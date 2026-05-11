@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    match /users/{userId} {
+      allow read, write: if isAuthenticated();
+
+      match /fcmTokens/{tokenId} {
+        allow read, write, delete: if isOwner(userId);
+      }
+    }
+
+    match /letters/{letterId} {
+      // 테스트를 위해 모든 로그인 사용자의 읽기/쓰기/삭제를 허용합니다.
+      allow read, write, delete: if isAuthenticated();
+    }
+    
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}
