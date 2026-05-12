@@ -57,7 +57,9 @@ Publish worries through a server endpoint and create the canonical Round 0 PRD d
 - Move runtime worry publication out of client Firestore writes.
 - Validate worry content: trim, non-empty, max 1000.
 - Normalize moderation/category output and preserve raw/valid/invalid/matching categories.
-- Create one worry, one Round 0 delivery batch, five deliveries where possible, one moderation log, and best-effort push logs.
+- Create one worry, one Round 0 delivery batch, exactly five deliveries, one moderation log, and best-effort push logs.
+- Use the strict 5-recipient policy: if fewer than 5 eligible human recipients exist, return a clear server error and write no partial worry, batch, delivery, counter, or push state.
+- Treat a missing `users/{uid}.deleted` field as not deleted for Phase 1 matching eligibility; exclude only `deleted === true` or an explicit final inactive/deleted marker.
 - Maintain `activeDeliveryCount` transactionally for initial recipients.
 - Add answer-feed read model for active PRD deliveries with an explicitly named legacy fallback.
 
@@ -71,11 +73,12 @@ Publish worries through a server endpoint and create the canonical Round 0 PRD d
 - TODO-6.1, TODO-6.3, TODO-6.4, TODO-6.5, TODO-6.8, TODO-6.9, TODO-6.10, TODO-6.18, TODO-6.20
 - TODO-8.2, TODO-8.3
 - TODO-9.1, TODO-9.4, TODO-9.5, TODO-9.8, TODO-9.9, TODO-9.10, TODO-9.14, TODO-9.20, TODO-9.41, TODO-9.74
-- TODO-11.10
+- TODO-11.10, TODO-11.13
 
 ### Verification Criteria
 
-- Happy path creates one worry, one Round 0 batch, and five delivery docs with 4 matched plus 1 random recipient where enough eligible users exist.
+- Happy path creates one worry, one Round 0 batch, and five delivery docs with 4 matched plus 1 random recipient.
+- Fewer than 5 eligible human recipients fails with a clear server error and creates no partial worry, batch, delivery, counter, or push state.
 - Rejected moderation creates a moderation log and no worry, batch, or deliveries.
 - Selected recipients are rechecked inside the transaction with `activeDeliveryCount < 10`, and each selected recipient is incremented exactly once.
 - Runtime app code no longer publishes PRD worries by writing `letters` or PRD source-of-truth collections directly from the browser.
@@ -98,6 +101,7 @@ Make the Phase 1 PRD collections server-owned at the rules layer while preservin
 - Add transition Firestore rules and rules tests for users, FCM tokens, worries, deliveries, initial delivery batches, moderation logs, push logs, and legacy letters.
 - Deny client create/update/delete on Phase 1 PRD source-of-truth collections.
 - Narrow `users/{uid}` profile access and forbid client writes to server-owned fields such as `activeDeliveryCount`.
+- Implement deleted-user rules helpers so a missing `deleted` field is allowed during transition and only explicit `deleted === true` is blocked.
 
 ### TODO IDs Completed In This Phase
 
@@ -113,6 +117,7 @@ Make the Phase 1 PRD collections server-owned at the rules layer while preservin
 - App still loads and uses the Phase 1 publish path.
 - Rules tests prove clients cannot directly create/update/delete `worries`, `deliveries`, initial `deliveryBatches`, `moderationLogs`, or `pushLogs`.
 - Rules tests prove users can write only narrow own profile/token fields and cannot mutate server-owned fields.
+- Rules tests prove missing `deleted` does not block a user during transition, while explicit `deleted === true` does.
 
 ### Explicit Non-Goals / Deferred Work
 
@@ -231,6 +236,8 @@ Add private read markers and unread emphasis for deliveries and received replies
 
 Allow recipients to pass active deliveries without creating immediate replacement deliveries.
 
+This is the implementation interpretation of the PRD statement that passed worries are rematched: `POST /api/deliveries/:deliveryId/pass` records pass state only, and the later Phase 8 additive rematch job considers passed slots when creating additional delivery batches.
+
 ### Work
 
 - Implement `POST /api/deliveries/:deliveryId/pass`.
@@ -238,6 +245,7 @@ Allow recipients to pass active deliveries without creating immediate replacemen
 - Decrement recipient `activeDeliveryCount` exactly once.
 - Remove passed deliveries from the recipient's answer feed.
 - Record enough state so the same user is excluded from future deliveries for the same worry.
+- Do not create a replacement delivery, do not notify the author, and do not expose a pass signal to the author.
 
 ### TODO IDs Completed In This Phase
 
@@ -257,6 +265,7 @@ Allow recipients to pass active deliveries without creating immediate replacemen
 - Answered or hidden deliveries return conflict.
 - The author receives no pass signal.
 - Pass does not create replacement deliveries.
+- Passed slots are eligible input for Phase 8 rematch, not a synchronous Phase 6 side effect.
 
 ### Explicit Non-Goals / Deferred Work
 
@@ -316,7 +325,8 @@ Create additive human delivery batches after 8-hour timeouts without expiring ex
 - Add job locks and rematch run records.
 - Maintain linear batch lineage: Round 0 -> Round 1 -> Round 2.
 - Use the previous round as the source batch and apply PRD 8.5 random-slot replacement.
-- Exclude author, deleted users, users at active delivery limit, all previous recipients, passed users, and answered users.
+- Consider passed slots from Phase 6 when determining needed additive delivery capacity; pass itself did not create a replacement.
+- Exclude author, deleted users, users at active delivery limit, all previous recipients, passed users, and answered users. Missing `deleted` is not deleted until Phase 14 writes the final deletion fields.
 - Never exceed 15 human deliveries.
 - Increment activeDeliveryCount for newly created recipients exactly once.
 
@@ -522,6 +532,7 @@ Implement soft account deletion and complete deleted-user blocking across user e
 - Remove push tokens.
 - Exclude deleted users from matching and notifications.
 - Ensure deleted users cannot publish, reply, mark read, pass, or give feedback.
+- Confirm the compatibility rule used by earlier phases: before this phase, missing `deleted` means not deleted; after this phase, `deleted === true` is the explicit block for publish/reply/read/pass/feedback actions and matching.
 
 ### TODO IDs Completed In This Phase
 
@@ -678,7 +689,7 @@ Run the final verification checklist after all implementation phases are complet
 | Phase | TODO IDs |
 | --- | --- |
 | Phase 0 | TODO-0.1..TODO-0.9; TODO-8.1; TODO-12.1..TODO-12.7 |
-| Phase 1 | TODO-1.1; TODO-1.11; TODO-1.23; TODO-1.26; TODO-1.31..TODO-1.33; TODO-1.43; TODO-1.61; TODO-2.15; TODO-2.20..TODO-2.27; TODO-2.33..TODO-2.37; TODO-2.57; TODO-2.62..TODO-2.66; TODO-2.70..TODO-2.72; TODO-2.75; TODO-3.1..TODO-3.10; TODO-4.1..TODO-4.16; TODO-5.1..TODO-5.11; TODO-6.1; TODO-6.3..TODO-6.5; TODO-6.8..TODO-6.10; TODO-6.18; TODO-6.20; TODO-8.2..TODO-8.3; TODO-9.1; TODO-9.4..TODO-9.5; TODO-9.8..TODO-9.10; TODO-9.14; TODO-9.20; TODO-9.41; TODO-9.74; TODO-11.10 |
+| Phase 1 | TODO-1.1; TODO-1.11; TODO-1.23; TODO-1.26; TODO-1.31..TODO-1.33; TODO-1.43; TODO-1.61; TODO-2.15; TODO-2.20..TODO-2.27; TODO-2.33..TODO-2.37; TODO-2.57; TODO-2.62..TODO-2.66; TODO-2.70..TODO-2.72; TODO-2.75; TODO-3.1..TODO-3.10; TODO-4.1..TODO-4.16; TODO-5.1..TODO-5.11; TODO-6.1; TODO-6.3..TODO-6.5; TODO-6.8..TODO-6.10; TODO-6.18; TODO-6.20; TODO-8.2..TODO-8.3; TODO-9.1; TODO-9.4..TODO-9.5; TODO-9.8..TODO-9.10; TODO-9.14; TODO-9.20; TODO-9.41; TODO-9.74; TODO-11.10; TODO-11.13 |
 | Phase 2 | TODO-1.15; TODO-1.46..TODO-1.47; TODO-5.12..TODO-5.18; TODO-6.17; TODO-7.1..TODO-7.6; TODO-7.10; TODO-7.14; TODO-7.16; TODO-9.31; TODO-9.35..TODO-9.38; TODO-11.1 |
 | Phase 3 | TODO-1.2; TODO-1.16; TODO-1.24; TODO-1.27; TODO-1.34; TODO-1.36; TODO-1.44; TODO-1.48; TODO-1.62; TODO-2.38..TODO-2.39; TODO-2.45..TODO-2.49; TODO-2.58; TODO-3.25..TODO-3.31; TODO-4.17..TODO-4.21; TODO-5.19..TODO-5.28; TODO-6.11; TODO-7.7; TODO-9.11; TODO-9.13; TODO-9.15; TODO-9.21; TODO-9.32; TODO-9.42 |
 | Phase 4 | TODO-1.12; TODO-1.63; TODO-4.27..TODO-4.30; TODO-4.34; TODO-5.29..TODO-5.37; TODO-9.46; TODO-9.48 |
