@@ -230,46 +230,58 @@ Add private read markers and unread emphasis for deliveries and received replies
 - Read state does not affect answerability.
 - Read state does not create rematch, feedback, or notification behavior.
 
-## Phase 6: Pass Delivery
+## Phase 6: Pass Delivery and Immediate Replacement
 
 ### Goal
 
-Allow recipients to pass active deliveries without creating immediate replacement deliveries.
+Allow recipients to pass active deliveries and synchronously attempt one replacement delivery for the same worry.
 
-This is the implementation interpretation of the PRD statement that passed worries are rematched: `POST /api/deliveries/:deliveryId/pass` records pass state only, and the later Phase 8 additive rematch job considers passed slots when creating additional delivery batches.
+This is the implementation interpretation of the PRD statement that passed worries are rematched: `POST /api/deliveries/:deliveryId/pass` records pass state and immediately attempts replacement in the same API flow. Phase 8 does not own pass replacement delivery creation.
 
 ### Work
 
 - Implement `POST /api/deliveries/:deliveryId/pass`.
 - Transition active deliveries to `passed`.
-- Decrement recipient `activeDeliveryCount` exactly once.
+- Decrement the passer's `activeDeliveryCount` exactly once.
 - Remove passed deliveries from the recipient's answer feed.
 - Record enough state so the same user is excluded from future deliveries for the same worry.
-- Do not create a replacement delivery, do not notify the author, and do not expose a pass signal to the author.
+- Synchronously select one eligible replacement recipient when possible.
+- Create one active replacement delivery with metadata that distinguishes it from Round 1/Round 2 additive rematch.
+- Increment the replacement recipient's `activeDeliveryCount` exactly once when replacement succeeds.
+- Attempt a new-worry push notification to the replacement recipient after core state is committed; push failure must not roll back pass or replacement creation.
+- If no eligible replacement recipient exists, keep the original delivery passed, create no duplicate/self-redelivery, log the shortfall, and still return pass success.
+- Do not notify the author and do not expose a pass signal to the author.
 
 ### TODO IDs Completed In This Phase
 
-- TODO-1.4, TODO-1.39, TODO-1.65
-- TODO-2.29
+- TODO-1.4, TODO-1.39, TODO-1.65, TODO-1.71
+- TODO-2.29, TODO-2.80
 - TODO-3.18..TODO-3.24
 - TODO-4.35, TODO-4.37, TODO-4.39, TODO-4.41, TODO-4.43
 - TODO-5.48..TODO-5.57
-- TODO-6.12
-- TODO-9.16, TODO-9.23, TODO-9.43, TODO-9.92
+- TODO-6.12, TODO-6.23, TODO-6.24
+- TODO-7.17
+- TODO-9.16, TODO-9.23, TODO-9.43, TODO-9.92, TODO-9.97..TODO-9.101
 - TODO-11.3
 
 ### Verification Criteria
 
 - Passing an active delivery removes it from the feed.
-- Repeating pass does not double-decrement.
+- Passing someone else's delivery fails.
 - Answered or hidden deliveries return conflict.
+- Repeating pass returns the recorded replacement result and does not double-decrement, double-increment, or duplicate replacement deliveries.
+- Replacement delivery is created immediately when an eligible user exists.
+- No replacement delivery is created when no eligible user exists; the shortfall is logged.
+- Replacement excludes the passer, author, previous recipients, previous passers, repliers, deleted/inactive users, and users excluded by normal matching policy.
+- Passer counter decrements exactly once; replacement recipient counter increments exactly once only when replacement succeeds.
+- Replacement-recipient push failure does not roll back pass or replacement creation.
+- Clients cannot read or write pass replacement attempt records directly.
 - The author receives no pass signal.
-- Pass does not create replacement deliveries.
-- Passed slots are eligible input for Phase 8 rematch, not a synchronous Phase 6 side effect.
 
 ### Explicit Non-Goals / Deferred Work
 
-- Additive replacement delivery creation is Phase 8 rematch job only.
+- Round 1/Round 2 additive rematch batches are Phase 8. Immediate pass replacement must not be encoded as those batches unless a separate replacement batch type is explicitly defined.
+- Invalid token cleanup and durable push log hardening remain in Phase 13.
 
 ## Phase 7: Feedback Migration
 
@@ -317,7 +329,7 @@ Implement deterministic, immutable feedback with correct helpedCount, visibility
 
 ### Goal
 
-Create additive human delivery batches after 8-hour timeouts without expiring existing active deliveries.
+Create additive human delivery batches after 8-hour timeouts without expiring existing active deliveries. This phase is the scheduled Round 0 -> Round 1 -> Round 2 rematch flow, not the immediate pass replacement flow.
 
 ### Work
 
@@ -325,8 +337,8 @@ Create additive human delivery batches after 8-hour timeouts without expiring ex
 - Add job locks and rematch run records.
 - Maintain linear batch lineage: Round 0 -> Round 1 -> Round 2.
 - Use the previous round as the source batch and apply PRD 8.5 random-slot replacement.
-- Consider passed slots from Phase 6 when determining needed additive delivery capacity; pass itself did not create a replacement.
-- Exclude author, deleted users, users at active delivery limit, all previous recipients, passed users, and answered users. Missing `deleted` is not deleted until Phase 14 writes the final deletion fields.
+- Do not retroactively fill pass slots as the job's primary responsibility; immediate pass replacement is handled in Phase 6.
+- Exclude author, deleted/inactive users, users at active delivery limit, all previous recipients, passed users, and answered users. Missing `deleted` is not deleted until Phase 14 writes the final deletion fields.
 - Never exceed 15 human deliveries.
 - Increment activeDeliveryCount for newly created recipients exactly once.
 
@@ -351,6 +363,7 @@ Create additive human delivery batches after 8-hour timeouts without expiring ex
 - Existing active deliveries remain answerable after rematch.
 - Total human deliveries never exceed 15.
 - Running the job twice does not duplicate deliveries.
+- Pass replacement behavior is already covered by Phase 6 and is not required for Phase 8 to pass.
 
 ### Explicit Non-Goals / Deferred Work
 
@@ -694,7 +707,7 @@ Run the final verification checklist after all implementation phases are complet
 | Phase 3 | TODO-1.2; TODO-1.16; TODO-1.24; TODO-1.27; TODO-1.34; TODO-1.36; TODO-1.44; TODO-1.48; TODO-1.62; TODO-2.38..TODO-2.39; TODO-2.45..TODO-2.49; TODO-2.58; TODO-3.25..TODO-3.31; TODO-4.17..TODO-4.21; TODO-5.19..TODO-5.28; TODO-6.11; TODO-7.7; TODO-9.11; TODO-9.13; TODO-9.15; TODO-9.21; TODO-9.32; TODO-9.42 |
 | Phase 4 | TODO-1.12; TODO-1.63; TODO-4.27..TODO-4.30; TODO-4.34; TODO-5.29..TODO-5.37; TODO-9.46; TODO-9.48 |
 | Phase 5 | TODO-1.3; TODO-2.28; TODO-2.40; TODO-3.11..TODO-3.17; TODO-3.32..TODO-3.38; TODO-4.31; TODO-5.38..TODO-5.47; TODO-6.15; TODO-9.22; TODO-9.47; TODO-9.50; TODO-9.71 |
-| Phase 6 | TODO-1.4; TODO-1.39; TODO-1.65; TODO-2.29; TODO-3.18..TODO-3.24; TODO-4.35; TODO-4.37; TODO-4.39; TODO-4.41; TODO-4.43; TODO-5.48..TODO-5.57; TODO-6.12; TODO-9.16; TODO-9.23; TODO-9.43; TODO-9.92; TODO-11.3 |
+| Phase 6 | TODO-1.4; TODO-1.39; TODO-1.65; TODO-1.71; TODO-2.29; TODO-2.80; TODO-3.18..TODO-3.24; TODO-4.35; TODO-4.37; TODO-4.39; TODO-4.41; TODO-4.43; TODO-5.48..TODO-5.57; TODO-6.12; TODO-6.23..TODO-6.24; TODO-7.17; TODO-9.16; TODO-9.23; TODO-9.43; TODO-9.92; TODO-9.97..TODO-9.101; TODO-11.3 |
 | Phase 7 | TODO-1.5; TODO-1.13; TODO-1.17; TODO-1.25; TODO-1.28; TODO-1.37..TODO-1.38; TODO-1.45; TODO-1.49; TODO-1.64; TODO-2.41; TODO-2.50..TODO-2.56; TODO-2.59; TODO-3.39..TODO-3.45; TODO-4.22..TODO-4.26; TODO-4.32; TODO-5.58..TODO-5.66; TODO-7.8; TODO-9.7; TODO-9.12; TODO-9.18; TODO-9.24; TODO-9.33; TODO-9.39; TODO-9.49 |
 | Phase 8 | TODO-1.6; TODO-1.18; TODO-1.35; TODO-1.40; TODO-2.16; TODO-2.30; TODO-2.73..TODO-2.74; TODO-2.76; TODO-3.53; TODO-4.36; TODO-4.38; TODO-4.40; TODO-4.42; TODO-4.44; TODO-5.67..TODO-5.77; TODO-6.2; TODO-6.6..TODO-6.7; TODO-6.13; TODO-6.16; TODO-6.19; TODO-6.22; TODO-7.11; TODO-9.6; TODO-9.28; TODO-9.34; TODO-9.45; TODO-9.51..TODO-9.69; TODO-9.72..TODO-9.73; TODO-9.76; TODO-9.93; TODO-11.2; TODO-11.4; TODO-11.6 |
 | Phase 9 | TODO-1.7; TODO-1.19; TODO-1.29; TODO-1.41; TODO-1.66; TODO-2.17; TODO-2.42; TODO-2.60; TODO-2.77; TODO-3.54; TODO-4.45..TODO-4.49; TODO-5.78..TODO-5.88; TODO-7.12; TODO-9.29; TODO-9.77..TODO-9.79; TODO-9.94; TODO-11.7 |
