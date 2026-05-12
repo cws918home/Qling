@@ -18,38 +18,59 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 
 ## 1. Target PRD Architecture
 
-- [ ] Server-owned mutation boundary:
-  - All source-of-truth mutations for worries, deliveries, replies, feedback, pass, read state, rematch, AI fallback, examples, deletion, push logging, and moderation logging go through Express endpoints or internal server jobs in `server.ts` routed to server modules.
-  - Client never sends trusted `uid`; endpoints use Firebase ID token verification.
-  - Client never directly creates or mutates `worries`, `deliveries`, `replies`, `feedbacks`, `moderationLogs`, or `pushLogs`.
-- [ ] Client read paths:
-  - Answer feed reads active `deliveries` for the signed-in recipient plus enough worry display data.
-  - My worries reads `worries` authored by the signed-in user plus `replies` for those worries.
-  - My page reads own `users/{uid}` profile, own written `replies`, and like/comment state visible to the replier.
-  - Temporary legacy fallbacks are isolated behind explicitly named adapters and removed in Slice 16.
-- [ ] Firestore collection ownership:
-  - Server-owned: `worries`, `deliveries`, `replies`, `feedbacks`, `moderationLogs`, `pushLogs`, operational job collections.
-  - Client-writable narrow profile data: specific safe fields on `users/{uid}` and own `users/{uid}/fcmTokens/{tokenId}` until token registration is server-owned.
-  - Legacy transition only: limited `letters` reads and, briefly, only reply paths that have not yet migrated.
-- [ ] Server-enforced invariants:
-  - Valid auth and non-deleted user for all user actions.
-  - Input trim/non-empty/max 1000.
-  - Moderation before saving user-visible content.
-  - Category raw/valid/invalid/matching preservation.
-  - Exactly 5 initial human deliveries where possible, 4 matched plus 1 random.
-  - Active delivery limit `< 10`, total human delivery cap `15`, no redelivery of same worry to same user.
-  - One reply per delivery, one immutable feedback per reply.
-  - Helped count increments only for eligible likes.
-  - Pass/rematch/AI/example/job idempotency.
-  - Push failure does not roll back core state.
-- [ ] Firestore rules-enforced invariants:
-  - Clients cannot create/update/delete server source-of-truth docs.
-  - Users can read only their own delivery/reply/profile surfaces and authored worry surfaces.
-  - Users cannot read moderation logs, push logs, or admin-only feedback comments.
-  - Users can write only narrow own profile fields and own push token docs during transition.
-- [ ] Logic that must not live in `App.tsx`:
-  - Matching, moderation interpretation, Firestore transaction rules, delivery status transitions, helpedCount changes, push dispatch, AI fallback, example scheduling, deletion blocking, and legacy migration decisions.
-  - `App.tsx` should eventually become view composition plus calls to small service hooks/API wrappers.
+- [ ] Worry publication mutation boundary is server-owned: browser submits to an authenticated endpoint, never supplies trusted `uid`, and no runtime PRD worry publication path writes `letters` or PRD source-of-truth collections directly from the client.
+- [ ] Reply publication mutation boundary is server-owned: browser submits by delivery ID to an authenticated endpoint, stored reply ID is deterministic from delivery ID, and no runtime reply publication path creates `letters` replies.
+- [ ] Read-state mutation boundary is server-owned: delivery and reply read markers are set only through authenticated endpoints and are not public read receipts.
+- [ ] Pass mutation boundary is server-owned: pass status changes and `activeDeliveryCount` decrements happen only in an authenticated server transaction.
+- [ ] Feedback mutation boundary is server-owned: like/dislike/comment writes and helpedCount changes happen only through an authenticated server transaction.
+- [ ] Rematch job mutation boundary is server-owned: rematch runs are performed only by authenticated internal endpoints or server jobs.
+- [ ] AI fallback job mutation boundary is server-owned: AI fallback runs are performed only by authenticated internal endpoints or server jobs.
+- [ ] Example feedback job mutation boundary is server-owned: example creation and delayed example feedback are performed only by authenticated server endpoints or internal jobs.
+- [ ] Account deletion mutation boundary is server-owned: delete requests use authenticated user identity, soft-delete the user, remove tokens, and block future user actions.
+- [ ] Final source-of-truth mutation boundary is closed: after legacy removal, the browser cannot create or mutate `worries`, `deliveries`, `replies`, `feedbacks`, `moderationLogs`, `pushLogs`, operational job collections, or legacy `letters`.
+- [ ] Answer feed read path reads active `deliveries` for the signed-in recipient plus enough worry display data, with any legacy fallback isolated behind an explicitly named adapter.
+- [ ] My worries and reply mailbox read paths read `worries` authored by the signed-in user, `replies` for those worries, and replies written by the signed-in user, with legacy fallback isolated behind an explicitly named adapter.
+- [ ] My page read path reads own profile, own written replies, and like/comment state visible to the replier.
+- [ ] Temporary legacy read fallbacks are removed from runtime code.
+- [ ] Firestore ownership for initial PRD collections is enforced: `worries`, `deliveries`, `moderationLogs`, `pushLogs`, and initial `deliveryBatches` are server-owned; clients keep only narrow profile/token writes and temporary legacy reads.
+- [ ] Firestore ownership for replies is enforced: `replies` are server-owned and legacy reply write paths are not needed for PRD replies.
+- [ ] Firestore ownership for feedback is enforced: `feedbacks` and helpedCount changes are server-owned.
+- [ ] Firestore ownership for rematch operational collections is enforced.
+- [ ] Firestore ownership for AI fallback operational collections is enforced.
+- [ ] Firestore ownership for example operational collections is enforced.
+- [ ] Final Firestore ownership is enforced: legacy `letters` runtime access is removed or fully denied.
+- [ ] Server invariant for auth/deleted-user blocking is enforced for all user endpoints.
+- [ ] Server invariant for worry content validation is enforced: trim, non-empty, max 1000.
+- [ ] Server invariant for reply content validation is enforced: trim, non-empty, max 1000.
+- [ ] Server invariant for feedback comment validation is enforced: trim, non-empty when submitted, max 1000.
+- [ ] Server invariant for worry moderation is enforced before saving user-visible worries.
+- [ ] Server invariant for reply moderation is enforced before saving user-visible replies.
+- [ ] Server invariant for feedback comment moderation is enforced before saving user-visible feedback comments.
+- [ ] Server invariant for AI reply moderation is enforced before saving AI replies.
+- [ ] Server invariant for example reply moderation is enforced before saving example replies.
+- [ ] Server invariant for category preservation is enforced for worry publication: raw, valid, invalid, and matching categories are stored.
+- [ ] Server invariant for initial matching is enforced: exactly 5 initial human deliveries where possible, 4 matched plus 1 random.
+- [ ] Server invariant for initial delivery active limit is enforced: selected initial recipients have `activeDeliveryCount < 10`.
+- [ ] Server invariant for same-worry redelivery exclusion metadata is enforced when users pass or answer.
+- [ ] Server invariant for rematch delivery limits is enforced: total human delivery cap `15`, active delivery limit `< 10`, and no redelivery of the same worry to the same user.
+- [ ] Server invariant for one reply per delivery is enforced with deterministic reply IDs and idempotency/duplicate-content behavior.
+- [ ] Server invariant for one immutable feedback per reply is enforced with deterministic feedback IDs and delayed like-comment rules.
+- [ ] Server invariant for helpedCount is enforced: increments happen exactly once only for eligible human/example likes, and AI likes are excluded.
+- [ ] Server invariant for pass idempotency is enforced by status preconditions.
+- [ ] Server invariant for rematch job idempotency is enforced by deterministic IDs, job locks, and status preconditions.
+- [ ] Server invariant for AI fallback idempotency is enforced by deterministic AI reply state and status preconditions.
+- [ ] Server invariant for example job idempotency is enforced by per-user example state, deterministic jobs, and status preconditions.
+- [ ] Server invariant for worry publication push failure is enforced: push failure never rolls back core worry publication.
+- [ ] Server invariant for reply publication push failure is enforced: push failure never rolls back core reply publication.
+- [ ] Server invariant for feedback push failure is enforced: push failure never rolls back core feedback mutation.
+- [ ] Firestore rules invariant for initial PRD collections is enforced: clients cannot create/update/delete `worries`, `deliveries`, `moderationLogs`, `pushLogs`, or initial `deliveryBatches`.
+- [ ] Firestore rules invariant for profile/token surfaces is enforced: users can read/write only narrow own profile fields and own push token docs during transition.
+- [ ] Firestore rules invariant for replies is enforced: users can read only permitted reply surfaces and cannot write replies directly.
+- [ ] Firestore rules invariant for feedback is enforced: publisher can read own feedback, replier can read only likes and like comments, and clients cannot write feedback directly.
+- [ ] Firestore rules invariant for hidden/admin-only data is enforced: users cannot read moderation logs, push logs, operational logs, hidden content, or admin-only feedback comments.
+- [ ] Firestore rules invariant for legacy removal is enforced: final rules deny legacy `letters` runtime reads/writes/deletes.
+- [ ] `App.tsx` does not own matching, moderation interpretation, Firestore transaction rules, delivery status transitions, helpedCount changes, push dispatch, AI fallback, example scheduling, deletion blocking, or legacy migration decisions.
+- [ ] `App.tsx` is limited to view composition plus calls to service hooks/API wrappers for PRD behavior.
 
 ### Architecture Safeguard: UI Extraction Before the Navigation Slice
 
@@ -72,10 +93,17 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] Do not create a new adapter/interface merely because a function call crosses a file boundary.
 - [ ] Introduce a seam only when it hides an external dependency, enables deterministic tests, or owns a meaningful policy boundary.
 - [ ] Prefer one deep module with a small public interface over many shallow wrappers.
-- [ ] Apply this especially to `worryPublication`, `replyPublication`, `replyFeedback`, `rematch`, `aiFallback`, `exampleWorries`, and `userAccount`.
-- [ ] Each slice must include a deletion test:
-  - Deleting the new module should remove a real PRD behavior.
-  - Deleting a wrapper should not be the only observable effect.
+- [ ] Apply deep-module guardrails to `worryPublication`, `moderation`, and `answerFeed`.
+- [ ] Apply deep-module guardrails to `replyPublication`.
+- [ ] Apply deep-module guardrails to `replyMailbox` / `myWorries`.
+- [ ] Apply deep-module guardrails to `replyFeedback`.
+- [ ] Apply deep-module guardrails to `pass` / `rematch`.
+- [ ] Apply deep-module guardrails to `aiFallback`.
+- [ ] Apply deep-module guardrails to `exampleWorries`.
+- [ ] Apply deep-module guardrails to `userAccount`.
+- [ ] Each slice includes a deletion test or equivalent observable-behavior removal check:
+  - Deleting the new module removes a real PRD behavior.
+  - Deleting a wrapper is not the only observable effect.
 - [ ] Tests should focus on observable PRD behavior, not implementation details.
 
 ## 2. Final Firestore Data Model
@@ -84,7 +112,10 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 ### `users/{uid}`
 
-- [ ] Fields: `uid`, `gender: 'male' | 'female'`, `interests`, `helpedCount`, `activeDeliveryCount`, `deleted`, `deletedAt`, `createdAt`, `updatedAt`, `lastActive`, onboarding/example state (`onboardingCompletedAt`, `exampleWorriesCreatedAt`, `exampleWorrySeedIds`), notification settings (`notificationPermission`, `isInstalledPWA`), and profile activity fields (`lastSeenAt`).
+- [ ] Core profile fields: `uid`, `gender: 'male' | 'female'`, `interests`, `helpedCount`, `activeDeliveryCount`, `createdAt`, `updatedAt`, `lastActive`, and profile activity fields (`lastSeenAt`).
+- [ ] Example/onboarding fields: `onboardingCompletedAt`, `exampleWorriesCreatedAt`, `exampleWorrySeedIds`.
+- [ ] Notification setting fields: `notificationPermission`, `isInstalledPWA`.
+- [ ] Account deletion fields: `deleted`, `deletedAt`.
 - [ ] Client-writable fields during transition: own `gender`, `interests`, `lastActive`, `notificationPermission`, `isInstalledPWA`.
 - [ ] Server-owned fields: `helpedCount`, `activeDeliveryCount`, `deleted`, `deletedAt`, example creation state, and any counters.
 - [ ] Source of truth: user profile and matching eligibility.
@@ -101,7 +132,11 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 ### `worries/{worryId}`
 
-- [ ] Fields: `authorUid`, `content`, `status: 'active' | 'hidden' | 'deleted_author'`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `moderationLogId`, `initialDeliveryBatchId`, `initialDeliveryTargetCount: 5`, `humanDeliveryLimit: 15`, `humanDeliveryCount`, `humanReplyCount`, `hasHumanReply`, `hasAiReply`, `aiReplyId`, `aiFallbackCheckedAt`, `isExample`, `exampleSeedId`, `exampleOwnerUid`, `createdAt`, `updatedAt`, `lastDeliveryCreatedAt`, `lastRematchRunId`, `lastRematchBatchId`, `lastRematchCreatedAt`, `hiddenAt`, `hiddenReason`, `hiddenBy`.
+- [ ] Core publication fields: `authorUid`, `content`, `status: 'active'`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `moderationLogId`, `initialDeliveryBatchId`, `initialDeliveryTargetCount: 5`, `humanDeliveryLimit: 15`, `humanDeliveryCount`, `humanReplyCount`, `hasHumanReply`, `createdAt`, `updatedAt`, `lastDeliveryCreatedAt`.
+- [ ] Rematch metadata fields: `lastRematchRunId`, `lastRematchBatchId`, `lastRematchCreatedAt`.
+- [ ] AI fallback fields: `hasAiReply`, `aiReplyId`, `aiFallbackCheckedAt`.
+- [ ] Example fields: `isExample`, `exampleSeedId`, `exampleOwnerUid`.
+- [ ] Hidden/deleted-author fields: `status: 'hidden' | 'deleted_author'`, `hiddenAt`, `hiddenReason`, `hiddenBy`.
 - [ ] Source of truth: canonical worry content and moderation/category state.
 - [ ] Read access: author can read; recipient reads via delivery/read model; no public board reads.
 - [ ] Write access: server only.
@@ -125,7 +160,12 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
   - Read state does not affect answerability.
   - Push failure does not affect answerability.
   - Do not include `rematched` as a normal terminal status. If a future admin/manual flow needs that concept, name and document it separately; normal 8-hour rematch is additive.
-- [ ] Fields: `worryId`, `recipientUid`, `authorUid`, `status: DeliveryStatus`, `readAt`, `answeredAt`, `passedAt`, `batchId`, `batchRound: 0 | 1 | 2`, `slotIndex`, `selectionType: 'matched' | 'random'`, `matchOverlapCount`, `matchCategoriesSnapshot`, `recipientInterestsSnapshot`, `recipientGenderSnapshot`, `recipientHelpedCountSnapshot`, `authorGenderSnapshot`, `isExample`, `exampleSeedId`, `isAiRecipient: false`, `createdAt`, `updatedAt`, `rematchEligibleAfter`, `createdByRematchRunId`, `answerableUntil?: null`, `hiddenAt`, `hiddenReason`.
+- [ ] Core delivery fields: `worryId`, `recipientUid`, `authorUid`, `status: 'active' | 'answered'`, `answeredAt`, `batchId`, `batchRound: 0`, `slotIndex`, `selectionType: 'matched' | 'random'`, `matchOverlapCount`, `matchCategoriesSnapshot`, `recipientInterestsSnapshot`, `recipientGenderSnapshot`, `recipientHelpedCountSnapshot`, `authorGenderSnapshot`, `isAiRecipient: false`, `createdAt`, `updatedAt`, `answerableUntil?: null`.
+- [ ] Read-state field: `readAt`.
+- [ ] Pass fields: `status: 'passed'`, `passedAt`.
+- [ ] Rematch delivery fields: `batchRound: 1 | 2`, `rematchEligibleAfter`, `createdByRematchRunId`.
+- [ ] Example delivery fields: `isExample`, `exampleSeedId`.
+- [ ] Hidden delivery fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`.
 - [ ] Source of truth: who may answer a worry and answer feed state.
 - [ ] Read access: recipient can read own delivery; author may read delivery metadata without read receipts exposed in UI.
 - [ ] Write access: server only.
@@ -135,7 +175,11 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 ### `replies/{replyId}`
 
 - [ ] Deterministic ID recommendation: `deliveryId`, so one reply per delivery is enforced by create-if-absent.
-- [ ] Fields: `deliveryId`, `worryId`, `authorUid`, `replierUid`, `content`, `status: 'active' | 'hidden'`, `readByAuthorAt`, `isAiGenerated`, `isExampleReply`, `moderationLogId`, `createdAt`, `updatedAt`, `hiddenAt`, `hiddenReason`, `feedbackType`, `likedAt`, `dislikedAt`.
+- [ ] Core human reply fields: `deliveryId`, `worryId`, `authorUid`, `replierUid`, `content`, `status: 'active'`, `moderationLogId`, `createdAt`, `updatedAt`.
+- [ ] Reply read-state field: `readByAuthorAt`.
+- [ ] Feedback summary fields: `feedbackType`, `likedAt`, `dislikedAt`.
+- [ ] AI/example reply fields: `isAiGenerated`, `isExampleReply`.
+- [ ] Hidden reply fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`.
 - [ ] Source of truth: final answer content.
 - [ ] Read access: replier can read own replies; worry author can read replies to own worries except disliked replies hidden from publisher UI/read model.
 - [ ] Write access: server only.
@@ -158,7 +202,11 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 ### `moderationLogs/{logId}`
 
-- [ ] Fields: `targetType: 'worry' | 'reply' | 'feedback_comment' | 'ai_reply' | 'example_reply'`, `targetId`, `uid`, `originalContent`, `status: 'approved' | 'rejected' | 'invalid_provider_response' | 'provider_error'`, `reasonCode`, `userMessage`, `helpMessage`, `rawProviderResponse`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `provider`, `model`, `createdAt`, `updatedAt`.
+- [ ] Worry moderation log fields: `targetType: 'worry'`, `targetId`, `uid`, `originalContent`, `status: 'approved' | 'rejected' | 'invalid_provider_response' | 'provider_error'`, `reasonCode`, `userMessage`, `helpMessage`, `rawProviderResponse`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `provider`, `model`, `createdAt`, `updatedAt`.
+- [ ] Reply moderation log fields: `targetType: 'reply'` plus common moderation fields.
+- [ ] Feedback comment moderation log fields: `targetType: 'feedback_comment'` plus common moderation fields.
+- [ ] AI reply moderation log fields: `targetType: 'ai_reply'` plus common moderation fields.
+- [ ] Example reply moderation log fields: `targetType: 'example_reply'` plus common moderation fields.
 - [ ] Reason codes: `abuse_hate_profanity`, `sexual`, `self_harm_suicide`, `crime_violence_victim`, `personal_info`, `spam_promotion`, `empty`, `too_long`, `provider_invalid`.
 - [ ] Source of truth: filtering and category audit.
 - [ ] Read/write access: server/admin only.
@@ -166,7 +214,10 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 ### `pushLogs/{pushLogId}`
 
-- [ ] Fields: `kind: 'new_worry' | 'new_reply' | 'reply_liked'`, `targetUid`, `sourceId`, `sourceType: 'worry' | 'delivery' | 'reply' | 'feedback'`, `status: 'sent' | 'failed' | 'skipped_no_token' | 'invalid_token_deleted' | 'skipped_deleted_user'`, `tokenDocId`, `tokenSummary`, `errorCode`, `errorMessage`, `createdAt`.
+- [ ] New-worry push log fields: `kind: 'new_worry'`, `targetUid`, `sourceId`, `sourceType: 'worry' | 'delivery'`, `status: 'sent' | 'failed' | 'skipped_no_token'`, `tokenDocId`, `tokenSummary`, `errorCode`, `errorMessage`, `createdAt`.
+- [ ] New-reply push log fields: `kind: 'new_reply'` plus common push log fields.
+- [ ] Reply-liked push log fields: `kind: 'reply_liked'`, `sourceType: 'reply' | 'feedback'`, plus common push log fields.
+- [ ] Push hardening status fields: `status: 'invalid_token_deleted' | 'skipped_deleted_user'`.
 - [ ] Source of truth: push attempt audit.
 - [ ] Read/write access: server/admin only.
 - [ ] Lifecycle: operational log; optional TTL later.
@@ -320,10 +371,12 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### `replyMailbox` / `myWorries`
 
-- [ ] Purpose: show replies received for my worries, replies written by me, unread counts.
+- [ ] Purpose: show worries authored by me, replies received for my worries, and replies written by me.
 - [ ] Public interface: `useMyWorries`, `useRepliesForWorry`, `useMyGivenReplies`.
 - [ ] Files: `src/services/replyMailbox/*`, new `src/services/myWorries/*`, `src/App.tsx` decomposition.
-- [ ] Tests: unread counts, hidden/disliked filtering, own written replies, legacy fallback removal.
+- [ ] Tests: authored worries, received replies, own written replies, and isolated legacy fallback behavior.
+- [ ] Read-state extension: unread counts and unread emphasis are added by Slice 5 after read APIs exist.
+- [ ] Feedback/admin extension: disliked and hidden filtering is completed by Slice 7 and Slice 15 after feedback and admin hiding exist.
 - [ ] Deletion test: legacy mailbox deletion does not remove PRD mailbox behavior.
 
 ### `pass` / `rematch`
@@ -368,7 +421,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] Data model changes: add `worries`, `deliveries`, required `deliveryBatches` for Round 0 lineage, `moderationLogs`, `pushLogs`; keep legacy `letters`.
 - [ ] API changes: new publish endpoint; `/api/process-worry`, `/api/notify-new-worry`, and `/api/schedule-bot-reply` become legacy/internal-to-be-removed paths.
 - [ ] UI/read-path changes: `App.tsx#publishWorry` calls endpoint and shows `고민이 전달되었어요!`; answer feed reads new deliveries first with temporary `letters` fallback.
-- [ ] Firestore rules changes: deny client writes to new PRD collections; keep minimal legacy access for current UI.
+- [ ] Firestore rules dependency: runtime app code no longer performs PRD worry publication through direct Firestore writes in this slice; full Firestore rules denial for new PRD collections is completed in Slice 2.
 - [ ] Tests: moderation normalization, recipient selection exactly 5 and 4/1, server publication transaction creates `deliveryBatches/{batchId}` with `batchRound: 0` and no source batch, API auth/body validation, feed read model with fallback.
 - [ ] Manual verification: publish worry; verify one `worries` doc, five `deliveries`, one moderation log, push logs; recipient sees delivery without push permission.
 - [ ] Explicit non-goals: no reply migration, no pass/rematch/AI/examples, no bottom-tab rebuild.
@@ -386,13 +439,13 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 3: Reply migration
 
-- [ ] Goal: replies are created under `replies/{deliveryId}` by server only.
+- [ ] Goal: replies are created by server only; the API remains `POST /api/deliveries/:deliveryId/replies`, and the stored reply document ID is deterministic from `deliveryId` so one reply per delivery is enforceable.
 - [ ] Files: `src/services/replyPublication/*`, `src/services/moderation/*`, `server.ts`, `src/App.tsx`, answer detail components.
 - [ ] Data/API: add `POST /api/deliveries/:deliveryId/replies`.
-- [ ] Transaction: create moderation log/reply, set delivery answered, update worry human reply state and counters.
+- [ ] Transaction: create moderation log and `replies/{deliveryId}`, set delivery answered, update worry human reply state and counters.
 - [ ] UI/read path: answer detail submits by delivery ID, not legacy worry letter ID.
 - [ ] Rules: deny client reply creation; preserve legacy reply read fallback until Slice 4.
-- [ ] Tests: moderation, one reply per delivery, answered status, notify author best-effort, no edit/delete, no writes to `letters`.
+- [ ] Tests: moderation, deterministic reply ID, one reply per delivery, duplicate same-content idempotency, different-content duplicate rejection, answered status, notify author best-effort, no edit/delete, no writes to `letters`.
 - [ ] Manual verification: recipient answers once; second attempt blocked; author gets new reply signal.
 - [ ] Explicit non-goals: feedback migration, full my-worries UI.
 - [ ] Deletion test: no `letters` reply creation path remains after this slice.
@@ -401,10 +454,10 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 - [ ] Goal: PRD read models replace `letters` mailbox/inbox concepts.
 - [ ] Files: `src/services/replyMailbox/*`, new `src/services/myWorries/*`, `src/App.tsx`.
-- [ ] Data model: read `worries` by `authorUid`, `replies` by `worryId`/`replierUid`, `feedbacks` for visible likes/comments.
-- [ ] UI/read path: my worries list, replies received, replies written by me, unread reply count, hidden/disliked behavior.
+- [ ] Data model: read `worries` by `authorUid` and `replies` by `worryId`/`replierUid`; do not require feedback summaries before Slice 7.
+- [ ] UI/read path: my worries list, replies received, and replies written by me; unread reply emphasis waits for Slice 5, disliked filtering waits for Slice 7, and admin hidden filtering waits for Slice 15.
 - [ ] Legacy fallback removal strategy: read both new `replies` and old `letters` replies behind one adapter, then remove fallback in Slice 16.
-- [ ] Tests: my worries list, replies received, replies written, unread count, hidden/disliked filtering.
+- [ ] Tests: my worries list, replies received, replies written, and legacy fallback isolation.
 - [ ] Manual verification: author sees new replies; replier sees own written reply.
 - [ ] Explicit non-goals: bottom tab redesign can wait until Slice 11.
 - [ ] Deletion test: removing `letters` fallback leaves new replies visible.
@@ -427,12 +480,12 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] Goal: users can pass active deliveries and never receive the same worry again.
 - [ ] Files: new `src/services/deliveries/passDelivery.ts`, answer feed UI, `server.ts`.
 - [ ] API: `POST /api/deliveries/:deliveryId/pass`.
-- [ ] Data: delivery status `passed`, `passedAt`, pass included in human delivery cap.
+- [ ] Data: delivery status `passed`, `passedAt`, pass included in same-worry redelivery exclusion metadata and human delivery accounting.
 - [ ] UI: left swipe or clear button in answer feed; immediate local removal after success.
 - [ ] Rules: server-only status update.
 - [ ] Tests: active only, ownership, feed removal, same worry recipient exclusion for rematch, idempotency.
 - [ ] Manual verification: pass disappears; author sees no pass signal.
-- [ ] Explicit non-goals: immediate additive rematch may be handled by Slice 8 job unless product requires synchronous extra delivery creation after pass.
+- [ ] Explicit non-goals: pass does not create immediate replacement deliveries; additive batch creation is handled only by Slice 8 rematch job.
 - [ ] Deletion test: deleting pass module removes pass action; matching exclusion tests fail if pass history is ignored.
 
 ### Slice 7: Feedback migration
@@ -640,12 +693,15 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] `users/{uid}`: own reads only; own safe profile field writes only; forbid `helpedCount`, `activeDeliveryCount`, `deleted`, example state, other-user access, and delete.
 - [ ] Rules tests must prove clients cannot create, update, or delete `activeDeliveryCount`; only server transactions may change it.
 - [ ] `users/{uid}/fcmTokens/{tokenId}`: own reads/writes/deletes during transition; server cleans invalid tokens.
-- [ ] `worries/{worryId}`: reads only for author or recipient with matching delivery; writes server only; no public read.
-- [ ] `deliveries/{deliveryId}`: recipient reads own delivery; author may read limited metadata if needed; writes server only.
-- [ ] `replies/{replyId}`: reads for replier or worry author; hidden/admin-only state filtered in read models and by rules where possible; writes server only.
-- [ ] `feedbacks/{feedbackId}`: publisher reads own feedback; replier reads only likes and like comments; writes server only.
-- [ ] `moderationLogs`, `pushLogs`, and operational collections: client reads/writes denied.
-- [ ] Legacy `letters`: during transition, deny worry create and delete while preserving minimum legacy reply paths; final state denies all.
+- [ ] Transition `worries/{worryId}` rules: reads only for author or recipient with matching delivery; writes server only; no public read.
+- [ ] Transition `deliveries/{deliveryId}` rules: recipient reads own delivery; author may read limited metadata if needed; writes server only.
+- [ ] Reply `replies/{replyId}` rules: reads for replier or worry author; writes server only.
+- [ ] Feedback `feedbacks/{feedbackId}` rules: publisher reads own feedback, replier reads only likes and like comments, and writes are server only.
+- [ ] Admin/hidden rules: hidden/admin-only state is filtered in read models and denied by rules where possible.
+- [ ] Initial log rules: `moderationLogs` and `pushLogs` client reads/writes denied.
+- [ ] Operational collection rules: job locks, rematch runs, AI fallback runs, example seeds, and scheduled/example feedback jobs client reads/writes denied when introduced.
+- [ ] Legacy `letters` transition rules: deny worry create and delete while preserving only minimum legacy read/reply paths needed during migration.
+- [ ] Legacy `letters` final rules: deny all runtime reads/writes/deletes or remove the match block after runtime code no longer depends on `letters`.
 - [ ] Firestore rules limitation:
   - Recipient reading worry via delivery existence is easiest with deterministic delivery IDs.
   - Do not store broad `recipientUids` on worry solely for rules unless needed; it risks leaking delivery audience and complicating updates.
@@ -783,9 +839,12 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] Additive rematch can accumulate old active deliveries for inactive users:
   - Risk: answer feeds may grow toward the 10-active limit if users ignore worries.
   - Mitigation: enforce `activeDeliveryCount < 10`, provide pass UX, use optional ordering/aging UI for readability, but do not expire answerability unless the PRD changes.
-- [ ] Scheduled job idempotency:
-  - Risk: retries duplicate additive delivery batches, AI replies, or example likes.
+- [ ] Rematch scheduled job idempotency:
+  - Risk: retries duplicate additive delivery batches.
   - Mitigation: job locks, deterministic delivery IDs, previous-recipient exclusion, status preconditions, idempotency tests.
+- [ ] Example scheduled job idempotency:
+  - Risk: retries duplicate example likes.
+  - Mitigation: deterministic jobs, per-user example state, status preconditions, and idempotency tests.
 - [ ] Rematch branching from historical batches:
   - Risk: if historical batches are scanned independently, rematch can over-create deliveries beyond the intended Round 0 -> Round 1 -> Round 2 flow.
   - Mitigation: required `deliveryBatches` with `sourceBatchId`/`sourceBatchRound`, job idempotency, tests for no branching, and max 15 cap.
