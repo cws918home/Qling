@@ -1,604 +1,722 @@
-아래처럼 **17개 TODO slice를 그대로 17번에 나누기보다, 구현 단위가 안정적으로 검증되는 9단계**로 묶어 진행하는 게 좋습니다. 핵심은 **데이터/서버 불변식 → read model → 사용자 action → job → UI → 제거/문서화** 순서입니다.
-
-현재 TODO는 server-owned mutation, PRD collection, `activeDeliveryCount`, additive rematch, deep module guardrail, deletion test를 명시하고 있으므로 이 순서를 기준으로 삼으면 됩니다. 
-
----
-
-## 전체 권장 순서
-
-```text
-Stage 0. TODO 고정 및 구현 전 점검
-Stage 1. Slice 1: Server-owned worry publication
-Stage 2. Slice 2: Firestore rules first hardening
-Stage 3. Slice 3~4: Reply + My worries/mailbox migration
-Stage 4. Slice 5~7: Read / Pass / Feedback
-Stage 5. Slice 8~9: Rematch + AI fallback jobs
-Stage 6. Slice 10: Example worries
-Stage 7. Slice 11~13: UI navigation / validation-copy / notifications
-Stage 8. Slice 14~15: Account deletion / admin hiding & logs
-Stage 9. Slice 16~17: Legacy removal / documentation & ops
-```
-
----
-
-# Stage 0. 구현 전 점검
+# Qling PRD Alignment Phase Plan
 
-## 목표
+This is the executable implementation plan for bringing the current codebase into alignment with `docs/PRD.md`.
 
-TODO 문서 기준으로 **첫 구현 범위를 Slice 1로 제한**하고, 에이전트가 전체 PRD를 한 번에 구현하려는 것을 막습니다.
+- Product baseline: `docs/PRD.md`
+- Implementation checklist: `docs/TODO.md`
+- Execution order and checkbox ownership: this file
 
-## 에이전트에게 요구할 것
+Each checkbox in `docs/TODO.md` has a stable ID. This plan assigns each TODO ID to exactly one phase. ID ranges below are inclusive. Do not check a TODO item until the owning phase's verification criteria pass.
 
-```text
-Read docs/TODO.md and inspect the current codebase. Do not implement yet.
+## Phase Rules
 
-Produce an implementation plan for Slice 1 only:
-- server-owned /api/worries/publish
-- Firebase auth boundary
-- moderation/category preservation
-- Round 0 deliveryBatches/{batchId}
-- exactly 5 Round 0 deliveries
-- 4 matched + 1 random
-- transactionally maintained activeDeliveryCount
-- best-effort push + pushLogs
-- answer feed reads new deliveries with legacy letters fallback
-- tests for Slice 1 observable behavior
+- Complete phases in order.
+- A phase may only check TODO IDs that are fully implemented and verified by the end of that phase.
+- Transition rules are not final rules. Final legacy denial is completed only in Phase 16.
+- Runtime behavior and Firestore security are separate verification surfaces. Phase 1 removes runtime direct Firestore worry publication; Phase 2 proves rules deny direct client writes.
+- Phase 18 only closes final verification TODO IDs.
 
-Do not implement reply migration, pass, rematch, AI fallback, example worries, or UI tab restructuring.
-Preserve deep module guardrails.
-```
-
-## 통과 기준
+## Phase 0: Baseline Confirmation
 
-에이전트의 계획이 다음을 지키면 진행합니다.
+### Goal
 
-```text
-- App.tsx에 정책을 넣지 않음
-- browser Firestore write를 source-of-truth로 유지하지 않음
-- activeDeliveryCount를 Slice 1부터 transaction으로 처리
-- Round 0 deliveryBatches 생성 포함
-- tests 먼저 또는 같은 PR에서 추가
-```
+Confirm the starting point and planning artifacts before changing runtime behavior.
 
----
+### Work
 
-# Stage 1. Server-owned worry publication
+- Read `docs/PRD.md` and `docs/TODO.md`.
+- Confirm the documented current architecture mismatches still describe the codebase.
+- Confirm the TODO document is concrete, actionable, and does not claim implementation has already passed.
 
-## 대응 TODO
+### TODO IDs Completed In This Phase
 
-```text
-Slice 1: Server-owned worry publication
-```
+- TODO-0.1..TODO-0.9
+- TODO-8.1
+- TODO-12.1..TODO-12.7
 
-## 구현 범위
+### Verification Criteria
 
-가장 중요한 첫 vertical slice입니다.
+- The current codebase still has the documented legacy `letters`, client-write, rules, bot scheduling, and navigation mismatches.
+- `docs/TODO.md` remains a planning document, not a claim that tests pass.
+- No runtime code or Firestore rules are changed in this phase.
 
-구현해야 할 것:
+### Explicit Non-Goals / Deferred Work
 
-```text
-1. Firebase auth middleware
-2. POST /api/worries/publish
-3. moderation/category normalization
-4. moderationLogs 생성
-5. worries/{worryId} 생성
-6. deliveryBatches/{batchId} Round 0 생성
-7. deliveries/{deliveryId} 5개 생성
-8. 4 matched + 1 random recipient selection
-9. users/{uid}.activeDeliveryCount transaction increment
-10. push best-effort + pushLogs
-11. client publish wrapper
-12. answer feed가 new deliveries를 읽고 legacy letters fallback 유지
-13. Slice 1 tests
-```
-
-## 절대 하지 말아야 할 것
+- Do not mark target architecture, rules invariants, risk mitigations, or runtime behavior as complete in Phase 0.
 
-```text
-- reply migration
-- pass
-- rematch
-- AI fallback
-- example worries
-- bottom tab UI restructure
-- legacy letters 완전 삭제
-```
+## Phase 1: Server-Owned Worry Publication
 
-## 검토 포인트
+### Goal
 
-이 단계에서 가장 중요한 것은 “publish worry”가 더 이상 client-side Firestore write로 `letters`를 만들지 않는 것입니다. 단, legacy read fallback은 남겨도 됩니다.
-
-## 통과 기준
+Publish worries through a server endpoint and create the canonical Round 0 PRD data model while keeping legacy read fallback isolated.
 
-```text
-- publish 성공 시 worry 1개, Round 0 deliveryBatch 1개, delivery 5개 생성
-- delivery 5개는 4 matched + 1 random
-- selected recipient는 transaction 안에서 activeDeliveryCount < 10 재검증
-- recipient activeDeliveryCount가 정확히 +1
-- push 실패해도 core state rollback 없음
-- rejected moderation이면 worry/delivery/batch 미생성
-- App.tsx는 wrapper 호출만 하고 정책을 갖지 않음
-```
+### Work
 
----
+- Implement authenticated `POST /api/worries/publish`.
+- Create the auth middleware needed by this endpoint.
+- Move runtime worry publication out of client Firestore writes.
+- Validate worry content: trim, non-empty, max 1000.
+- Normalize moderation/category output and preserve raw/valid/invalid/matching categories.
+- Create one worry, one Round 0 delivery batch, exactly five deliveries, one moderation log, and best-effort push logs.
+- Use the strict 5-recipient policy: if fewer than 5 eligible human recipients exist, return a clear server error and write no partial worry, batch, delivery, counter, or push state.
+- Treat a missing `users/{uid}.deleted` field as not deleted for Phase 1 matching eligibility; exclude only `deleted === true` or an explicit final inactive/deleted marker.
+- Maintain `activeDeliveryCount` transactionally for initial recipients.
+- Add answer-feed read model for active PRD deliveries with an explicitly named legacy fallback.
 
-# Stage 2. Firestore rules first hardening
+### TODO IDs Completed In This Phase
 
-## 대응 TODO
+- TODO-1.1, TODO-1.11, TODO-1.23, TODO-1.26, TODO-1.31, TODO-1.32, TODO-1.33, TODO-1.43, TODO-1.61
+- TODO-2.15, TODO-2.20..TODO-2.27, TODO-2.33..TODO-2.37, TODO-2.57, TODO-2.62..TODO-2.66, TODO-2.70..TODO-2.72, TODO-2.75
+- TODO-3.1..TODO-3.10
+- TODO-4.1..TODO-4.16
+- TODO-5.1..TODO-5.11
+- TODO-6.1, TODO-6.3, TODO-6.4, TODO-6.5, TODO-6.8, TODO-6.9, TODO-6.10, TODO-6.18, TODO-6.20
+- TODO-8.2, TODO-8.3
+- TODO-9.1, TODO-9.4, TODO-9.5, TODO-9.8, TODO-9.9, TODO-9.10, TODO-9.14, TODO-9.20, TODO-9.41, TODO-9.74
+- TODO-11.10, TODO-11.13
 
-```text
-Slice 2: Firestore rules first hardening
-```
+### Verification Criteria
 
-## 구현 범위
+- Happy path creates one worry, one Round 0 batch, and five delivery docs with 4 matched plus 1 random recipient.
+- Fewer than 5 eligible human recipients fails with a clear server error and creates no partial worry, batch, delivery, counter, or push state.
+- Rejected moderation creates a moderation log and no worry, batch, or deliveries.
+- Selected recipients are rechecked inside the transaction with `activeDeliveryCount < 10`, and each selected recipient is incremented exactly once.
+- Runtime app code no longer publishes PRD worries by writing `letters` or PRD source-of-truth collections directly from the browser.
+- Push failures create/log a warning path and do not roll back the core publish transaction.
+- Recipient can see an assigned delivery without granting push permission.
 
-Stage 1에서 새 source-of-truth가 생겼으므로, 이제 클라이언트가 직접 PRD collection을 쓰지 못하도록 막습니다.
+### Explicit Non-Goals / Deferred Work
 
-구현해야 할 것:
+- Firestore rules denial for direct client writes is Phase 2.
+- Replies, read state, pass, feedback, rematch, AI fallback, examples, account deletion UI, admin hiding, final tabs, and legacy removal are deferred.
 
-```text
-1. worries client write deny
-2. deliveries client write deny
-3. deliveryBatches client write deny
-4. moderationLogs / pushLogs client read-write deny
-5. users/{uid}.activeDeliveryCount client write deny
-6. letters delete deny
-7. letters type == worry client create deny
-8. users read/write narrow
-9. Firestore rules tests
-```
+## Phase 2: Transition Firestore Rules Hardening
 
-## 통과 기준
+### Goal
 
-```text
-- 클라이언트가 worries/deliveries/deliveryBatches 직접 생성 불가
-- 클라이언트가 activeDeliveryCount 조작 불가
-- 기존 앱의 최소 read path는 깨지지 않음
-- rules tests로 권한 경계가 고정됨
-```
-
-이 단계는 Stage 1 직후가 적절합니다. 나중으로 미루면 새 모델을 만들고도 기존 보안 구멍이 계속 남습니다.
-
----
-
-# Stage 3. Reply + My worries/mailbox migration
+Make the Phase 1 PRD collections server-owned at the rules layer while preserving only the minimum legacy access needed for migration.
 
-## 대응 TODO
+### Work
 
-```text
-Slice 3: Reply migration
-Slice 4: My worries and reply mailbox migration
-```
+- Add transition Firestore rules and rules tests for users, FCM tokens, worries, deliveries, initial delivery batches, moderation logs, push logs, and legacy letters.
+- Deny client create/update/delete on Phase 1 PRD source-of-truth collections.
+- Narrow `users/{uid}` profile access and forbid client writes to server-owned fields such as `activeDeliveryCount`.
+- Implement deleted-user rules helpers so a missing `deleted` field is allowed during transition and only explicit `deleted === true` is blocked.
 
-## 구현 범위
-
-이제 사용자가 받은 delivery에 답변할 수 있게 하고, 작성자가 그 답변을 볼 수 있게 합니다.
-
-구현해야 할 것:
-
-```text
-1. POST /api/deliveries/:deliveryId/replies
-2. reply moderation
-3. replies/{deliveryId} deterministic create
-4. delivery active -> answered
-5. activeDeliveryCount decrement exactly once
-6. worry humanReplyCount / hasHumanReply update
-7. best-effort new reply notification
-8. 기존 letters reply creation 제거 또는 비활성화
-9. my worries read model
-10. replies received read model
-11. replies written by me read model
-12. legacy letters reply fallback은 임시 유지
-13. tests
-```
+### TODO IDs Completed In This Phase
 
-## 왜 Slice 3과 4를 묶는가
+- TODO-1.15, TODO-1.46, TODO-1.47
+- TODO-5.12..TODO-5.18
+- TODO-6.17
+- TODO-7.1..TODO-7.6, TODO-7.10, TODO-7.14, TODO-7.16
+- TODO-9.31, TODO-9.35..TODO-9.38
+- TODO-11.1
 
-Reply creation만 만들고 mailbox/my worries를 바꾸지 않으면, 답변은 저장되지만 사용자가 확인하기 어렵습니다. 반대로 read model만 먼저 바꿔도 새 replies가 없습니다. 따라서 둘은 하나의 feature migration으로 묶는 편이 낫습니다.
+### Verification Criteria
 
-## 통과 기준
+- App still loads and uses the Phase 1 publish path.
+- Rules tests prove clients cannot directly create/update/delete `worries`, `deliveries`, initial `deliveryBatches`, `moderationLogs`, or `pushLogs`.
+- Rules tests prove users can write only narrow own profile/token fields and cannot mutate server-owned fields.
+- Rules tests prove missing `deleted` does not block a user during transition, while explicit `deleted === true` does.
 
-```text
-- delivery 하나당 reply 하나만 생성 가능
-- reply 생성과 delivery answered 전환이 transaction으로 묶임
-- activeDeliveryCount가 정확히 -1
-- 중복 submit/retry가 double decrement하지 않음
-- 작성자는 내 고민에서 새 reply를 볼 수 있음
-- 답변자는 내가 쓴 답변 목록에서 볼 수 있음
-- letters reply write path가 더 이상 핵심 경로가 아님
-```
-
----
-
-# Stage 4. Read / Pass / Feedback
-
-## 대응 TODO
-
-```text
-Slice 5: Read state
-Slice 6: Pass
-Slice 7: Feedback migration
-```
-
-## 구현 범위
-
-이 단계는 delivery/reply lifecycle을 완성합니다.
-
-### 4-1. Read state
-
-```text
-1. POST /api/deliveries/:deliveryId/read
-2. POST /api/worries/:worryId/replies/read
-3. delivery.readAt
-4. reply.readByAuthorAt
-5. answer tab unread emphasis
-6. my worries unread reply emphasis
-```
-
-### 4-2. Pass
-
-```text
-1. POST /api/deliveries/:deliveryId/pass
-2. delivery active -> passed
-3. activeDeliveryCount decrement exactly once
-4. answer feed에서 제거
-5. same worry 재수신 방지
-```
-
-### 4-3. Feedback
-
-```text
-1. POST /api/replies/:replyId/feedback
-2. feedbacks/{replyId} deterministic create
-3. like/dislike immutable
-4. helpedCount transaction
-5. AI like excluded from helpedCount
-6. dislike hides reply from publisher view
-7. like comment visible to replier
-8. dislike comment admin-only
-9. no comment push
-10. like push only
-```
+### Explicit Non-Goals / Deferred Work
 
-## 왜 이 셋을 같은 단계로 묶는가
+- Reply, feedback, operational job, hidden/admin, and final `letters` rules are completed when those collections or behaviors become real.
 
-Read, pass, feedback은 모두 “답변 이후 사용자 interaction”입니다. 특히 feedback은 `helpedCount`와 matching 품질에 영향을 주므로 rematch/AI fallback보다 먼저 갖추는 게 맞습니다.
+## Phase 3: Server-Owned Reply Publication
 
-## 통과 기준
+### Goal
 
-```text
-- read state는 상대에게 노출되지 않음
-- pass는 activeDeliveryCount를 정확히 -1
-- pass한 사용자는 같은 worry를 다시 받지 않음
-- feedback은 한 번만 가능
-- like만 helpedCount 증가
-- dislike는 publisher view에서 숨김
-- comment notification 제거
-- reply liked notification만 남음
-```
-
----
-
-# Stage 5. Rematch + AI fallback jobs
-
-## 대응 TODO
-
-```text
-Slice 8: Rematch job
-Slice 9: AI fallback
-```
-
-## 구현 범위
-
-이 단계는 서버 job 중심입니다. UI보다 job idempotency와 transaction correctness가 핵심입니다.
-
-### 5-1. Rematch job
-
-구현해야 할 것:
-
-```text
-1. POST /api/internal/rematch-due-deliveries
-2. internal auth
-3. jobLocks
-4. rematchRuns
-5. deliveryBatches lineage
-6. Round 0 -> Round 1 -> Round 2
-7. No Round 3
-8. sourceBatchId/sourceBatchRound
-9. PRD 8.5 random-slot replacement
-10. existing active deliveries remain answerable
-11. no branching rematch tree
-12. total human delivery count <= 15
-13. selected new recipients activeDeliveryCount < 10 transaction check
-14. new recipients activeDeliveryCount increment
-```
-
-### 5-2. AI fallback
-
-구현해야 할 것:
-
-```text
-1. POST /api/internal/create-ai-fallbacks
-2. 24h condition
-3. human delivery limit exhausted
-4. zero human replies
-5. disliked human replies still count as human replies
-6. existing active deliveries do not need to expire
-7. one AI reply per worry
-8. AI reply moderation before save
-9. notify author
-```
-
-## 왜 rematch 다음 AI인가
-
-AI fallback 조건이 rematch 결과에 의존합니다. 인간 delivery 15개를 모두 소진했고, 인간 reply가 0개일 때만 AI fallback이 가능합니다. 따라서 rematch가 먼저입니다.
-
-## 통과 기준
-
-```text
-- Round 1은 Round 0 source
-- Round 2는 Round 1 source
-- Round 3 없음
-- historical earlier batches가 독립 branch 생성하지 않음
-- source batch random recipient 답변 여부에 따라 random replacement 결정
-- 기존 active delivery는 계속 answerable
-- AI fallback은 late human reply가 있으면 생성되지 않음
-```
-
----
-
-# Stage 6. Example worries
-
-## 대응 TODO
-
-```text
-Slice 10: Example worries
-```
-
-## 구현 범위
-
-온보딩 직후 예제 고민을 생성합니다. 이 단계는 real delivery/reply/feedback 구조가 안정화된 뒤 해야 합니다.
-
-구현해야 할 것:
-
-```text
-1. exampleWorrySeeds
-2. onboarding 완료 hook/API
-3. 최대 5개 생성
-4. 선택 interests 기반 seed 선택
-5. created once
-6. answer feed에는 실제 고민처럼 표시
-7. UI에 example label 없음
-8. example reply도 moderation 적용
-9. reply 후 5~15분 delayed like
-10. no auto comment
-11. helpedCount 증가
-12. example feedback job
-```
-
-## 통과 기준
-
-```text
-- 신규 유저 온보딩 후 최대 5개 예제 delivery 생성
-- 같은 유저에게 중복 생성되지 않음
-- 관심 분야 수보다 많이 생성하지 않음
-- 예제 답변도 일반 답변처럼 처리
-- delayed like가 한 번만 발생
-```
-
----
-
-# Stage 7. UI navigation / validation-copy / notifications
-
-## 대응 TODO
-
-```text
-Slice 11: UI navigation PRD alignment
-Slice 12: Input validation and copy
-Slice 13: Notifications
-```
-
-## 구현 범위
-
-서버/데이터 모델이 안정화된 뒤 사용자-facing 구조를 PRD에 맞춥니다.
-
-### 7-1. UI navigation
-
-```text
-1. 첫 화면 답변하기
-2. 하단 탭: 답변하기 / 나의 고민 / 마이페이지
-3. 고민 작성은 나의 고민에서 시작
-4. inbox/settings/home 개념 분해
-5. 마이페이지 More menu
-6. 공개 게시판처럼 보이는 요소 제거
-```
-
-### 7-2. Validation/copy
+Create exactly one moderated reply per delivery through a server endpoint.
 
-```text
-1. common content validator
-2. trim non-empty
-3. max 1000
-4. min 10 제거
-5. moderation reason별 message
-6. high-risk help message
-7. moderation 실패 후 draft 유지
-```
-
-### 7-3. Notifications
-
-```text
-1. notification service 추출
-2. PRD notification kinds only
-   - new worry
-   - new reply
-   - reply liked
-3. comment notification 제거
-4. dislike notification 없음
-5. invalid token cleanup
-6. pushLogs durable
-7. foreground duplication policy
-```
-
-## 왜 UI를 이 시점에 하는가
-
-UI부터 하면 잘못된 legacy data flow에 맞춰 화면을 다시 짜게 됩니다. 서버 model/read model이 잡힌 뒤 UI를 맞추는 편이 덜 위험합니다.
-
-## 통과 기준
-
-```text
-- PRD 탭 구조와 진입점이 맞음
-- 공개 feed처럼 보이는 요소 없음
-- 모든 입력 정책이 통일됨
-- notification 종류가 PRD 3종으로 제한됨
-```
-
----
-
-# Stage 8. Account deletion / Admin hiding / logs
-
-## 대응 TODO
-
-```text
-Slice 14: Account deletion and inactive users
-Slice 15: Admin hiding and internal logs
-```
-
-## 구현 범위
-
-운영 정책과 안전장치를 완성합니다.
-
-### 8-1. Account deletion
-
-```text
-1. POST /api/users/me/delete
-2. soft delete only
-3. push token cleanup
-4. deleted user future activity block
-5. matching exclusion
-6. existing content preserved
-```
-
-### 8-2. Admin hiding/logs
-
-```text
-1. hidden fields on worries/replies/deliveries
-2. read models exclude hidden
-3. active delivery hidden이면 activeDeliveryCount decrement exactly once
-4. moderation/matching/pass/rematch/push/AI/example logs
-5. DB-manual hiding support
-```
-
-## 통과 기준
-
-```text
-- 탈퇴자는 publish/reply/pass/feedback 불가
-- 탈퇴자 기존 content는 유지
-- 탈퇴자 matching/push 대상 제외
-- admin hidden content가 모든 read model에서 제외
-- logs가 주요 server action에 남음
-```
-
----
-
-# Stage 9. Legacy removal / Docs & ops
-
-## 대응 TODO
-
-```text
-Slice 16: Legacy letters removal
-Slice 17: Documentation and operational setup
-```
-
-## 구현 범위
-
-최종 정리 단계입니다. 이 단계 전까지는 legacy fallback이 일부 남아 있을 수 있지만, 여기서 제거합니다.
-
-### 9-1. Legacy removal
-
-```text
-1. receiverId === 'public' 제거
-2. deleteLetter 제거
-3. letters worry fallback 제거
-4. letters reply fallback 제거
-5. old bot schedule endpoint 제거
-6. old comment notification endpoint 제거
-7. client Firestore adapters that create/update letters 제거
-8. final rules deny letters
-9. rg "letters" 검증
-```
-
-### 9-2. Documentation / ops
-
-```text
-1. docs/matching_algorithm.md 업데이트
-2. README 또는 docs/ops.md 업데이트
-3. env vars 정리
-4. internal job 실행 방식 문서화
-5. Firebase emulator/rules test command
-6. deploy notes
-```
-
-## 통과 기준
-
-```text
-- runtime에서 letters 의존 제거
-- public worry feed 없음
-- old bot schedule 없음
-- rules에서 letters 차단
-- 새 개발자가 ops docs 보고 실행/배포 가능
-```
-
----
-
-## 최종 실행 방식
-
-각 stage마다 에이전트에게 아래 형식으로 요구하는 게 좋습니다.
-
-```text
-Implement only Stage N / Slice X from docs/TODO.md.
-
-Before coding:
-1. Inspect the relevant files.
-2. Produce a short implementation plan.
-3. Identify deletion test.
-4. Identify tests to add/update.
-
-During implementation:
-- Keep policy out of App.tsx.
-- Do not add shallow adapters.
-- Add tests for observable PRD behavior.
-- Preserve legacy compatibility only where TODO explicitly allows it.
-
-After implementation:
-- Report files changed.
-- Report tests run.
-- Report any TODO item intentionally deferred.
-- Report any behavior that differs from docs/TODO.md.
-```
-
----
-
-## 첫 번째로 시킬 작업
-
-바로 구현으로 들어가려면 **Stage 1 / Slice 1만** 시키면 됩니다.
-
-```text
-Implement only Slice 1 from docs/TODO.md.
-
-Focus on:
-- server-owned /api/worries/publish
-- Firebase auth boundary
-- moderation/category preservation
-- Round 0 deliveryBatches/{batchId}
-- exactly 5 Round 0 deliveries
-- 4 matched + 1 random
-- transactionally maintained activeDeliveryCount
-- best-effort push and pushLogs
-- answer feed reads new deliveries with legacy letters fallback
-- tests for Slice 1 observable behavior
-
-Do not implement reply migration, pass, rematch, AI fallback, example worries, UI tab restructuring, or legacy letters removal.
-```
-
-이렇게 진행하면 됩니다.
+### Work
+
+- Implement `POST /api/deliveries/:deliveryId/replies`.
+- The API path uses `deliveryId`; the stored reply document ID is deterministic from `deliveryId`, usually `replies/{deliveryId}`; the response may still return `replyId`.
+- Validate and moderate replies before saving.
+- In one transaction, create the moderation log and reply, set delivery status to `answered`, update worry human reply state, and decrement `activeDeliveryCount` exactly once.
+- Add new-reply notification support and reply Firestore rules.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.2, TODO-1.16, TODO-1.24, TODO-1.27, TODO-1.34, TODO-1.36, TODO-1.44, TODO-1.48, TODO-1.62
+- TODO-2.38, TODO-2.39, TODO-2.45..TODO-2.49, TODO-2.58
+- TODO-3.25..TODO-3.31
+- TODO-4.17..TODO-4.21
+- TODO-5.19..TODO-5.28
+- TODO-6.11
+- TODO-7.7
+- TODO-9.11, TODO-9.13, TODO-9.15, TODO-9.21, TODO-9.32, TODO-9.42
+
+### Verification Criteria
+
+- A recipient can reply once to an active delivery.
+- Repeating the same submitted content can return the existing deterministic reply success; submitting different content for the same delivery returns `409`.
+- Answered or hidden deliveries cannot receive a new reply.
+- No runtime PRD reply path creates a `letters` reply.
+- Rules tests prove the browser cannot create or mutate replies directly.
+
+### Explicit Non-Goals / Deferred Work
+
+- My-worries mailbox read model is Phase 4.
+- Feedback and dislike-hidden behavior are Phase 7.
+
+## Phase 4: My Worries and Reply Mailbox Read Models
+
+### Goal
+
+Replace legacy inbox/mailbox concepts with PRD read models for authored worries and replies.
+
+### Work
+
+- Implement `useMyWorries`, `useRepliesForWorry`, and `useMyGivenReplies`.
+- Read authored worries from `worries` by `authorUid`.
+- Read replies received for those worries from `replies` by `worryId`.
+- Read replies written by the signed-in user from `replies` by `replierUid`.
+- Keep any legacy reply fallback isolated behind an explicitly named adapter.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.12, TODO-1.63
+- TODO-4.27..TODO-4.30, TODO-4.34
+- TODO-5.29..TODO-5.37
+- TODO-9.46, TODO-9.48
+
+### Verification Criteria
+
+- The worry author can see their authored worries and replies to those worries.
+- A replier can see their own written replies.
+- Removing only the legacy fallback does not hide newly-created PRD replies.
+
+### Explicit Non-Goals / Deferred Work
+
+- Unread emphasis is Phase 5.
+- Like/comment/dislike visibility semantics are Phase 7.
+- Admin hidden filtering is Phase 15.
+- Bottom tab redesign is Phase 11.
+
+## Phase 5: Private Read State
+
+### Goal
+
+Add private read markers and unread emphasis for deliveries and received replies.
+
+### Work
+
+- Implement `POST /api/deliveries/:deliveryId/read`.
+- Implement `POST /api/worries/:worryId/replies/read`.
+- Store `deliveries.readAt` and `replies.readByAuthorAt` only through server endpoints.
+- Update answer feed and my-worries UI/read hooks to emphasize unread items for the current user only.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.3
+- TODO-2.28, TODO-2.40
+- TODO-3.11..TODO-3.17, TODO-3.32..TODO-3.38
+- TODO-4.31
+- TODO-5.38..TODO-5.47
+- TODO-6.15
+- TODO-9.22, TODO-9.47, TODO-9.50, TODO-9.71
+
+### Verification Criteria
+
+- Opening a delivered worry clears only the recipient's unread emphasis.
+- Opening replies clears only the worry author's unread reply emphasis.
+- Read fields are not exposed as public read receipts to the other party.
+- Clients cannot set read fields directly.
+
+### Explicit Non-Goals / Deferred Work
+
+- Read state does not affect answerability.
+- Read state does not create rematch, feedback, or notification behavior.
+
+## Phase 6: Pass Delivery and Immediate Replacement
+
+### Goal
+
+Allow recipients to pass active deliveries and synchronously attempt one replacement delivery for the same worry.
+
+This is the implementation interpretation of the PRD statement that passed worries are rematched: `POST /api/deliveries/:deliveryId/pass` records pass state and immediately attempts replacement in the same API flow. Phase 8 does not own pass replacement delivery creation.
+
+### Work
+
+- Implement `POST /api/deliveries/:deliveryId/pass`.
+- Transition active deliveries to `passed`.
+- Decrement the passer's `activeDeliveryCount` exactly once.
+- Remove passed deliveries from the recipient's answer feed.
+- Record enough state so the same user is excluded from future deliveries for the same worry.
+- Synchronously select one eligible replacement recipient when possible.
+- Create one active replacement delivery with metadata that distinguishes it from Round 1/Round 2 additive rematch.
+- Increment the replacement recipient's `activeDeliveryCount` exactly once when replacement succeeds.
+- Attempt a new-worry push notification to the replacement recipient after core state is committed; push failure must not roll back pass or replacement creation.
+- If no eligible replacement recipient exists, keep the original delivery passed, create no duplicate/self-redelivery, log the shortfall, and still return pass success.
+- Do not notify the author and do not expose a pass signal to the author.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.4, TODO-1.39, TODO-1.65, TODO-1.71
+- TODO-2.29, TODO-2.80
+- TODO-3.18..TODO-3.24
+- TODO-4.35, TODO-4.37, TODO-4.39, TODO-4.41, TODO-4.43
+- TODO-5.48..TODO-5.57
+- TODO-6.12, TODO-6.23, TODO-6.24
+- TODO-7.17
+- TODO-9.16, TODO-9.23, TODO-9.43, TODO-9.92, TODO-9.97..TODO-9.101
+- TODO-11.3
+
+### Verification Criteria
+
+- Passing an active delivery removes it from the feed.
+- Passing someone else's delivery fails.
+- Answered or hidden deliveries return conflict.
+- Repeating pass returns the recorded replacement result and does not double-decrement, double-increment, or duplicate replacement deliveries.
+- Replacement delivery is created immediately when an eligible user exists.
+- No replacement delivery is created when no eligible user exists; the shortfall is logged.
+- Replacement excludes the passer, author, previous recipients, previous passers, repliers, deleted/inactive users, and users excluded by normal matching policy.
+- Passer counter decrements exactly once; replacement recipient counter increments exactly once only when replacement succeeds.
+- Replacement-recipient push failure does not roll back pass or replacement creation.
+- Clients cannot read or write pass replacement attempt records directly.
+- The author receives no pass signal.
+
+### Explicit Non-Goals / Deferred Work
+
+- Round 1/Round 2 additive rematch batches are Phase 8. Immediate pass replacement must not be encoded as those batches unless a separate replacement batch type is explicitly defined.
+- Invalid token cleanup and durable push log hardening remain in Phase 13.
+
+## Phase 7: Feedback Migration
+
+### Goal
+
+Implement deterministic, immutable feedback with correct helpedCount, visibility, and notification semantics.
+
+### Work
+
+- Implement `POST /api/replies/:replyId/feedback`.
+- Store feedback in deterministic `feedbacks/{replyId}` or an equivalent deterministic document keyed by reply ID.
+- Validate and moderate feedback comments before saving.
+- Enforce immutable like/dislike choice.
+- Apply the explicit comment policy: like choice is immutable, but a missing like comment may be added later once; dislike choice is immutable and cannot receive a later comment after the publisher view hides the reply.
+- Increment helpedCount exactly once for eligible human and example likes; AI likes do not increment helpedCount.
+- Hide disliked replies from the publisher view without deleting replies.
+- Expose likes and like comments to repliers; do not expose dislikes or dislike comments to repliers.
+- Send reply-liked push where PRD allows it; comments and dislikes do not trigger push.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.5, TODO-1.13, TODO-1.17, TODO-1.25, TODO-1.28, TODO-1.37, TODO-1.38, TODO-1.45, TODO-1.49, TODO-1.64
+- TODO-2.41, TODO-2.50..TODO-2.56, TODO-2.59
+- TODO-3.39..TODO-3.45
+- TODO-4.22..TODO-4.26, TODO-4.32
+- TODO-5.58..TODO-5.66
+- TODO-7.8
+- TODO-9.7, TODO-9.12, TODO-9.18, TODO-9.24, TODO-9.33, TODO-9.39, TODO-9.49
+
+### Verification Criteria
+
+- Same feedback repeat returns existing success; different type returns `409`.
+- Like increments helpedCount exactly once for eligible human/example replies.
+- AI reply like does not increment helpedCount.
+- Dislike hides the reply from publisher views without deleting it.
+- Repliers cannot read dislike feedback or comments.
+- Comment pushes are not sent; like push is sent where PRD allows; push failure does not roll back feedback.
+
+### Explicit Non-Goals / Deferred Work
+
+- AI reply creation is Phase 9.
+- Example worry creation is Phase 10.
+
+## Phase 8: Additive Rematch Job
+
+### Goal
+
+Create additive human delivery batches after 8-hour timeouts without expiring existing active deliveries. This phase is the scheduled Round 0 -> Round 1 -> Round 2 rematch flow, not the immediate pass replacement flow.
+
+### Work
+
+- Implement `POST /api/internal/rematch-due-deliveries` with internal auth.
+- Add job locks and rematch run records.
+- Maintain linear batch lineage: Round 0 -> Round 1 -> Round 2.
+- Use the previous round as the source batch and apply PRD 8.5 random-slot replacement.
+- Do not retroactively fill pass slots as the job's primary responsibility; immediate pass replacement is handled in Phase 6.
+- Exclude author, deleted/inactive users, users at active delivery limit, all previous recipients, passed users, and answered users. Missing `deleted` is not deleted until Phase 14 writes the final deletion fields.
+- Never exceed 15 human deliveries.
+- Increment activeDeliveryCount for newly created recipients exactly once.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.6, TODO-1.18, TODO-1.35, TODO-1.40
+- TODO-2.16, TODO-2.30, TODO-2.73, TODO-2.74, TODO-2.76
+- TODO-3.53
+- TODO-4.36, TODO-4.38, TODO-4.40, TODO-4.42, TODO-4.44
+- TODO-5.67..TODO-5.77
+- TODO-6.2, TODO-6.6, TODO-6.7, TODO-6.13, TODO-6.16, TODO-6.19, TODO-6.22
+- TODO-7.11
+- TODO-9.6, TODO-9.28, TODO-9.34, TODO-9.45, TODO-9.51..TODO-9.69, TODO-9.72, TODO-9.73, TODO-9.76, TODO-9.93
+- TODO-11.2, TODO-11.4, TODO-11.6
+
+### Verification Criteria
+
+- Round 1 is created from Round 0 after 8 hours.
+- Round 2 is created from Round 1 after another 8 hours.
+- No Round 3 is created.
+- Historical earlier batches do not independently spawn branches.
+- Existing active deliveries remain answerable after rematch.
+- Total human deliveries never exceed 15.
+- Running the job twice does not duplicate deliveries.
+- Pass replacement behavior is already covered by Phase 6 and is not required for Phase 8 to pass.
+
+### Explicit Non-Goals / Deferred Work
+
+- AI fallback is Phase 9 and must not be created by the rematch job.
+
+## Phase 9: AI Fallback
+
+### Goal
+
+Create one moderated AI reply only under the exact PRD no-human-reply condition.
+
+### Work
+
+- Implement `POST /api/internal/create-ai-fallbacks` with internal auth.
+- Create at most one AI reply after 24 hours, human delivery cap exhausted, zero human replies, and no existing AI reply.
+- Treat disliked human replies as human replies.
+- Recheck current reply state at job execution time.
+- Moderate AI reply before saving and notify the author best-effort.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.7, TODO-1.19, TODO-1.29, TODO-1.41, TODO-1.66
+- TODO-2.17, TODO-2.42, TODO-2.60, TODO-2.77
+- TODO-3.54
+- TODO-4.45..TODO-4.49
+- TODO-5.78..TODO-5.88
+- TODO-7.12
+- TODO-9.29, TODO-9.77..TODO-9.79, TODO-9.94
+- TODO-11.7
+
+### Verification Criteria
+
+- A qualifying worry receives exactly one AI reply.
+- Any human reply blocks fallback, including a reply submitted after 8 hours by an original recipient.
+- AI fallback does not require existing active deliveries to expire.
+
+### Explicit Non-Goals / Deferred Work
+
+- Professional counseling copy is outside MVP unless the PRD changes.
+
+## Phase 10: Example Worries
+
+### Goal
+
+Create onboarding example deliveries once per user and delayed example likes.
+
+### Work
+
+- Add example seed storage and example creation for newly onboarded users.
+- Create up to five example deliveries once, selected by interests.
+- Do not label examples in the UI.
+- Moderate example replies.
+- Add delayed example feedback jobs: auto-like after 5-15 minutes, no auto comment, helpedCount increases.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.8, TODO-1.20, TODO-1.30, TODO-1.42, TODO-1.67
+- TODO-2.2, TODO-2.18, TODO-2.31, TODO-2.43, TODO-2.61, TODO-2.78, TODO-2.79
+- TODO-3.55, TODO-3.56, TODO-3.57
+- TODO-4.50..TODO-4.54
+- TODO-5.89..TODO-5.96
+- TODO-7.13
+- TODO-9.30, TODO-9.80, TODO-9.81
+- TODO-11.5
+
+### Verification Criteria
+
+- A new onboarded user receives at most five example deliveries once.
+- Example selection uses interests and does not create later additions after interest edits.
+- Example feedback creates one delayed like, no comment, and increments helpedCount.
+
+### Explicit Non-Goals / Deferred Work
+
+- No admin seed UI is introduced.
+
+## Phase 11: PRD Navigation and App Composition
+
+### Goal
+
+Make the user-facing app shell match the PRD navigation and remove public-board impressions.
+
+### Work
+
+- Make `답변하기` the first authenticated screen.
+- Use bottom tabs: `답변하기`, `나의 고민`, `마이페이지`.
+- Start worry writing from `나의 고민`.
+- Move More actions into My Page: notification guide/settings, usage guide, policy, logout, delete account entry.
+- Keep server policy out of `App.tsx`.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.53..TODO-1.57
+- TODO-5.97..TODO-5.102
+- TODO-9.82..TODO-9.84, TODO-9.86..TODO-9.88
+- TODO-11.11
+
+### Verification Criteria
+
+- Authenticated users land on `답변하기`.
+- The three PRD bottom tabs are the only bottom tabs.
+- No screen looks like a public board.
+- More actions live in My Page.
+
+### Explicit Non-Goals / Deferred Work
+
+- Visual brand overhaul is not part of this phase.
+- Actual account deletion endpoint is Phase 14; this phase only places the entry point if needed.
+
+## Phase 12: Validation Copy and Draft Preservation
+
+### Goal
+
+Polish content validation UX and moderation copy after server validation already exists on write endpoints.
+
+### Work
+
+- Centralize duplicated validation UI around the shared server policy.
+- Ensure moderation failure reason messages match PRD reason codes.
+- Add high-risk help message behavior.
+- Preserve drafts on validation/moderation failure.
+
+### TODO IDs Completed In This Phase
+
+- TODO-5.103..TODO-5.109
+- TODO-9.2, TODO-9.3, TODO-9.85, TODO-9.89..TODO-9.91
+
+### Verification Criteria
+
+- Worry, reply, and feedback comment forms all preserve draft on validation or moderation failure.
+- Reason/help copy is consistent across write surfaces.
+- This phase does not introduce the first server validation for any endpoint; endpoint validation was implemented in Phases 1, 3, and 7.
+
+### Explicit Non-Goals / Deferred Work
+
+- Rich text is not part of the MVP.
+
+## Phase 13: Notification Hardening
+
+### Goal
+
+Consolidate notification behavior after all PRD notification-producing paths exist.
+
+### Work
+
+- Extract or harden notification service code used by new worry, new reply, and reply liked.
+- Ensure durable push log status coverage.
+- Clean invalid tokens.
+- Remove or disable non-PRD notification paths such as comment notifications.
+- Document foreground duplication policy where needed.
+
+### TODO IDs Completed In This Phase
+
+- TODO-2.3, TODO-2.11..TODO-2.14, TODO-2.67..TODO-2.69
+- TODO-5.110..TODO-5.118
+- TODO-9.95
+- TODO-11.9
+
+### Verification Criteria
+
+- Supported notification kinds are only new worry, new reply, and reply liked.
+- Invalid tokens are deleted or marked according to the TODO policy.
+- Comment and dislike notifications are absent.
+- Push failure never rolls back publication, reply, or feedback.
+
+### Explicit Non-Goals / Deferred Work
+
+- Notification settings beyond the PRD are not introduced.
+
+## Phase 14: Account Deletion and Deleted-User Blocking
+
+### Goal
+
+Implement soft account deletion and complete deleted-user blocking across user endpoints.
+
+### Work
+
+- Implement `POST /api/users/me/delete`.
+- Soft delete users and keep existing content.
+- Remove push tokens.
+- Exclude deleted users from matching and notifications.
+- Ensure deleted users cannot publish, reply, mark read, pass, or give feedback.
+- Confirm the compatibility rule used by earlier phases: before this phase, missing `deleted` means not deleted; after this phase, `deleted === true` is the explicit block for publish/reply/read/pass/feedback actions and matching.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.9, TODO-1.22, TODO-1.68
+- TODO-2.1, TODO-2.4..TODO-2.10
+- TODO-3.46..TODO-3.52
+- TODO-4.55..TODO-4.59
+- TODO-5.119..TODO-5.127
+- TODO-9.19, TODO-9.25, TODO-9.26, TODO-9.96
+
+### Verification Criteria
+
+- Deletion is idempotent.
+- Existing authored content and replies remain visible according to PRD read rules.
+- Deleted users cannot publish, reply, mark read, pass, or give feedback.
+- Deleted users are excluded from matching and notification targets.
+
+### Explicit Non-Goals / Deferred Work
+
+- Physical data erasure and full privacy export/delete workflows are outside MVP.
+
+## Phase 15: Admin Hiding and Internal Audit Coverage
+
+### Goal
+
+Support DB-manual hiding and centralized hidden-content filtering without adding an admin UI.
+
+### Work
+
+- Add and honor hidden fields on worries, deliveries, and replies.
+- Centralize hidden filtering in read model policies.
+- Decrement `activeDeliveryCount` exactly once when an active delivery is hidden.
+- Ensure major paths have operational audit coverage.
+- Add hidden/admin-only rules where possible.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.50
+- TODO-2.19, TODO-2.32, TODO-2.44
+- TODO-4.33
+- TODO-5.128..TODO-5.136
+- TODO-6.14, TODO-6.21
+- TODO-7.9
+- TODO-9.17, TODO-9.44, TODO-9.70, TODO-9.75
+
+### Verification Criteria
+
+- Hidden worries, deliveries, and replies disappear from user-visible read models.
+- Hiding an active delivery decrements `activeDeliveryCount` exactly once.
+- Hidden filtering is centralized and not scattered through view markup.
+- No admin UI is introduced.
+
+### Explicit Non-Goals / Deferred Work
+
+- Full admin dashboard is not part of the MVP.
+
+## Phase 16: Legacy `letters` Runtime Removal
+
+### Goal
+
+Remove runtime dependency on the legacy `letters` data model and close final rules access.
+
+### Work
+
+- Remove `receiverId === 'public'`.
+- Remove `deleteLetter`.
+- Remove `letters` worry and reply fallbacks.
+- Remove old bot schedule endpoint and old comment notification endpoint.
+- Remove client Firestore adapters that create/update `letters`.
+- Deny all runtime access to `letters` in final rules, or remove the match block.
+- Verify runtime code no longer depends on `letters`.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.10, TODO-1.14, TODO-1.21, TODO-1.51
+- TODO-5.137..TODO-5.143
+- TODO-7.15
+- TODO-8.4..TODO-8.6
+- TODO-9.40
+- TODO-11.8
+
+### Verification Criteria
+
+- Runtime `rg "letters"` shows no application dependency, allowing archival/migration documentation mentions only.
+- The app works with only PRD collections.
+- Final rules deny legacy `letters` runtime reads/writes/deletes.
+- Old bot schedule and old comment notification endpoints are removed.
+
+### Explicit Non-Goals / Deferred Work
+
+- Historical data migration is not required if the reset/archive strategy is chosen.
+
+## Phase 17: Operational Documentation and Final Guardrail Audit
+
+### Goal
+
+Make operational docs match the final PRD implementation and close long-running architecture guardrails.
+
+### Work
+
+- Update matching algorithm documentation.
+- Update README or create/update `docs/ops.md`.
+- Document Firebase Admin, moderation provider, internal job secret, env vars, local test commands, emulator/rules test setup, and deploy notes for scheduled jobs.
+- Audit that no shallow adapter/interface was added merely because a call crossed a file boundary.
+- Audit that introduced seams hide real dependencies, enable deterministic tests, or own meaningful policy boundaries.
+- Audit that tests focus on observable PRD behavior and each slice has a deletion test or equivalent behavior-removal check.
+
+### TODO IDs Completed In This Phase
+
+- TODO-1.52, TODO-1.58..TODO-1.60, TODO-1.69, TODO-1.70
+- TODO-5.144..TODO-5.148
+- TODO-9.27
+- TODO-11.12
+
+### Verification Criteria
+
+- A new developer can run, test, and deploy using `docs/PRD.md`, code, `docs/TODO.md`, `docs/phase.md`, and ops docs.
+- Docs mention all internal endpoints and required environment variables.
+- Architecture guardrail audit has no unresolved shallow-wrapper or implementation-detail-test issues.
+
+### Explicit Non-Goals / Deferred Work
+
+- Broad product documentation beyond implementation and operations is not required.
+
+## Phase 18: Final Verification
+
+### Goal
+
+Run the final verification checklist after all implementation phases are complete.
+
+### Work
+
+- Run full automated checks.
+- Run final manual happy, rejection, rematch, AI fallback, notification, deletion, security, and legacy-removal paths.
+
+### TODO IDs Completed In This Phase
+
+- TODO-10.1..TODO-10.9
+
+### Verification Criteria
+
+- `npm test` passes.
+- `npm run lint` passes.
+- `npm run build` passes.
+- Firestore rules tests pass.
+- Manual happy, rejection, pass/rematch/AI, security, and legacy-removal checks pass.
+
+### Explicit Non-Goals / Deferred Work
+
+- This phase does not own implementation work. The coverage matrix below assigns every TODO ID to a concrete phase.
+
+## TODO Coverage Matrix
+
+| Phase | TODO IDs |
+| --- | --- |
+| Phase 0 | TODO-0.1..TODO-0.9; TODO-8.1; TODO-12.1..TODO-12.7 |
+| Phase 1 | TODO-1.1; TODO-1.11; TODO-1.23; TODO-1.26; TODO-1.31..TODO-1.33; TODO-1.43; TODO-1.61; TODO-2.15; TODO-2.20..TODO-2.27; TODO-2.33..TODO-2.37; TODO-2.57; TODO-2.62..TODO-2.66; TODO-2.70..TODO-2.72; TODO-2.75; TODO-3.1..TODO-3.10; TODO-4.1..TODO-4.16; TODO-5.1..TODO-5.11; TODO-6.1; TODO-6.3..TODO-6.5; TODO-6.8..TODO-6.10; TODO-6.18; TODO-6.20; TODO-8.2..TODO-8.3; TODO-9.1; TODO-9.4..TODO-9.5; TODO-9.8..TODO-9.10; TODO-9.14; TODO-9.20; TODO-9.41; TODO-9.74; TODO-11.10; TODO-11.13 |
+| Phase 2 | TODO-1.15; TODO-1.46..TODO-1.47; TODO-5.12..TODO-5.18; TODO-6.17; TODO-7.1..TODO-7.6; TODO-7.10; TODO-7.14; TODO-7.16; TODO-9.31; TODO-9.35..TODO-9.38; TODO-11.1 |
+| Phase 3 | TODO-1.2; TODO-1.16; TODO-1.24; TODO-1.27; TODO-1.34; TODO-1.36; TODO-1.44; TODO-1.48; TODO-1.62; TODO-2.38..TODO-2.39; TODO-2.45..TODO-2.49; TODO-2.58; TODO-3.25..TODO-3.31; TODO-4.17..TODO-4.21; TODO-5.19..TODO-5.28; TODO-6.11; TODO-7.7; TODO-9.11; TODO-9.13; TODO-9.15; TODO-9.21; TODO-9.32; TODO-9.42 |
+| Phase 4 | TODO-1.12; TODO-1.63; TODO-4.27..TODO-4.30; TODO-4.34; TODO-5.29..TODO-5.37; TODO-9.46; TODO-9.48 |
+| Phase 5 | TODO-1.3; TODO-2.28; TODO-2.40; TODO-3.11..TODO-3.17; TODO-3.32..TODO-3.38; TODO-4.31; TODO-5.38..TODO-5.47; TODO-6.15; TODO-9.22; TODO-9.47; TODO-9.50; TODO-9.71 |
+| Phase 6 | TODO-1.4; TODO-1.39; TODO-1.65; TODO-1.71; TODO-2.29; TODO-2.80; TODO-3.18..TODO-3.24; TODO-4.35; TODO-4.37; TODO-4.39; TODO-4.41; TODO-4.43; TODO-5.48..TODO-5.57; TODO-6.12; TODO-6.23..TODO-6.24; TODO-7.17; TODO-9.16; TODO-9.23; TODO-9.43; TODO-9.92; TODO-9.97..TODO-9.101; TODO-11.3 |
+| Phase 7 | TODO-1.5; TODO-1.13; TODO-1.17; TODO-1.25; TODO-1.28; TODO-1.37..TODO-1.38; TODO-1.45; TODO-1.49; TODO-1.64; TODO-2.41; TODO-2.50..TODO-2.56; TODO-2.59; TODO-3.39..TODO-3.45; TODO-4.22..TODO-4.26; TODO-4.32; TODO-5.58..TODO-5.66; TODO-7.8; TODO-9.7; TODO-9.12; TODO-9.18; TODO-9.24; TODO-9.33; TODO-9.39; TODO-9.49 |
+| Phase 8 | TODO-1.6; TODO-1.18; TODO-1.35; TODO-1.40; TODO-2.16; TODO-2.30; TODO-2.73..TODO-2.74; TODO-2.76; TODO-3.53; TODO-4.36; TODO-4.38; TODO-4.40; TODO-4.42; TODO-4.44; TODO-5.67..TODO-5.77; TODO-6.2; TODO-6.6..TODO-6.7; TODO-6.13; TODO-6.16; TODO-6.19; TODO-6.22; TODO-7.11; TODO-9.6; TODO-9.28; TODO-9.34; TODO-9.45; TODO-9.51..TODO-9.69; TODO-9.72..TODO-9.73; TODO-9.76; TODO-9.93; TODO-11.2; TODO-11.4; TODO-11.6 |
+| Phase 9 | TODO-1.7; TODO-1.19; TODO-1.29; TODO-1.41; TODO-1.66; TODO-2.17; TODO-2.42; TODO-2.60; TODO-2.77; TODO-3.54; TODO-4.45..TODO-4.49; TODO-5.78..TODO-5.88; TODO-7.12; TODO-9.29; TODO-9.77..TODO-9.79; TODO-9.94; TODO-11.7 |
+| Phase 10 | TODO-1.8; TODO-1.20; TODO-1.30; TODO-1.42; TODO-1.67; TODO-2.2; TODO-2.18; TODO-2.31; TODO-2.43; TODO-2.61; TODO-2.78..TODO-2.79; TODO-3.55..TODO-3.57; TODO-4.50..TODO-4.54; TODO-5.89..TODO-5.96; TODO-7.13; TODO-9.30; TODO-9.80..TODO-9.81; TODO-11.5 |
+| Phase 11 | TODO-1.53..TODO-1.57; TODO-5.97..TODO-5.102; TODO-9.82..TODO-9.84; TODO-9.86..TODO-9.88; TODO-11.11 |
+| Phase 12 | TODO-5.103..TODO-5.109; TODO-9.2..TODO-9.3; TODO-9.85; TODO-9.89..TODO-9.91 |
+| Phase 13 | TODO-2.3; TODO-2.11..TODO-2.14; TODO-2.67..TODO-2.69; TODO-5.110..TODO-5.118; TODO-9.95; TODO-11.9 |
+| Phase 14 | TODO-1.9; TODO-1.22; TODO-1.68; TODO-2.1; TODO-2.4..TODO-2.10; TODO-3.46..TODO-3.52; TODO-4.55..TODO-4.59; TODO-5.119..TODO-5.127; TODO-9.19; TODO-9.25..TODO-9.26; TODO-9.96 |
+| Phase 15 | TODO-1.50; TODO-2.19; TODO-2.32; TODO-2.44; TODO-4.33; TODO-5.128..TODO-5.136; TODO-6.14; TODO-6.21; TODO-7.9; TODO-9.17; TODO-9.44; TODO-9.70; TODO-9.75 |
+| Phase 16 | TODO-1.10; TODO-1.14; TODO-1.21; TODO-1.51; TODO-5.137..TODO-5.143; TODO-7.15; TODO-8.4..TODO-8.6; TODO-9.40; TODO-11.8 |
+| Phase 17 | TODO-1.52; TODO-1.58..TODO-1.60; TODO-1.69..TODO-1.70; TODO-5.144..TODO-5.148; TODO-9.27; TODO-11.12 |
+| Phase 18 | TODO-10.1..TODO-10.9 |
