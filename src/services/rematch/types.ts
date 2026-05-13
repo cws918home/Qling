@@ -12,6 +12,7 @@ export type RematchSkipReason =
   | 'no_capacity'
   | 'no_unanswered_slots'
   | 'no_eligible_recipients'
+  | 'example_worry'
   | 'lock_busy'
   | 'dry_run';
 

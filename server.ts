@@ -21,6 +21,7 @@ import { registerPassRoutes } from "./src/server/passRoutes";
 import { registerFeedbackRoutes } from "./src/server/feedbackRoutes";
 import { registerRematchRoutes } from "./src/server/rematchRoutes";
 import { registerAiFallbackRoutes } from "./src/server/aiFallbackRoutes";
+import { registerExampleWorryRoutes } from "./src/server/exampleWorryRoutes";
 
 // Read client config to get database ID
 const clientConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
@@ -323,6 +324,10 @@ async function startServer() {
       db,
       messaging,
     });
+    registerExampleWorryRoutes(app, {
+      db,
+      auth: getAuth(),
+    });
   } else {
     app.post('/api/worries/publish', (_req, res) => {
       res.status(500).json({
@@ -379,6 +384,10 @@ async function startServer() {
     registerAiFallbackRoutes(app, {
       db: null,
       messaging: null,
+    });
+    registerExampleWorryRoutes(app, {
+      db: null,
+      auth: {} as never,
     });
   }
 

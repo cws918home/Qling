@@ -7,6 +7,7 @@ import type {
   ReplyPublicationRepository,
   ReplyWriteModel,
 } from './types';
+import { buildExampleFeedbackJob } from '../../exampleWorries';
 
 function withoutId<T extends { id: string }>(model: T): Omit<T, 'id'> {
   const { id: _id, ...rest } = model;
@@ -40,7 +41,13 @@ export function createReplyPublicationRepository(params: {
     },
 
     async commitRejectedReplyModeration({ moderationLog }) {
-      await db.collection('moderationLogs').doc(moderationLog.id).set(withoutId(moderationLog));
+      const deliveryDoc = await db.collection('deliveries').doc(moderationLog.targetId).get();
+      const delivery = deliveryDoc.data();
+      const log = {
+        ...moderationLog,
+        targetType: delivery?.isExample === true ? 'example_reply' as const : moderationLog.targetType,
+      };
+      await db.collection('moderationLogs').doc(moderationLog.id).set(withoutId(log));
       return { moderationLogId: moderationLog.id };
     },
 
@@ -97,6 +104,7 @@ export function createReplyPublicationRepository(params: {
         }
 
         const timestamp = serverTimestamp();
+        const isExampleReply = delivery.isExample === true || (worryDoc.data() ?? {}).isExample === true;
         const reply: ReplyWriteModel = {
           id: deliveryId,
           deliveryId,
@@ -109,29 +117,42 @@ export function createReplyPublicationRepository(params: {
           createdAt: timestamp,
           updatedAt: timestamp,
           isAiGenerated: false,
-          isExampleReply: false,
+          isExampleReply,
         };
 
-        transaction.set(db.collection('moderationLogs').doc(moderationLog.id), withoutId(moderationLog));
+        transaction.set(db.collection('moderationLogs').doc(moderationLog.id), withoutId({
+          ...moderationLog,
+          targetType: isExampleReply ? 'example_reply' : moderationLog.targetType,
+        }));
         transaction.set(replyRef, withoutId(reply));
         transaction.update(deliveryRef, {
           status: 'answered',
           answeredAt: timestamp,
           updatedAt: timestamp,
         });
-        transaction.update(worryRef, {
-          humanReplyCount: FieldValue.increment(1),
-          hasHumanReply: true,
-          lastHumanReplyAt: timestamp,
-          updatedAt: timestamp,
-        });
+        if (isExampleReply) {
+          const job = buildExampleFeedbackJob({
+            replyId: deliveryId,
+            targetUid: replierUid,
+            submittedAt: new Date(),
+            now: timestamp,
+          });
+          transaction.set(db.collection('exampleFeedbackJobs').doc(job.id), withoutId(job), { merge: true });
+        } else {
+          transaction.update(worryRef, {
+            humanReplyCount: FieldValue.increment(1),
+            hasHumanReply: true,
+            lastHumanReplyAt: timestamp,
+            updatedAt: timestamp,
+          });
 
-        const activeDeliveryCount = typeof userDoc.data()?.activeDeliveryCount === 'number'
-          ? userDoc.data()?.activeDeliveryCount
-          : 0;
-        transaction.set(userRef, {
-          activeDeliveryCount: Math.max(0, activeDeliveryCount - 1),
-        }, { merge: true });
+          const activeDeliveryCount = typeof userDoc.data()?.activeDeliveryCount === 'number'
+            ? userDoc.data()?.activeDeliveryCount
+            : 0;
+          transaction.set(userRef, {
+            activeDeliveryCount: Math.max(0, activeDeliveryCount - 1),
+          }, { merge: true });
+        }
 
         return { status: 'created' as const, replyId: deliveryId, reply };
       });

@@ -17,12 +17,12 @@ export interface ReplyWriteModel {
   createdAt: ServerTimestampValue;
   updatedAt: ServerTimestampValue;
   isAiGenerated: false;
-  isExampleReply: false;
+  isExampleReply: boolean;
 }
 
 export interface ReplyModerationLogWriteModel {
   id: string;
-  targetType: 'reply';
+  targetType: 'reply' | 'example_reply';
   targetId: string;
   uid: string;
   originalContent: string;

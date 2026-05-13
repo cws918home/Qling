@@ -79,6 +79,7 @@ async function recheckEligibility(params: {
   if (!worryDoc.exists) return { status: 'skipped' as const, reason: 'worry_missing' as const };
   const worry = worryDoc.data() ?? {};
   if (worry.status !== 'active') return { status: 'skipped' as const, reason: 'worry_missing' as const };
+  if (worry.isExample === true) return { status: 'skipped' as const, reason: 'example_worry' as const };
   const createdAt = toDate(worry.createdAt);
   if (!createdAt || params.now.getTime() - createdAt.getTime() < 24 * 60 * 60 * 1000) {
     return { status: 'skipped' as const, reason: 'not_24h_elapsed' as const };
@@ -121,6 +122,7 @@ export function createAiFallbackRepository(params: { db: Firestore }): AiFallbac
       const candidates: AiFallbackCandidate[] = [];
       for (const doc of snap.docs) {
         const data = doc.data();
+        if (data.isExample === true) continue;
         if (typeof data.authorUid !== 'string' || typeof data.content !== 'string') continue;
         const candidate: AiFallbackCandidate = {
           worryId: doc.id,

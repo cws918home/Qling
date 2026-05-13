@@ -436,6 +436,44 @@ Create onboarding example deliveries once per user and delayed example likes.
 - Example selection uses interests and does not create later additions after interest edits.
 - Example feedback creates one delayed like, no comment, and increments helpedCount.
 
+### Evidence Matrix
+
+| TODO ID | Checked? | Evidence |
+|---|---|---|
+| TODO-1.8 | yes | `src/server/exampleWorryRoutes.test.ts`; `src/services/exampleWorries/createExamplesForUser.test.ts`; `src/services/exampleWorries/createExampleFeedbacks.test.ts` |
+| TODO-1.20 | yes | `firestore.rules`; `src/firestore.rules.test.ts` example operational collection denial |
+| TODO-1.30 | yes | `src/services/replyPublication/server/firestoreRepository.test.ts` example moderation target and rejected example reply tests |
+| TODO-1.42 | yes | `src/services/exampleWorries/firestoreRepository.test.ts` deterministic ID and repeated job execution tests |
+| TODO-1.67 | yes | `src/services/exampleWorries/index.ts`; `createExamplesForUser.ts`; `seedAdapter.ts`; `createExampleFeedbacks.ts`; module tests |
+| TODO-2.2 | yes | `createExamplesForUser.ts`; `firestoreRepository.ts`; `src/firestore.rules.test.ts` user example field protection |
+| TODO-2.18 | yes | `firestoreRepository.ts` example worry write model; `createExamplesForUser.test.ts` creation path |
+| TODO-2.31 | yes | `firestoreRepository.ts` example delivery write model; `createExamplesForUser.test.ts` creation path |
+| TODO-2.43 | yes | `replyPublication/server/firestoreRepository.test.ts` `isExampleReply: true` assertion |
+| TODO-2.61 | yes | `replyPublication/server/firestoreRepository.test.ts` `targetType: 'example_reply'` assertions |
+| TODO-2.78 | yes | `seedAdapter.ts`; `scripts/seedExampleWorrySeeds.ts`; `firestore.rules`; `src/firestore.rules.test.ts` |
+| TODO-2.79 | yes | `createExampleFeedbacks.ts`; `firestoreRepository.ts`; `src/firestore.rules.test.ts` |
+| TODO-3.55 | yes | `src/server/exampleWorryRoutes.test.ts` tests `POST /api/internal/create-example-feedbacks` |
+| TODO-3.56 | yes | `scripts/seedExampleWorrySeeds.ts`; `exampleSeedFixtures.ts`; no admin UI or public seed route |
+| TODO-3.57 | yes | `src/server/exampleWorryRoutes.test.ts`; `createExampleFeedbacks.test.ts`; `firestoreRepository.test.ts` |
+| TODO-4.50 | yes | `src/services/exampleWorries/*`; policy and service tests |
+| TODO-4.51 | yes | `src/services/exampleWorries/index.ts`; `createExamplesForUser.ts`; `createExampleFeedbacks.ts` |
+| TODO-4.52 | yes | Required files exist; `src/App.tsx`; `server.ts`; `src/server/exampleWorryRoutes.ts` |
+| TODO-4.53 | yes | `policy.test.ts`; `createExamplesForUser.test.ts`; `homeWorryFeed/prdPolicy.test.ts`; `createExampleFeedbacks.test.ts` |
+| TODO-4.54 | yes | `homeWorryFeed/prdPolicy.test.ts`; `replyPublication/server/firestoreRepository.test.ts` normal reply/job regression |
+| TODO-5.89 | yes | `createExamplesForUser.test.ts`; `src/server/exampleWorryRoutes.test.ts` |
+| TODO-5.90 | yes | `src/services/exampleWorries/*`; `src/App.tsx`; `src/server/exampleWorryRoutes.ts`; feed tests |
+| TODO-5.91 | yes | `firestoreRepository.ts`; `firestoreRepository.test.ts`; rules tests for seeds/jobs |
+| TODO-5.92 | yes | Policy, feed, reply publication, feedback job, and helpedCount tests |
+| TODO-5.93 | yes | `createExamplesForUser.test.ts`; `createExampleFeedbacks.test.ts`; `firestoreRepository.test.ts` |
+| TODO-5.94 | yes | Manual path documented: run `scripts/seedExampleWorrySeeds.ts`, create a new user, complete onboarding, verify answer feed examples with no label |
+| TODO-5.95 | yes | No admin seed UI or public seed endpoint added; seed is script-only |
+| TODO-5.96 | yes | `homeWorryFeed/prdPolicy.test.ts`; `replyPublication/server/firestoreRepository.test.ts` normal behavior regressions |
+| TODO-7.13 | yes | `firestore.rules`; `src/firestore.rules.test.ts` seed/job deny-all tests |
+| TODO-9.30 | yes | `src/server/exampleWorryRoutes.test.ts` internal auth for `/api/internal/create-example-feedbacks` |
+| TODO-9.80 | yes | `createExamplesForUser.test.ts` once/max five tests |
+| TODO-9.81 | yes | `policy.test.ts`; `createExampleFeedbacks.test.ts`; `firestoreRepository.test.ts` delayed/no-comment/helpedCount tests |
+| TODO-11.5 | yes | `firestoreRepository.test.ts` deterministic IDs and repeated job no double increment |
+
 ### Explicit Non-Goals / Deferred Work
 
 - No admin seed UI is introduced.

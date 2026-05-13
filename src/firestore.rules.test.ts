@@ -167,7 +167,19 @@ describe('profile and token transition', () => {
     }));
     await assertFails(dbFor('author').doc('users/author').set({
       ...safeProfile('author'),
+      onboardingCompletedAt: new Date(),
+    }));
+    await assertFails(dbFor('author').doc('users/author').set({
+      ...safeProfile('author'),
       exampleWorrySeedIds: [],
+    }));
+    await assertFails(dbFor('author').doc('users/author').set({
+      ...safeProfile('author'),
+      exampleDeliveryIds: [],
+    }));
+    await assertFails(dbFor('author').doc('users/author').set({
+      ...safeProfile('author'),
+      exampleFeedbackJobIds: [],
     }));
   });
 
@@ -208,6 +220,11 @@ describe('profile and token transition', () => {
     await assertFails(dbFor('author').doc('users/author').update({ helpedCount: 1 }));
     await assertFails(dbFor('author').doc('users/author').update({ activeDeliveryCount: 1 }));
     await assertFails(dbFor('author').doc('users/author').update({ deletedAt: new Date() }));
+    await assertFails(dbFor('author').doc('users/author').update({ onboardingCompletedAt: new Date() }));
+    await assertFails(dbFor('author').doc('users/author').update({ exampleWorriesCreatedAt: new Date() }));
+    await assertFails(dbFor('author').doc('users/author').update({ exampleWorrySeedIds: ['seed1'] }));
+    await assertFails(dbFor('author').doc('users/author').update({ exampleDeliveryIds: ['delivery1'] }));
+    await assertFails(dbFor('author').doc('users/author').update({ exampleFeedbackJobIds: ['reply1'] }));
   });
 
   test('server-owned field protection rejects create update merge remove and delete', async () => {
@@ -775,6 +792,54 @@ describe('reply feedback transition', () => {
 
     await assertSucceeds(dbFor('recipient').doc('replies/like-reply').get());
     await assertFails(dbFor('recipient').doc('replies/dislike-reply').get());
+  });
+});
+
+describe('example operational collections', () => {
+  test('clients cannot read create update or delete exampleWorrySeeds', async () => {
+    await seedBaseUsers();
+    await seed('exampleWorrySeeds/seed1', {
+      content: 'example',
+      categories: ['career'],
+      status: 'active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await assertFails(dbFor('author').doc('exampleWorrySeeds/seed1').get());
+    await assertFails(dbFor('author').doc('exampleWorrySeeds/seed2').set({
+      content: 'example',
+      categories: ['career'],
+      status: 'active',
+    }));
+    await assertFails(dbFor('author').doc('exampleWorrySeeds/seed1').update({ status: 'inactive' }));
+    await assertFails(dbFor('author').doc('exampleWorrySeeds/seed1').delete());
+  });
+
+  test('clients cannot read create update or delete exampleFeedbackJobs', async () => {
+    await seedBaseUsers();
+    await seed('exampleFeedbackJobs/reply1', {
+      kind: 'example_like',
+      runAfter: new Date(),
+      status: 'scheduled',
+      replyId: 'reply1',
+      targetUid: 'recipient',
+      attempts: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    await assertFails(dbFor('author').doc('exampleFeedbackJobs/reply1').get());
+    await assertFails(dbFor('author').doc('exampleFeedbackJobs/reply2').set({
+      kind: 'example_like',
+      runAfter: new Date(),
+      status: 'scheduled',
+      replyId: 'reply2',
+      targetUid: 'recipient',
+      attempts: 0,
+    }));
+    await assertFails(dbFor('author').doc('exampleFeedbackJobs/reply1').update({ status: 'completed' }));
+    await assertFails(dbFor('author').doc('exampleFeedbackJobs/reply1').delete());
   });
 });
 }

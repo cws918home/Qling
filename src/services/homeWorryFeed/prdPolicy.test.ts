@@ -163,6 +163,41 @@ test('successful reply transaction state excludes delivery from answer feed', ()
   assert.deepEqual(after, []);
 });
 
+test('example active delivery appears normally without label exposure', () => {
+  const selected = selectActivePrdAnswerFeedItems({
+    profileUid: 'recipient',
+    deliveries: [
+      {
+        id: 'example_delivery',
+        worryId: 'example_worry',
+        authorUid: 'example_author',
+        recipientUid: 'recipient',
+        status: 'active',
+        isExample: true,
+        exampleSeedId: 'seed1',
+      } as never,
+    ],
+    worriesById: new Map([[
+      'example_worry',
+      {
+        id: 'example_worry',
+        content: 'example content',
+        matchingCategories: ['career'],
+        isExample: true,
+        exampleSeedId: 'seed1',
+      } as never,
+    ]]),
+  });
+  const letter = adaptPrdAnswerFeedItemToHomeWorryFeedLetter(selected[0]);
+
+  assert.equal(selected.length, 1);
+  assert.equal(selected[0].originalContent, 'example content');
+  assert.equal('isExample' in selected[0], false);
+  assert.equal('exampleSeedId' in selected[0], false);
+  assert.equal('isExample' in letter, false);
+  assert.equal('exampleSeedId' in letter, false);
+});
+
 test('adapter preserves PRD identity fields for reply form compatibility', () => {
   const letter = adaptPrdAnswerFeedItemToHomeWorryFeedLetter({
     id: 'delivery1',

@@ -209,6 +209,51 @@ test('commit creates deterministic Round 1 batch and deliveries without changing
   assert.equal(db.store.get('worries/worry1')?.lastRematchRunId, 'run1');
 });
 
+test('example worries are skipped during scan', async () => {
+  const db = createFakeFirestore(baseState({
+    'worries/worry1': {
+      authorUid: 'author',
+      status: 'active',
+      matchingCategories: ['career'],
+      initialDeliveryBatchId: 'batch0',
+      humanDeliveryCount: 5,
+      humanDeliveryLimit: 15,
+      isExample: true,
+    },
+  }));
+  const repo = createRematchRepository({ db: db as never });
+
+  const scans = await repo.fetchScans({ now, limit: 10 });
+
+  assert.deepEqual(scans, []);
+});
+
+test('example worries are skipped during transaction recheck without delivery batch creation', async () => {
+  const db = createFakeFirestore(baseState());
+  const repo = createRematchRepository({ db: db as never });
+  const scan = await fetchScan(db);
+  db.store.set('worries/worry1', {
+    ...(db.store.get('worries/worry1') ?? {}),
+    isExample: true,
+  });
+
+  const result = await repo.commitRematchBatch({
+    runId: 'run1',
+    now,
+    scan,
+    sourceBatch: { id: 'batch0', worryId: 'worry1', batchRound: 0, createdAt: nineHoursAgo },
+    targetCount: 1,
+    recipients: [selected('r1a')],
+    nextRound: 1,
+    rematchEligibleAfter: new Date(now.getTime() + 8 * 60 * 60 * 1000),
+  });
+
+  assert.equal(result.status, 'skipped');
+  assert.equal(result.reason, 'example_worry');
+  assert.equal(db.store.has('deliveryBatches/worry1_rematch_1'), false);
+  assert.equal(db.store.has('deliveries/worry1_r1a'), false);
+});
+
 test('candidate with stale newly-created deterministic delivery is skipped without counter increment', async () => {
   const db = createFakeFirestore(baseState({
     'deliveries/worry1_r1a': {

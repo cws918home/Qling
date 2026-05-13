@@ -8,6 +8,7 @@ export type AiFallbackSkipReason =
   | 'human_delivery_cap_not_exhausted'
   | 'human_reply_exists'
   | 'ai_reply_exists'
+  | 'example_worry'
   | 'worry_missing'
   | 'dry_run';
 

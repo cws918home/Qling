@@ -18,7 +18,22 @@ function createFakeFirestore(initial: Record<string, Record<string, unknown>>) {
     collection(name: string) {
       return {
         doc(id = `${name}-generated`) {
-          return ref(`${name}/${id}`);
+          const doc = ref(`${name}/${id}`);
+          return {
+            ...doc,
+            async get() {
+              return {
+                exists: store.has(doc.path),
+                data: () => {
+                  const data = store.get(doc.path);
+                  return data ? { ...data } : undefined;
+                },
+              };
+            },
+            async set(data: Record<string, unknown>, options?: { merge?: boolean }) {
+              store.set(doc.path, options?.merge ? { ...(store.get(doc.path) ?? {}), ...data } : { ...data });
+            },
+          };
         },
       };
     },
@@ -217,4 +232,88 @@ test('repository rejects different-content duplicate and never decrements below 
     moderationLog,
   });
   assert.equal(zeroDb.store.get('users/recipient')?.activeDeliveryCount, 0);
+});
+
+test('approved example reply uses example moderation target, schedules one job, and preserves normal counters', async () => {
+  const db = createFakeFirestore({
+    'deliveries/delivery1': {
+      worryId: 'worry1',
+      authorUid: 'example_author',
+      recipientUid: 'recipient',
+      status: 'active',
+      answeredAt: null,
+      isExample: true,
+      exampleSeedId: 'seed1',
+    },
+    'worries/worry1': {
+      authorUid: 'example_author',
+      humanReplyCount: 0,
+      hasHumanReply: false,
+      isExample: true,
+    },
+    'users/recipient': {
+      activeDeliveryCount: 2,
+    },
+  });
+  const repo = createReplyPublicationRepository({ db: db as never });
+
+  const result = await repo.commitApprovedReplyPublication({
+    deliveryId: 'delivery1',
+    replierUid: 'recipient',
+    content: 'reply',
+    moderationLog,
+  });
+
+  assert.equal(result.status, 'created');
+  assert.equal(db.store.get('replies/delivery1')?.isExampleReply, true);
+  assert.equal(db.store.get('replies/delivery1')?.isAiGenerated, false);
+  assert.equal(db.store.get('moderationLogs/mod1')?.targetType, 'example_reply');
+  assert.equal(db.store.get('exampleFeedbackJobs/delivery1')?.kind, 'example_like');
+  assert.equal(db.store.get('exampleFeedbackJobs/delivery1')?.replyId, 'delivery1');
+  assert.equal(db.store.get('exampleFeedbackJobs/delivery1')?.status, 'scheduled');
+  assert.equal(db.store.get('users/recipient')?.activeDeliveryCount, 2);
+  assert.equal(db.store.get('worries/worry1')?.humanReplyCount, 0);
+  assert.equal(db.store.get('worries/worry1')?.hasHumanReply, false);
+});
+
+test('normal approved reply does not schedule example feedback job', async () => {
+  const db = createFakeFirestore({
+    'deliveries/delivery1': {
+      worryId: 'worry1',
+      authorUid: 'author',
+      recipientUid: 'recipient',
+      status: 'active',
+      answeredAt: null,
+    },
+    'worries/worry1': { authorUid: 'author', humanReplyCount: 0, hasHumanReply: false },
+    'users/recipient': { activeDeliveryCount: 1 },
+  });
+  const repo = createReplyPublicationRepository({ db: db as never });
+
+  await repo.commitApprovedReplyPublication({
+    deliveryId: 'delivery1',
+    replierUid: 'recipient',
+    content: 'reply',
+    moderationLog,
+  });
+
+  assert.equal(db.store.has('exampleFeedbackJobs/delivery1'), false);
+  assert.equal(db.store.get('moderationLogs/mod1')?.targetType, 'reply');
+});
+
+test('rejected example reply creates moderation log only and no reply or job', async () => {
+  const db = createFakeFirestore({
+    'deliveries/delivery1': {
+      worryId: 'worry1',
+      recipientUid: 'recipient',
+      isExample: true,
+    },
+  });
+  const repo = createReplyPublicationRepository({ db: db as never });
+
+  await repo.commitRejectedReplyModeration({ moderationLog: { ...moderationLog, status: 'rejected' } });
+
+  assert.equal(db.store.get('moderationLogs/mod1')?.targetType, 'example_reply');
+  assert.equal(db.store.has('replies/delivery1'), false);
+  assert.equal(db.store.has('exampleFeedbackJobs/delivery1'), false);
 });

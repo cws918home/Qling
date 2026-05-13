@@ -222,6 +222,47 @@ test('candidate scan over-scans old under-cap worries so small limits still reac
   assert.deepEqual(candidates.map(item => item.worryId), ['eligible']);
 });
 
+test('example worries are skipped during AI fallback scan', async () => {
+  const db = createFakeFirestore(baseDocs({
+    'worries/worry1': {
+      authorUid: 'author',
+      content: '고민',
+      status: 'active',
+      createdAt: new Date('2026-05-11T00:00:00.000Z'),
+      humanDeliveryLimit: 15,
+      humanDeliveryCount: 15,
+      isExample: true,
+    },
+  }));
+  const repo = createAiFallbackRepository({ db: db as never });
+
+  const candidates = await repo.fetchCandidates({ now, limit: 10 });
+
+  assert.deepEqual(candidates, []);
+});
+
+test('example worries are skipped during AI fallback transaction recheck', async () => {
+  const db = createFakeFirestore(baseDocs());
+  const repo = createAiFallbackRepository({ db: db as never });
+  db.store.set('worries/worry1', {
+    ...(db.store.get('worries/worry1') ?? {}),
+    isExample: true,
+  });
+
+  const result = await repo.commitApprovedReply({
+    runId: 'run1',
+    now,
+    candidate: candidate(),
+    content: '답장',
+    moderationLog: moderationLog(),
+  });
+
+  assert.equal(result.status, 'skipped');
+  assert.equal(result.status === 'skipped' ? result.reason : '', 'example_worry');
+  assert.equal(db.store.has('replies/worry1_ai'), false);
+  assert.equal(db.store.get('worries/worry1')?.hasAiReply, undefined);
+});
+
 test('active deliveries do not expire and AI fallback creates exactly one AI reply', async () => {
   const db = createFakeFirestore(baseDocs());
   const repo = createAiFallbackRepository({ db: db as never });

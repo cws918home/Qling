@@ -92,6 +92,10 @@ interface UserProfile {
   interests: string[];
   helpedCount?: number;
   createdAt: Timestamp;
+  onboardingCompletedAt?: unknown;
+  exampleWorriesCreatedAt?: unknown;
+  exampleWorrySeedIds?: string[];
+  exampleDeliveryIds?: string[];
 }
 
 interface Letter {
@@ -114,6 +118,23 @@ interface Letter {
   matchOverlapCount?: number;
   matchSelectionType?: 'matched' | 'random_fallback' | 'ai' | 'ai_safety_fallback';
   matchCategoriesSnapshot?: string[];
+}
+
+async function createExampleWorriesForCurrentUser(user: FirebaseUser) {
+  const token = await user.getIdToken();
+  const response = await fetch('/api/users/me/example-worries', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({}),
+  });
+  if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    throw new Error(body?.error?.message ?? 'Example worry creation failed.');
+  }
+  return response.json();
 }
 
 // --- App Component ---
@@ -201,6 +222,16 @@ export default function App() {
             const userData = userSnap.data() as UserProfile;
             setProfile(userData);
             setView(prev => (['onboarding', 'login'].includes(prev) ? 'home' : prev));
+            if (!userData.exampleWorriesCreatedAt) {
+              void createExampleWorriesForCurrentUser(currentUser)
+                .then(async () => {
+                  const refreshed = await getDoc(userRef);
+                  if (refreshed.exists()) setProfile(refreshed.data() as UserProfile);
+                })
+                .catch(err => {
+                  console.error('Example worry retry failed:', err);
+                });
+            }
           } else {
             setProfile(null);
             setView('onboarding');
@@ -295,13 +326,20 @@ export default function App() {
       await setDoc(userRef, newProfileData, { merge: true });
       console.log("Profile saved successfully.");
 
-      // 2. IMPORTANT: Update local state FIRST
-      setProfile({ ...newProfileData, lastActive: now } as UserProfile);
+      // 2. Create server-owned onboarding examples before entering the feed.
+      await createExampleWorriesForCurrentUser(user);
+      const savedProfile = await getDoc(userRef);
+      const profileData = savedProfile.exists()
+        ? savedProfile.data()
+        : { ...newProfileData, lastActive: now };
+
+      // 3. Update local state after server-owned state is present.
+      setProfile(profileData as UserProfile);
       
-      // 3. Forcefully switch view
+      // 4. Forcefully switch view
       setView('home');
       
-      // 4. Scroll to top
+      // 5. Scroll to top
       window.scrollTo(0, 0);
 
     } catch (e: any) {

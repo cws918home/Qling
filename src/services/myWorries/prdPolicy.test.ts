@@ -226,6 +226,25 @@ test('legacy adapter source-marks fallback replies', () => {
   assert.equal(selected[0].replyTo, 'legacy-worry');
 });
 
+test('example replies remain visible in my given replies', () => {
+  const selected = selectMyGivenReplies({
+    userUid: 'replier',
+    replies: [
+      prdReply({
+        id: 'example-reply',
+        replierUid: 'replier',
+        authorUid: 'example_author',
+        isAiGenerated: false,
+        isExampleReply: true,
+      }),
+    ],
+  });
+
+  assert.equal(selected.length, 1);
+  assert.equal(selected[0].id, 'example-reply');
+  assert.equal(selected[0].isExampleReply, true);
+});
+
 function prdReply(overrides: Partial<PrdReplyDoc>): PrdReplyDoc {
   return {
     id: 'reply',

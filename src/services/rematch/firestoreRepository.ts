@@ -195,6 +195,7 @@ export function createRematchRepository(params: { db: Firestore }): RematchRepos
 
       for (const worryDoc of worriesSnap.docs) {
         const worry = worryDoc.data();
+        if (worry.isExample === true) continue;
         const worryId = worryDoc.id;
         const [authorDoc, batchesSnap, deliveriesSnap, repliesSnap] = await Promise.all([
           typeof worry.authorUid === 'string' ? db.collection('users').doc(worry.authorUid).get() : Promise.resolve(null),
@@ -331,6 +332,9 @@ export function createRematchRepository(params: { db: Firestore }): RematchRepos
 
         const currentHumanCount = deliveriesForWorry.docs.filter(doc => doc.data().isAiRecipient !== true).length;
         const worry = worryDoc.data() ?? {};
+        if (worry.isExample === true) {
+          return { status: 'skipped' as const, worryId: scan.worryId, deliveryIds: [], recipientUids: [], createdCount: 0, reason: 'example_worry' as const };
+        }
         const humanDeliveryLimit = typeof worry.humanDeliveryLimit === 'number' ? Math.min(worry.humanDeliveryLimit, 15) : 15;
         const remainingCapacity = Math.max(0, humanDeliveryLimit - currentHumanCount);
         if (remainingCapacity <= 0) {

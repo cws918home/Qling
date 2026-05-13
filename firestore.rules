@@ -62,8 +62,11 @@ service cloud.firestore {
         'helpedCount',
         'deleted',
         'deletedAt',
+        'onboardingCompletedAt',
         'exampleWorriesCreatedAt',
-        'exampleWorrySeedIds'
+        'exampleWorrySeedIds',
+        'exampleDeliveryIds',
+        'exampleFeedbackJobIds'
       ];
     }
 
@@ -217,6 +220,14 @@ service cloud.firestore {
     }
 
     match /aiFallbackRuns/{runId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /exampleWorrySeeds/{seedId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /exampleFeedbackJobs/{jobId} {
       allow read, create, update, delete: if false;
     }
 
