@@ -59,6 +59,30 @@ const prdReply = {
   isExampleReply: false,
 };
 
+const likeFeedback = {
+  replyId: 'worry1_recipient',
+  worryId: 'worry1',
+  deliveryId: 'worry1_recipient',
+  publisherUid: 'author',
+  replierUid: 'recipient',
+  type: 'like',
+  comment: 'thanks',
+  commentVisibility: 'replier',
+  commentModerationLogId: 'mod-feedback-1',
+  helpedCountApplied: true,
+  isForAiReply: false,
+  isForExampleReply: false,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+const dislikeFeedback = {
+  ...likeFeedback,
+  type: 'dislike',
+  comment: 'private',
+  commentVisibility: 'admin_only',
+};
+
 const deliveryReadState = {
   deliveryId: 'worry1_recipient',
   worryId: 'worry1',
@@ -650,6 +674,83 @@ describe('legacy letters transition', () => {
     await seedBaseUsers();
     await seed('letters/reply1', replyLetter);
     await assertFails(dbFor('author').doc('letters/reply1').update({ refinedContent: 'edited' }));
+  });
+});
+
+describe('reply feedback transition', () => {
+  test('publisher feedback query allowed and hides dislike by read model contract', async () => {
+    await seedBaseUsers();
+    await seed('feedbacks/worry1_recipient', dislikeFeedback);
+
+    await assertSucceeds(
+      dbFor('author')
+        .collection('feedbacks')
+        .where('worryId', '==', 'worry1')
+        .where('publisherUid', '==', 'author')
+        .get()
+    );
+    await assertFails(
+      dbFor('other')
+        .collection('feedbacks')
+        .where('worryId', '==', 'worry1')
+        .where('publisherUid', '==', 'author')
+        .get()
+    );
+  });
+
+  test('replier like query allowed and dislike query denied', async () => {
+    await seedBaseUsers();
+    await seed('feedbacks/like-reply', likeFeedback);
+    await seed('feedbacks/dislike-reply', dislikeFeedback);
+
+    await assertSucceeds(
+      dbFor('recipient')
+        .collection('feedbacks')
+        .where('replierUid', '==', 'recipient')
+        .where('type', '==', 'like')
+        .get()
+    );
+    await assertFails(
+      dbFor('recipient')
+        .collection('feedbacks')
+        .where('replierUid', '==', 'recipient')
+        .where('type', '==', 'dislike')
+        .get()
+    );
+  });
+
+  test('direct replier dislike doc read denied', async () => {
+    await seedBaseUsers();
+    await seed('feedbacks/worry1_recipient', dislikeFeedback);
+
+    await assertFails(dbFor('recipient').doc('feedbacks/worry1_recipient').get());
+    await assertSucceeds(dbFor('author').doc('feedbacks/worry1_recipient').get());
+  });
+
+  test('browser cannot mutate feedbacks or helpedCount', async () => {
+    await seedBaseUsers();
+    await assertFails(dbFor('author').doc('feedbacks/worry1_recipient').set(likeFeedback));
+    await seed('feedbacks/worry1_recipient', likeFeedback);
+    await assertFails(dbFor('author').doc('feedbacks/worry1_recipient').update({ type: 'dislike' }));
+    await assertFails(dbFor('recipient').doc('users/recipient').update({ helpedCount: 1 }));
+  });
+
+  test('does not leak dislike summary through replier-readable reply document', async () => {
+    await seedBaseUsers();
+    await seed('replies/like-reply', {
+      ...prdReply,
+      feedbackType: 'like',
+      likedAt: new Date(),
+    });
+    await seed('replies/dislike-reply', {
+      ...prdReply,
+      feedbackType: 'dislike',
+      dislikedAt: new Date(),
+      publisherHiddenBecauseDisliked: true,
+    });
+
+    await assertSucceeds(dbFor('recipient').doc('replies/like-reply').get());
+    await assertFails(dbFor('recipient').doc('replies/dislike-reply').get());
   });
 });
 }

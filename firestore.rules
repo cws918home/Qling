@@ -145,6 +145,15 @@ service cloud.firestore {
         && request.resource.data.feedback in ['helpful', 'not_helpful'];
     }
 
+    function noReplyDislikeLeak() {
+      return !resource.data.keys().hasAny([
+        'dislikedAt',
+        'publisherHiddenBecauseDisliked',
+        'hiddenBecauseDisliked'
+      ])
+      && (!('feedbackType' in resource.data) || resource.data.feedbackType == 'like');
+    }
+
     match /users/{uid} {
       allow read: if isSelf(uid) && existingUserIsNotDeleted();
       allow create: if isSelf(uid) && hasOnlySafeUserKeys() && uidMatchesPath(uid);
@@ -201,9 +210,23 @@ service cloud.firestore {
 
     match /replies/{replyId} {
       allow read: if isNotDeletedSelf()
+        && noReplyDislikeLeak()
         && (
           resource.data.replierUid == request.auth.uid
           || resource.data.authorUid == request.auth.uid
+        );
+      allow create, update, delete: if false;
+    }
+
+    match /feedbacks/{feedbackId} {
+      allow read: if isNotDeletedSelf()
+        && (
+          ('publisherUid' in resource.data && resource.data.publisherUid == request.auth.uid)
+          || (
+            'replierUid' in resource.data
+            && resource.data.replierUid == request.auth.uid
+            && resource.data.type == 'like'
+          )
         );
       allow create, update, delete: if false;
     }

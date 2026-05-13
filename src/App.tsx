@@ -1056,7 +1056,6 @@ export default function App() {
                   </p>
                 </div>
 
-                {selectedReply.source === 'legacy_letters' && (
                 <div className="pt-8 text-center border-t border-[#E9EDC9]">
                   {selectedReply.feedback ? (
                     <div className="space-y-6">
@@ -1076,6 +1075,15 @@ export default function App() {
                             replyId={selectedReply.id} 
                             replierId={selectedReply.senderId}
                             onCommentAdded={(c) => setSelectedReply({...selectedReply, publisherComment: c})} 
+                            onSubmit={selectedReply.source === 'prd_replies'
+                              ? async content => {
+                                await submitReplyFeedbackWithProductionAdapters({
+                                  reply: selectedReply,
+                                  feedbackType: 'helpful',
+                                  comment: content,
+                                });
+                              }
+                              : undefined}
                           />
 
                         </div>
@@ -1106,7 +1114,6 @@ export default function App() {
                     </>
                   )}
                 </div>
-                )}
               </div>
             </motion.div>
           )}
@@ -1140,14 +1147,14 @@ export default function App() {
 
                 {/* Feedback & Comment Section */}
                 <div className="pt-4 space-y-4">
-                  {selectedReply.source === 'legacy_letters' && selectedReply.feedback === 'helpful' && (
+                  {selectedReply.feedback === 'helpful' && (
                     <div className="flex items-center justify-center gap-2 px-6 py-4 bg-white border border-[#E9EDC9] rounded-2xl text-[#5A5A40] font-bold">
                       <Heart className="w-5 h-5 text-[#E07A5F]" /> 
                       작성자에게 위로가 되었다는 답신이 왔어요! (해결 횟수 +1)
                     </div>
                   )}
 
-                  {selectedReply.source === 'legacy_letters' && selectedReply.publisherComment && (
+                  {selectedReply.publisherComment && (
                     <div className="bg-white p-6 rounded-2xl border border-[#D4A373]">
                       <div className="text-xs font-bold text-[#D4A373] mb-3">작성자가 남긴 코멘트</div>
                       <p className="text-[#5A5A40] text-sm leading-relaxed whitespace-pre-wrap">
@@ -1293,7 +1300,17 @@ function Tabs({ tabs, render }: { tabs: {id: string, label: string}[], render: (
   );
 }
 
-function CommentForm({ replyId, replierId, onCommentAdded }: { replyId: string, replierId: string, onCommentAdded: (c: string) => void }) {
+function CommentForm({
+  replyId,
+  replierId,
+  onCommentAdded,
+  onSubmit,
+}: {
+  replyId: string;
+  replierId: string;
+  onCommentAdded: (c: string) => void;
+  onSubmit?: (content: string) => Promise<void>;
+}) {
   const [content, setContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -1304,6 +1321,12 @@ function CommentForm({ replyId, replierId, onCommentAdded }: { replyId: string, 
     if (!isLengthValid) return;
     setIsProcessing(true);
     try {
+      if (onSubmit) {
+        await onSubmit(content);
+        onCommentAdded(content.trim());
+        return;
+      }
+
       const result = await publishPublisherCommentWithProductionAdapters({
         replyId,
         replierId,

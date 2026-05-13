@@ -39,6 +39,21 @@ export interface PrdReplyDoc {
   createdAt?: TimestampLike | null;
   isAiGenerated?: boolean;
   isExampleReply?: boolean;
+  feedbackType?: 'like';
+  likedAt?: TimestampLike | null;
+}
+
+export interface PrdFeedbackDoc {
+  id: string;
+  replyId?: string;
+  worryId?: string;
+  publisherUid?: string;
+  replierUid?: string;
+  type?: 'like' | 'dislike';
+  comment?: string | null;
+  commentVisibility?: 'replier' | 'admin_only' | 'none';
+  commentModerationLogId?: string | null;
+  helpedCountApplied?: boolean;
 }
 
 export interface ReplyReadStateDoc {

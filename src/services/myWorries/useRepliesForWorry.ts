@@ -15,7 +15,7 @@ import {
 } from './prdPolicy';
 import { useLegacyLettersReplyFallback } from './useLegacyLettersReplyFallback';
 import type { PrdReplyDoc, ReplyReadModelItem } from './types';
-import type { ReplyReadStateDoc } from './types';
+import type { PrdFeedbackDoc, ReplyReadStateDoc } from './types';
 
 function toPrdReplyDocs(snapshot: QuerySnapshot<DocumentData>): PrdReplyDoc[] {
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PrdReplyDoc));
@@ -23,6 +23,10 @@ function toPrdReplyDocs(snapshot: QuerySnapshot<DocumentData>): PrdReplyDoc[] {
 
 function toReplyReadStateDocs(snapshot: QuerySnapshot<DocumentData>): ReplyReadStateDoc[] {
   return snapshot.docs.map(doc => ({ replyId: doc.id, ...doc.data() } as ReplyReadStateDoc));
+}
+
+function toPrdFeedbackDocs(snapshot: QuerySnapshot<DocumentData>): PrdFeedbackDoc[] {
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PrdFeedbackDoc));
 }
 
 export function useRepliesForWorry(params: {
@@ -33,6 +37,7 @@ export function useRepliesForWorry(params: {
   const { user, worryId, firestore = db } = params;
   const [prdReplies, setPrdReplies] = useState<ReplyReadModelItem[]>([]);
   const [readStatesByReplyId, setReadStatesByReplyId] = useState(new Map<string, ReplyReadStateDoc>());
+  const [feedbacksByReplyId, setFeedbacksByReplyId] = useState(new Map<string, PrdFeedbackDoc>());
   const { legacyLettersReplies } = useLegacyLettersReplyFallback({
     user,
     worryId,
@@ -58,6 +63,7 @@ export function useRepliesForWorry(params: {
           userUid: user.uid,
           worryId,
           readStatesByReplyId,
+          feedbacksByReplyId,
         }));
       },
       error => {
@@ -67,7 +73,33 @@ export function useRepliesForWorry(params: {
     );
 
     return () => unsubscribe();
-  }, [firestore, readStatesByReplyId, user, worryId]);
+  }, [feedbacksByReplyId, firestore, readStatesByReplyId, user, worryId]);
+
+  useEffect(() => {
+    if (!user || !worryId) {
+      setFeedbacksByReplyId(new Map());
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      query(
+        collection(firestore, 'feedbacks'),
+        where('worryId', '==', worryId),
+        where('publisherUid', '==', user.uid)
+      ),
+      snapshot => {
+        setFeedbacksByReplyId(new Map(
+          toPrdFeedbackDocs(snapshot).map(feedback => [feedback.replyId ?? feedback.id, feedback])
+        ));
+      },
+      error => {
+        console.error('Publisher feedback listener error:', error);
+        setFeedbacksByReplyId(new Map());
+      }
+    );
+
+    return () => unsubscribe();
+  }, [firestore, user, worryId]);
 
   useEffect(() => {
     if (!user) {

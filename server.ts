@@ -18,6 +18,7 @@ import { registerWorryRoutes } from "./src/server/worryRoutes";
 import { registerReplyRoutes } from "./src/server/replyRoutes";
 import { registerReadStateRoutes } from "./src/server/readStateRoutes";
 import { registerPassRoutes } from "./src/server/passRoutes";
+import { registerFeedbackRoutes } from "./src/server/feedbackRoutes";
 
 // Read client config to get database ID
 const clientConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
@@ -299,6 +300,18 @@ async function startServer() {
       messaging,
       auth: getAuth(),
     });
+    registerFeedbackRoutes(app, {
+      db,
+      auth: getAuth(),
+      moderationProvider: commentContent => processSimpleModerationResponse(
+        commentContent,
+        content => fetchFromOpenRouter(`You are a moderator for a Korean anonymous worry-sharing app.
+1. Check if the feedback comment is inappropriate, abusive, violent, or spam.
+2. Return JSON exactly like this:
+   - If bad: { "status": "rejected", "reason": "부적절한 표현이 감지되었습니다." }
+   - If good: { "status": "approved" }`, content)
+      ).then(result => result.body),
+    });
   } else {
     app.post('/api/worries/publish', (_req, res) => {
       res.status(500).json({
@@ -333,6 +346,14 @@ async function startServer() {
       });
     });
     app.post('/api/worries/:worryId/replies/read', (_req, res) => {
+      res.status(500).json({
+        error: {
+          code: 'firebase_unavailable',
+          message: 'Firebase Admin is not initialized.',
+        },
+      });
+    });
+    app.post('/api/replies/:replyId/feedback', (_req, res) => {
       res.status(500).json({
         error: {
           code: 'firebase_unavailable',

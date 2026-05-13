@@ -49,7 +49,7 @@ test('helpful human reply calls incrementHelpedCount', async () => {
     persistence,
   });
 
-  assert.deepEqual(result, { feedback: 'helpful' });
+  assert.deepEqual(result, { status: 'saved', feedback: 'helpful' });
   assert.deepEqual(calls, ['save:reply-1:helpful', 'increment:human-1']);
 });
 
@@ -62,7 +62,7 @@ test('not_helpful saves feedback and skips helpedCount', async () => {
     persistence,
   });
 
-  assert.deepEqual(result, { feedback: 'not_helpful' });
+  assert.deepEqual(result, { status: 'saved', feedback: 'not_helpful' });
   assert.deepEqual(calls, ['save:reply-1:not_helpful']);
 });
 
@@ -75,7 +75,7 @@ test('AI-generated reply saves feedback and skips helpedCount', async () => {
     persistence,
   });
 
-  assert.deepEqual(result, { feedback: 'helpful' });
+  assert.deepEqual(result, { status: 'saved', feedback: 'helpful' });
   assert.deepEqual(calls, ['save:reply-1:helpful']);
 });
 
@@ -88,7 +88,7 @@ test('bot sender reply saves feedback and skips helpedCount', async () => {
     persistence,
   });
 
-  assert.deepEqual(result, { feedback: 'helpful' });
+  assert.deepEqual(result, { status: 'saved', feedback: 'helpful' });
   assert.deepEqual(calls, ['save:reply-1:helpful']);
 });
 
@@ -126,6 +126,54 @@ test('helpedCount failure still returns feedback', async () => {
     persistence,
   });
 
-  assert.deepEqual(result, { feedback: 'helpful' });
+  assert.deepEqual(result, { status: 'saved', feedback: 'helpful' });
   assert.deepEqual(calls, ['save:reply-1:helpful', 'increment:human-1']);
+});
+
+test('PRD feedback uses API path and does not fall back to direct Firestore persistence', async () => {
+  const calls: string[] = [];
+  const result = await submitReplyFeedback({
+    reply: { ...humanReply, source: 'prd_replies' },
+    feedbackType: 'helpful',
+    comment: ' 고마워요 ',
+    persistence: {
+      async saveReplyFeedback() {
+        calls.push('legacy-save');
+      },
+      async incrementHelpedCount() {
+        calls.push('legacy-increment');
+      },
+    },
+    apiClient: {
+      async submitReplyFeedback(input) {
+        calls.push(`${input.replyId}:${input.type}:${input.comment}`);
+        return { status: 'saved', feedbackId: input.replyId, helpedCountApplied: true };
+      },
+    },
+  });
+
+  assert.deepEqual(result, { status: 'saved', feedbackId: 'reply-1', helpedCountApplied: true });
+  assert.deepEqual(calls, ['reply-1:like: 고마워요 ']);
+});
+
+test('PRD feedback fails closed when API path is unavailable', async () => {
+  const calls: string[] = [];
+
+  await assert.rejects(
+    submitReplyFeedback({
+      reply: { ...humanReply, source: 'prd_replies' },
+      feedbackType: 'helpful',
+      persistence: {
+        async saveReplyFeedback() {
+          calls.push('legacy-save');
+        },
+        async incrementHelpedCount() {
+          calls.push('legacy-increment');
+        },
+      },
+    }),
+    /reply_feedback_api_unavailable/
+  );
+
+  assert.deepEqual(calls, []);
 });

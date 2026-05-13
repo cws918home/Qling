@@ -1,5 +1,6 @@
 import type {
   LegacyLettersReplyDoc,
+  PrdFeedbackDoc,
   MyWorryListItem,
   PrdReplyDoc,
   PrdWorryDoc,
@@ -74,27 +75,42 @@ export function selectRepliesForWorry(params: {
   userUid: string;
   worryId: string;
   readStatesByReplyId?: Map<string, ReplyReadStateDoc>;
+  feedbacksByReplyId?: Map<string, PrdFeedbackDoc>;
 }): ReplyReadModelItem[] {
-  return adaptPrdReplies(params.replies.filter(reply => (
+  const visibleReplies = params.replies.filter(reply => {
+    if (
     reply.worryId === params.worryId
     && reply.authorUid === params.userUid
-  )), params.readStatesByReplyId);
+    ) {
+      return params.feedbacksByReplyId?.get(reply.id)?.type !== 'dislike';
+    }
+    return false;
+  });
+
+  return adaptPrdReplies(visibleReplies, params.readStatesByReplyId, params.feedbacksByReplyId);
 }
 
 export function selectMyGivenReplies(params: {
   replies: PrdReplyDoc[];
   userUid: string;
+  feedbacksByReplyId?: Map<string, PrdFeedbackDoc>;
 }): ReplyReadModelItem[] {
-  return adaptPrdReplies(params.replies.filter(reply => reply.replierUid === params.userUid));
+  return adaptPrdReplies(
+    params.replies.filter(reply => reply.replierUid === params.userUid),
+    undefined,
+    params.feedbacksByReplyId
+  );
 }
 
 export function adaptPrdReplies(
   replies: PrdReplyDoc[],
-  readStatesByReplyId?: Map<string, ReplyReadStateDoc>
+  readStatesByReplyId?: Map<string, ReplyReadStateDoc>,
+  feedbacksByReplyId?: Map<string, PrdFeedbackDoc>
 ): ReplyReadModelItem[] {
   return sortNewestFirst(replies.flatMap(reply => {
     if (!reply.worryId || !reply.authorUid || !reply.replierUid) return [];
     if (typeof reply.content !== 'string') return [];
+    const feedback = feedbacksByReplyId?.get(reply.id);
 
     return [{
       id: reply.id,
@@ -115,6 +131,16 @@ export function adaptPrdReplies(
       hasUnread: readStatesByReplyId ? !readStatesByReplyId.has(reply.id) : false,
       isAiGenerated: reply.isAiGenerated,
       isExampleReply: reply.isExampleReply,
+      feedback: feedback?.type === 'like'
+        ? 'helpful'
+        : feedback?.type === 'dislike'
+          ? 'not_helpful'
+          : reply.feedbackType === 'like'
+            ? 'helpful'
+            : undefined,
+      publisherComment: feedback?.commentVisibility === 'replier' && typeof feedback.comment === 'string'
+        ? feedback.comment
+        : undefined,
     }];
   }));
 }
