@@ -1,30 +1,204 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    function isAuthenticated() {
+
+    function signedIn() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
     }
-    
-    match /users/{userId} {
-      allow read, write: if isAuthenticated();
+
+    function currentUserPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function isNotDeletedSelf() {
+      return signedIn()
+        && (!exists(currentUserPath())
+          || !('deleted' in get(currentUserPath()).data)
+          || get(currentUserPath()).data.deleted != true);
+    }
+
+    function deliveryIdFor(worryId, uid) {
+      return worryId + '_' + uid;
+    }
+
+    function hasDeliveryForWorry(worryId) {
+      let delivery = get(/databases/$(database)/documents/deliveries/$(deliveryIdFor(worryId, request.auth.uid)));
+      return signedIn()
+        && delivery.data.worryId == worryId
+        && delivery.data.recipientUid == request.auth.uid;
+    }
+
+    function isWorryAuthor(worryId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/worries/$(worryId)).data.authorUid == request.auth.uid;
+    }
+
+    function isDeliveryRecipient(deliveryId) {
+      return signedIn()
+        && resource.data.recipientUid == request.auth.uid;
+    }
+
+    function safeUserKeys() {
+      return [
+        'uid',
+        'gender',
+        'interests',
+        'createdAt',
+        'updatedAt',
+        'lastActive',
+        'lastTokenRefresh',
+        'notificationPermission',
+        'isInstalledPWA'
+      ];
+    }
+
+    function forbiddenUserKeys() {
+      return [
+        'activeDeliveryCount',
+        'helpedCount',
+        'deleted',
+        'deletedAt',
+        'exampleWorriesCreatedAt',
+        'exampleWorrySeedIds'
+      ];
+    }
+
+    function hasOnlySafeUserKeys() {
+      return request.resource.data.keys().hasOnly(safeUserKeys())
+        && !request.resource.data.keys().hasAny(forbiddenUserKeys());
+    }
+
+    function uidMatchesPath(uid) {
+      return !('uid' in request.resource.data) || request.resource.data.uid == uid;
+    }
+
+    function existingUserIsNotDeleted() {
+      return !('deleted' in resource.data) || resource.data.deleted != true;
+    }
+
+    function legacyReplyCreateKeys() {
+      return [
+        'senderId',
+        'receiverId',
+        'originalContent',
+        'refinedContent',
+        'type',
+        'replyTo',
+        'replyToContent',
+        'createdAt',
+        'isRead',
+        'feedback',
+        'isAiGenerated'
+      ];
+    }
+
+    function isOwnLegacyLetterRead() {
+      return signedIn()
+        && (
+          resource.data.senderId == request.auth.uid
+          || resource.data.receiverId == request.auth.uid
+          || (resource.data.type == 'worry' && resource.data.receiverId == 'public')
+        );
+    }
+
+    function isLegacyReplyCreate() {
+      return isNotDeletedSelf()
+        && request.resource.data.type == 'reply'
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.keys().hasOnly(legacyReplyCreateKeys())
+        && request.resource.data.isRead == false
+        && request.resource.data.feedback == null;
+    }
+
+    function changesOnly(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    function isReplyReceiver() {
+      return signedIn()
+        && resource.data.type == 'reply'
+        && resource.data.receiverId == request.auth.uid;
+    }
+
+    function isReadUpdate() {
+      return isNotDeletedSelf()
+        && isReplyReceiver()
+        && changesOnly(['isRead'])
+        && request.resource.data.isRead == true;
+    }
+
+    function publisherCommentUpdate() {
+      return isNotDeletedSelf()
+        && isReplyReceiver()
+        && changesOnly(['publisherComment'])
+        && request.resource.data.publisherComment is string;
+    }
+
+    function feedbackUpdate() {
+      return isNotDeletedSelf()
+        && isReplyReceiver()
+        && changesOnly(['feedback'])
+        && request.resource.data.feedback in ['helpful', 'not_helpful'];
+    }
+
+    match /users/{uid} {
+      allow read: if isSelf(uid) && existingUserIsNotDeleted();
+      allow create: if isSelf(uid) && hasOnlySafeUserKeys() && uidMatchesPath(uid);
+      allow update: if isSelf(uid)
+        && existingUserIsNotDeleted()
+        && hasOnlySafeUserKeys()
+        && uidMatchesPath(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(safeUserKeys());
+      allow delete: if false;
 
       match /fcmTokens/{tokenId} {
-        allow read, write, delete: if isOwner(userId);
+        allow read, create, update, delete: if isSelf(uid) && isNotDeletedSelf();
       }
     }
 
-    match /letters/{letterId} {
-      // 테스트를 위해 모든 로그인 사용자의 읽기/쓰기/삭제를 허용합니다.
-      allow read, write, delete: if isAuthenticated();
+    match /worries/{worryId} {
+      allow read: if isNotDeletedSelf()
+        && (
+          resource.data.authorUid == request.auth.uid
+          || hasDeliveryForWorry(worryId)
+        );
+      allow create, update, delete: if false;
     }
-    
+
+    match /deliveries/{deliveryId} {
+      allow read: if isNotDeletedSelf() && isDeliveryRecipient(deliveryId);
+      allow create, update, delete: if false;
+    }
+
+    match /deliveryBatches/{batchId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /moderationLogs/{logId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /pushLogs/{logId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /letters/{letterId} {
+      allow read: if isOwnLegacyLetterRead();
+      allow create: if isLegacyReplyCreate();
+      allow update: if isReadUpdate() || publisherCommentUpdate() || feedbackUpdate();
+      allow delete: if false;
+    }
+
     match /test/connection {
       allow read: if true;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

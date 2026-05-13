@@ -235,21 +235,6 @@ export default function App() {
     await signOut(auth);
   };
 
-  // Active Users Listener
-  const [activeUsersCount, setActiveUsersCount] = useState(1);
-  useEffect(() => {
-    if (!user) return;
-    const twoMinsAgo = Timestamp.fromDate(new Date(Date.now() - 2 * 60 * 1000));
-    const q = query(
-      collection(db, 'users'),
-      where('lastActive', '>=', twoMinsAgo)
-    );
-    const unsubscribe = onSnapshot(q, (snap) => {
-      setActiveUsersCount(Math.max(1, snap.size));
-    });
-    return () => unsubscribe();
-  }, [user]);
-
   // Presence Updater
   useEffect(() => {
     if (!profile) return;
@@ -298,7 +283,6 @@ export default function App() {
         uid: user.uid,
         gender,
         interests,
-        helpedCount: 0,
         createdAt: now,
         lastActive: serverTimestamp() // Set to server timestamp for matching
       };
@@ -484,7 +468,7 @@ export default function App() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#A3B18A] opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[#A3B18A]"></span>
                 </span>
-                {activeUsersCount}명
+                연결됨
               </div>
               <button 
                 onClick={() => setView('settings')}

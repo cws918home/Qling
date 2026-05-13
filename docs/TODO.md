@@ -32,7 +32,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.12 My worries and reply mailbox read paths read `worries` authored by the signed-in user, `replies` for those worries, and replies written by the signed-in user, with legacy fallback isolated behind an explicitly named adapter.
 - [ ] TODO-1.13 My page read path reads own profile, own written replies, and like/comment state visible to the replier.
 - [ ] TODO-1.14 Temporary legacy read fallbacks are removed from runtime code.
-- [ ] TODO-1.15 Firestore ownership for initial PRD collections is enforced: `worries`, `deliveries`, `moderationLogs`, `pushLogs`, and initial `deliveryBatches` are server-owned; clients keep only narrow profile/token writes and temporary legacy reads.
+- [x] TODO-1.15 Firestore ownership for initial PRD collections is enforced: `worries`, `deliveries`, `moderationLogs`, `pushLogs`, and initial `deliveryBatches` are server-owned; clients keep only narrow profile/token writes and temporary legacy reads.
 - [ ] TODO-1.16 Firestore ownership for replies is enforced: `replies` are server-owned and legacy reply write paths are not needed for PRD replies.
 - [ ] TODO-1.17 Firestore ownership for feedback is enforced: `feedbacks` and helpedCount changes are server-owned.
 - [ ] TODO-1.18 Firestore ownership for rematch operational collections is enforced.
@@ -64,8 +64,8 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.44 Server invariant for reply publication push failure is enforced: push failure never rolls back core reply publication.
 - [ ] TODO-1.45 Server invariant for feedback push failure is enforced: push failure never rolls back core feedback mutation.
 - [ ] TODO-1.71 Server invariant for pass replacement push failure is enforced: push failure to the immediate replacement recipient never rolls back the pass transition or replacement delivery creation.
-- [ ] TODO-1.46 Firestore rules invariant for initial PRD collections is enforced: clients cannot create/update/delete `worries`, `deliveries`, `moderationLogs`, `pushLogs`, or initial `deliveryBatches`.
-- [ ] TODO-1.47 Firestore rules invariant for profile/token surfaces is enforced: users can read/write only narrow own profile fields and own push token docs during transition.
+- [x] TODO-1.46 Firestore rules invariant for initial PRD collections is enforced: clients cannot create/update/delete `worries`, `deliveries`, `moderationLogs`, `pushLogs`, or initial `deliveryBatches`.
+- [x] TODO-1.47 Firestore rules invariant for profile/token surfaces is enforced: users can read/write only narrow own profile fields and own push token docs during transition.
 - [ ] TODO-1.48 Firestore rules invariant for replies is enforced: users can read only permitted reply surfaces and cannot write replies directly.
 - [ ] TODO-1.49 Firestore rules invariant for feedback is enforced: publisher can read own feedback, replier can read only likes and like comments, and clients cannot write feedback directly.
 - [ ] TODO-1.50 Firestore rules invariant for hidden/admin-only data is enforced: users cannot read moderation logs, push logs, operational logs, hidden content, or admin-only feedback comments.
@@ -443,13 +443,13 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 2: Firestore rules first hardening
 
-- [ ] TODO-5.12 Goal: stop new client-created PRD source-of-truth data and reduce legacy blast radius.
-- [ ] TODO-5.13 Modify: `firestore.rules`; add rules tests.
-- [ ] TODO-5.14 Rules changes: deny client create/update/delete for PRD collections; deny `letters` worry creation; deny `letters` delete immediately; narrow `users` read/write; preserve only necessary temporary `letters` reply paths.
-- [ ] TODO-5.15 Tests: direct write denial, own profile allowed, other user denied, legacy delete denied.
-- [ ] TODO-5.16 Manual verification: app still loads and can use first-slice publish path.
-- [ ] TODO-5.17 Explicit non-goals: final `letters` denial waits until Slice 16.
-- [ ] TODO-5.18 Deletion test: removing legacy rules should fail only legacy tests, not PRD source-of-truth tests.
+- [x] TODO-5.12 Goal: stop new client-created PRD source-of-truth data and reduce legacy blast radius.
+- [x] TODO-5.13 Modify: `firestore.rules`; add rules tests.
+- [x] TODO-5.14 Rules changes: deny client create/update/delete for PRD collections; deny `letters` worry creation; deny `letters` delete immediately; narrow `users` read/write; preserve only necessary temporary `letters` reply paths.
+- [x] TODO-5.15 Tests: direct write denial, own profile allowed, other user denied, legacy delete denied.
+- [x] TODO-5.16 Manual verification: app still loads and can use first-slice publish path.
+- [x] TODO-5.17 Explicit non-goals: final `letters` denial waits until Slice 16.
+- [x] TODO-5.18 Deletion test: removing legacy rules should fail only legacy tests, not PRD source-of-truth tests.
 
 ### Slice 3: Reply migration
 
@@ -698,7 +698,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-6.14 ActiveDeliveryCount hidden decrement: hiding an active delivery decrements the recipient's `activeDeliveryCount` exactly once.
 - [ ] TODO-6.15 ActiveDeliveryCount non-decrement events: read marking, push failure, and additive rematch creation elsewhere do not decrement `activeDeliveryCount`.
 - [ ] TODO-6.16 ActiveDeliveryCount idempotency: deterministic delivery IDs, status preconditions, and transaction reads prevent double-increment and double-decrement on retry paths.
-- [ ] TODO-6.17 ActiveDeliveryCount rules protection: Firestore rules forbid all client writes to `activeDeliveryCount`.
+- [x] TODO-6.17 ActiveDeliveryCount rules protection: Firestore rules forbid all client writes to `activeDeliveryCount`.
 - [x] TODO-6.18 Initial matching tests: exactly 5 initial deliveries, 4 matched + 1 random, fewer-than-5 failure with no partial writes, tie-breaks, active delivery limit, and initial redelivery prevention.
 - [ ] TODO-6.19 Rematch matching tests: duplicate-recipient exclusion, additive rematch cap 15, passed/answered exclusion, and PRD 8.5 random-slot behavior.
 - [x] TODO-6.20 Counter tests for publication: publish increments selected recipients, rejects recipients with `activeDeliveryCount >= 10`, and does not change counters when fewer than 5 eligible recipients exist.
@@ -717,22 +717,22 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ## 7. Firestore Rules Final Design
 
-- [ ] TODO-7.1 Helper functions: `signedIn()`, `isSelf(uid)`, `isNotDeletedSelf()`, `isWorryAuthor(worryId)`, `isDeliveryRecipient(deliveryId)`, `deliveryIdFor(worryId, uid)`, `hasDeliveryForWorry(worryId)`. During transition, `isNotDeletedSelf()` treats missing `deleted` as not deleted and blocks only explicit `deleted === true`.
-- [ ] TODO-7.2 `users/{uid}`: own reads only; own safe profile field writes only; forbid `helpedCount`, `activeDeliveryCount`, `deleted`, example state, other-user access, and delete.
-- [ ] TODO-7.3 Rules tests must prove clients cannot create, update, or delete `activeDeliveryCount`; only server transactions may change it.
-- [ ] TODO-7.4 `users/{uid}/fcmTokens/{tokenId}`: own reads/writes/deletes during transition; server cleans invalid tokens.
-- [ ] TODO-7.5 Transition `worries/{worryId}` rules: reads only for author or recipient with matching delivery; writes server only; no public read.
-- [ ] TODO-7.6 Transition `deliveries/{deliveryId}` rules: recipient reads own delivery; author may read limited metadata if needed; writes server only.
+- [x] TODO-7.1 Helper functions: `signedIn()`, `isSelf(uid)`, `isNotDeletedSelf()`, `isWorryAuthor(worryId)`, `isDeliveryRecipient(deliveryId)`, `deliveryIdFor(worryId, uid)`, `hasDeliveryForWorry(worryId)`. During transition, `isNotDeletedSelf()` treats missing `deleted` as not deleted and blocks only explicit `deleted === true`.
+- [x] TODO-7.2 `users/{uid}`: own reads only; own safe profile field writes only; forbid `helpedCount`, `activeDeliveryCount`, `deleted`, example state, other-user access, and delete.
+- [x] TODO-7.3 Rules tests must prove clients cannot create, update, or delete `activeDeliveryCount`; only server transactions may change it.
+- [x] TODO-7.4 `users/{uid}/fcmTokens/{tokenId}`: own reads/writes/deletes during transition; server cleans invalid tokens.
+- [x] TODO-7.5 Transition `worries/{worryId}` rules: reads only for author or recipient with matching delivery; writes server only; no public read.
+- [x] TODO-7.6 Transition `deliveries/{deliveryId}` rules: recipient reads own delivery; author may read limited metadata if needed; writes server only.
 - [ ] TODO-7.7 Reply `replies/{replyId}` rules: reads for replier or worry author; writes server only.
 - [ ] TODO-7.8 Feedback `feedbacks/{feedbackId}` rules: publisher reads own feedback, replier reads only likes and like comments, and writes are server only.
 - [ ] TODO-7.9 Admin/hidden rules: hidden/admin-only state is filtered in read models and denied by rules where possible.
-- [ ] TODO-7.10 Initial log rules: `moderationLogs` and `pushLogs` client reads/writes denied.
+- [x] TODO-7.10 Initial log rules: `moderationLogs` and `pushLogs` client reads/writes denied.
 - [ ] TODO-7.11 Rematch operational collection rules: `jobLocks` and `rematchRuns` client reads/writes denied when introduced.
 - [ ] TODO-7.12 AI fallback operational collection rules: `aiFallbackRuns` client reads/writes denied when introduced.
 - [ ] TODO-7.13 Example operational collection rules: `exampleWorrySeeds` and scheduled/example feedback jobs client reads/writes denied when introduced.
-- [ ] TODO-7.14 Legacy `letters` transition rules: deny worry create and delete while preserving only minimum legacy read/reply paths needed during migration.
+- [x] TODO-7.14 Legacy `letters` transition rules: deny worry create and delete while preserving only minimum legacy read/reply paths needed during migration.
 - [ ] TODO-7.15 Legacy `letters` final rules: deny all runtime reads/writes/deletes or remove the match block after runtime code no longer depends on `letters`.
-- [ ] TODO-7.16 Firestore rules limitation:
+- [x] TODO-7.16 Firestore rules limitation:
   - Recipient reading worry via delivery existence is easiest with deterministic delivery IDs.
   - Do not store broad `recipientUids` on worry solely for rules unless needed; it risks leaking delivery audience and complicating updates.
   - Prefer delivery snapshots/read model for answer feed to reduce cross-document rules complexity.
@@ -793,14 +793,14 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Firestore Rules Tests
 
-- [ ] TODO-9.31 No client direct source-of-truth writes to worries/deliveries/initial batches/logs.
+- [x] TODO-9.31 No client direct source-of-truth writes to worries/deliveries/initial batches/logs.
 - [ ] TODO-9.32 No client direct source-of-truth writes to replies.
 - [ ] TODO-9.33 No client direct source-of-truth writes to feedbacks.
 - [ ] TODO-9.34 No client direct source-of-truth writes to operational collections.
-- [ ] TODO-9.35 Own profile safe fields allowed; server-owned fields denied.
-- [ ] TODO-9.36 Client writes to `users/{uid}.activeDeliveryCount` are denied.
-- [ ] TODO-9.37 Recipient can read own delivery and allowed worry surface.
-- [ ] TODO-9.38 Non-recipient cannot read other delivery/worry.
+- [x] TODO-9.35 Own profile safe fields allowed; server-owned fields denied.
+- [x] TODO-9.36 Client writes to `users/{uid}.activeDeliveryCount` are denied.
+- [x] TODO-9.37 Recipient can read own delivery and allowed worry surface.
+- [x] TODO-9.38 Non-recipient cannot read other delivery/worry.
 - [ ] TODO-9.39 Replier cannot read dislike feedback/comment.
 - [ ] TODO-9.40 Legacy `letters` writes denied in final state.
 
@@ -888,7 +888,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ## 11. Risk Register
 
-- [ ] TODO-11.1 Firestore rules complexity:
+- [x] TODO-11.1 Firestore rules complexity:
   - Risk: cross-document read checks are hard to reason about.
   - Mitigation: deterministic delivery IDs and delivery snapshots; rules tests for every read/write surface.
 - [ ] TODO-11.2 Race conditions around active delivery counts:
