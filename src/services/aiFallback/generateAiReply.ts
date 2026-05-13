@@ -1,4 +1,5 @@
 export const AI_REPLY_MAX_LENGTH = 500;
+export const OPENAI_CHAT_COMPLETIONS_URL = 'https://api.openai.com/v1/chat/completions';
 
 export function buildAiFallbackPrompt() {
   return `You write one reply for a Korean anonymous worry-sharing app.
@@ -37,10 +38,10 @@ export async function generateAiReply(params: {
 }
 
 async function defaultFetchJson(systemInstruction: string, userContent: string): Promise<unknown> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not defined in .env file');
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error('OPENAI_API_KEY is not defined in .env file');
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch(OPENAI_CHAT_COMPLETIONS_URL, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,

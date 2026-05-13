@@ -10,6 +10,7 @@ import type {
 
 const JOB_NAME = 'createAiFallbacks';
 const MAX_LIMIT = 100;
+const SCAN_LIMIT = 500;
 const AI_REPLIER_UID = 'ai_fallback';
 
 function withoutId<T extends { id: string }>(model: T): Omit<T, 'id'> {
@@ -110,10 +111,17 @@ export function createAiFallbackRepository(params: { db: Firestore }): AiFallbac
 
     async fetchCandidates({ now, limit }) {
       const safeLimit = Math.max(1, Math.min(limit, MAX_LIMIT));
-      const snap = await db.collection('worries').where('status', '==', 'active').limit(safeLimit).get();
-      return snap.docs.flatMap(doc => {
+      const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const snap = await db.collection('worries')
+        .where('status', '==', 'active')
+        .where('createdAt', '<=', cutoff)
+        .orderBy('createdAt', 'asc')
+        .limit(Math.max(safeLimit, SCAN_LIMIT))
+        .get();
+      const candidates: AiFallbackCandidate[] = [];
+      for (const doc of snap.docs) {
         const data = doc.data();
-        if (typeof data.authorUid !== 'string' || typeof data.content !== 'string') return [];
+        if (typeof data.authorUid !== 'string' || typeof data.content !== 'string') continue;
         const candidate: AiFallbackCandidate = {
           worryId: doc.id,
           authorUid: data.authorUid,
@@ -124,8 +132,11 @@ export function createAiFallbackRepository(params: { db: Firestore }): AiFallbac
           hasAiReply: data.hasAiReply,
           aiReplyId: typeof data.aiReplyId === 'string' ? data.aiReplyId : undefined,
         };
-        return precheckCandidate(candidate, now) === 'human_delivery_cap_not_exhausted' ? [] : [candidate];
-      });
+        if (precheckCandidate(candidate, now)) continue;
+        candidates.push(candidate);
+        if (candidates.length >= safeLimit) break;
+      }
+      return candidates;
     },
 
     async acquireRunLock({ runId, now, lockUntil }) {

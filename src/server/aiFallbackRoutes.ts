@@ -4,7 +4,7 @@ import type { Messaging } from 'firebase-admin/messaging';
 import { requireInternalJobSecret } from './internalAuth';
 import { processSimpleModerationResponse } from './moderationResponses';
 import { createAiFallbacksWithDependencies, type CreateAiFallbacks, type CreateAiFallbacksResult } from '../services/aiFallback';
-import { generateAiReply } from '../services/aiFallback/generateAiReply';
+import { generateAiReply, OPENAI_CHAT_COMPLETIONS_URL } from '../services/aiFallback/generateAiReply';
 
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 100;
@@ -126,9 +126,9 @@ export function registerAiFallbackRoutes(app: express.Express, deps: {
 }
 
 async function generateModerationResponse(content: string): Promise<unknown> {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  if (!apiKey) throw new Error('OPENROUTER_API_KEY is not defined in .env file');
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) throw new Error('OPENAI_API_KEY is not defined in .env file');
+  const response = await fetch(OPENAI_CHAT_COMPLETIONS_URL, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,

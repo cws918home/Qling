@@ -13,17 +13,41 @@ function createFakeFirestore(initial: Record<string, Record<string, unknown>>) {
     return { id: path.split('/').at(-1) ?? '', path };
   }
 
-  function query(collectionName: string, filters: Array<[string, unknown]> = [], max?: number) {
+  type Filter = { field: string; op: string; value: unknown };
+
+  function compareValues(left: unknown, right: unknown) {
+    const leftValue = left instanceof Date ? left.getTime() : left;
+    const rightValue = right instanceof Date ? right.getTime() : right;
+    if (typeof leftValue === 'number' && typeof rightValue === 'number') return leftValue - rightValue;
+    if (typeof leftValue === 'string' && typeof rightValue === 'string') return leftValue.localeCompare(rightValue);
+    return 0;
+  }
+
+  function matchesFilter(data: Record<string, unknown>, filter: Filter) {
+    const value = data[filter.field];
+    if (filter.op === '==') return value === filter.value;
+    if (filter.op === '<=') return compareValues(value, filter.value) <= 0;
+    throw new Error(`unsupported_filter:${filter.op}`);
+  }
+
+  function query(
+    collectionName: string,
+    filters: Filter[] = [],
+    max?: number,
+    order?: { field: string; direction: 'asc' | 'desc' }
+  ) {
     const api = {
       collectionName,
       filters,
       max,
       where(field: string, op: string, value: unknown) {
-        assert.equal(op, '==');
-        return query(collectionName, [...filters, [field, value]], max);
+        return query(collectionName, [...filters, { field, op, value }], max, order);
+      },
+      orderBy(field: string, direction: 'asc' | 'desc' = 'asc') {
+        return query(collectionName, filters, max, { field, direction });
       },
       limit(limit: number) {
-        return query(collectionName, filters, limit);
+        return query(collectionName, filters, limit, order);
       },
       async get() {
         return api.querySnapshot();
@@ -31,7 +55,12 @@ function createFakeFirestore(initial: Record<string, Record<string, unknown>>) {
       querySnapshot() {
         const docs = [...store.entries()]
           .filter(([path]) => path.startsWith(`${collectionName}/`) && path.split('/').length === 2)
-          .filter(([, data]) => filters.every(([field, value]) => data[field] === value))
+          .filter(([, data]) => filters.every(filter => matchesFilter(data, filter)))
+          .sort(([, left], [, right]) => {
+            if (!order) return 0;
+            const result = compareValues(left[order.field], right[order.field]);
+            return order.direction === 'asc' ? result : -result;
+          })
           .slice(0, max)
           .map(([path, data]) => ({
             id: path.split('/')[1],
@@ -52,8 +81,10 @@ function createFakeFirestore(initial: Record<string, Record<string, unknown>>) {
           return docRef(`${name}/${id}`);
         },
         where(field: string, op: string, value: unknown) {
-          assert.equal(op, '==');
-          return query(name, [[field, value]]);
+          return query(name, [{ field, op, value }]);
+        },
+        orderBy(field: string, direction: 'asc' | 'desc' = 'asc') {
+          return query(name, [], undefined, { field, direction });
         },
         limit(limit: number) {
           return query(name, [], limit);
@@ -138,6 +169,58 @@ function moderationLog(id = 'mod1'): AiFallbackModerationLogWriteModel {
     updatedAt: now,
   };
 }
+
+test('candidate scan excludes under-24h active worries so they cannot starve older eligible worries', async () => {
+  const db = createFakeFirestore({
+    'worries/new': {
+      authorUid: 'author-new',
+      content: 'new worry',
+      status: 'active',
+      createdAt: new Date('2026-05-12T12:00:00.000Z'),
+      humanDeliveryLimit: 15,
+      humanDeliveryCount: 15,
+    },
+    'worries/old': {
+      authorUid: 'author-old',
+      content: 'old worry',
+      status: 'active',
+      createdAt: new Date('2026-05-11T00:00:00.000Z'),
+      humanDeliveryLimit: 15,
+      humanDeliveryCount: 15,
+    },
+  });
+  const repo = createAiFallbackRepository({ db: db as never });
+
+  const candidates = await repo.fetchCandidates({ now, limit: 1 });
+
+  assert.deepEqual(candidates.map(item => item.worryId), ['old']);
+});
+
+test('candidate scan over-scans old under-cap worries so small limits still reach eligible worries', async () => {
+  const db = createFakeFirestore({
+    'worries/under-cap': {
+      authorUid: 'author-under',
+      content: 'under cap',
+      status: 'active',
+      createdAt: new Date('2026-05-10T00:00:00.000Z'),
+      humanDeliveryLimit: 15,
+      humanDeliveryCount: 14,
+    },
+    'worries/eligible': {
+      authorUid: 'author-eligible',
+      content: 'eligible',
+      status: 'active',
+      createdAt: new Date('2026-05-11T00:00:00.000Z'),
+      humanDeliveryLimit: 15,
+      humanDeliveryCount: 15,
+    },
+  });
+  const repo = createAiFallbackRepository({ db: db as never });
+
+  const candidates = await repo.fetchCandidates({ now, limit: 1 });
+
+  assert.deepEqual(candidates.map(item => item.worryId), ['eligible']);
+});
 
 test('active deliveries do not expire and AI fallback creates exactly one AI reply', async () => {
   const db = createFakeFirestore(baseDocs());
