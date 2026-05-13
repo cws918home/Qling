@@ -19,7 +19,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 ## 1. Target PRD Architecture
 
 - [x] TODO-1.1 Worry publication mutation boundary is server-owned: browser submits to an authenticated endpoint, never supplies trusted `uid`, and no runtime PRD worry publication path writes `letters` or PRD source-of-truth collections directly from the client.
-- [ ] TODO-1.2 Reply publication mutation boundary is server-owned: browser submits by delivery ID to an authenticated endpoint, stored reply ID is deterministic from delivery ID, and no runtime reply publication path creates `letters` replies.
+- [x] TODO-1.2 Reply publication mutation boundary is server-owned: browser submits by delivery ID to an authenticated endpoint, stored reply ID is deterministic from delivery ID, and no runtime reply publication path creates `letters` replies.
 - [ ] TODO-1.3 Read-state mutation boundary is server-owned: delivery and reply read markers are set only through authenticated endpoints and are not public read receipts.
 - [ ] TODO-1.4 Pass mutation boundary is server-owned: pass status changes, same-worry exclusion, immediate replacement attempt, and `activeDeliveryCount` decrement/increment behavior happen only in an authenticated server transaction or transaction-plus-best-effort-push flow.
 - [ ] TODO-1.5 Feedback mutation boundary is server-owned: like/dislike/comment writes and helpedCount changes happen only through an authenticated server transaction.
@@ -33,7 +33,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.13 My page read path reads own profile, own written replies, and like/comment state visible to the replier.
 - [ ] TODO-1.14 Temporary legacy read fallbacks are removed from runtime code.
 - [x] TODO-1.15 Firestore ownership for initial PRD collections is enforced: `worries`, `deliveries`, `moderationLogs`, `pushLogs`, and initial `deliveryBatches` are server-owned; clients keep only narrow profile/token writes and temporary legacy reads.
-- [ ] TODO-1.16 Firestore ownership for replies is enforced: `replies` are server-owned and legacy reply write paths are not needed for PRD replies.
+- [x] TODO-1.16 Firestore ownership for replies is enforced: `replies` are server-owned and legacy reply write paths are not needed for PRD replies.
 - [ ] TODO-1.17 Firestore ownership for feedback is enforced: `feedbacks` and helpedCount changes are server-owned.
 - [ ] TODO-1.18 Firestore ownership for rematch operational collections is enforced.
 - [ ] TODO-1.19 Firestore ownership for AI fallback operational collections is enforced.
@@ -41,19 +41,19 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.21 Final Firestore ownership is enforced: legacy `letters` runtime access is removed or fully denied.
 - [ ] TODO-1.22 Server invariant for auth/deleted-user blocking is enforced for all user endpoints. Compatibility rule: until Phase 14 backfills/sets deletion state, a missing `deleted` field means "not deleted"; only `deleted === true` or another final explicit inactive/deleted marker blocks activity and matching.
 - [x] TODO-1.23 Server invariant for worry content validation is enforced: trim, non-empty, max 1000.
-- [ ] TODO-1.24 Server invariant for reply content validation is enforced: trim, non-empty, max 1000.
+- [x] TODO-1.24 Server invariant for reply content validation is enforced: trim, non-empty, max 1000.
 - [ ] TODO-1.25 Server invariant for feedback comment validation is enforced: trim, non-empty when submitted, max 1000.
 - [x] TODO-1.26 Server invariant for worry moderation is enforced before saving user-visible worries.
-- [ ] TODO-1.27 Server invariant for reply moderation is enforced before saving user-visible replies.
+- [x] TODO-1.27 Server invariant for reply moderation is enforced before saving user-visible replies.
 - [ ] TODO-1.28 Server invariant for feedback comment moderation is enforced before saving user-visible feedback comments.
 - [ ] TODO-1.29 Server invariant for AI reply moderation is enforced before saving AI replies.
 - [ ] TODO-1.30 Server invariant for example reply moderation is enforced before saving example replies.
 - [x] TODO-1.31 Server invariant for category preservation is enforced for worry publication: raw, valid, invalid, and matching categories are stored.
 - [x] TODO-1.32 Server invariant for initial matching is enforced: exactly 5 initial human deliveries, 4 matched plus 1 random. If fewer than 5 eligible human recipients exist, publication fails without partial worry, batch, delivery, counter, or push state.
 - [x] TODO-1.33 Server invariant for initial delivery active limit is enforced: selected initial recipients have `activeDeliveryCount < 10`.
-- [ ] TODO-1.34 Server invariant for same-worry redelivery exclusion metadata is enforced when users pass or answer.
+- [x] TODO-1.34 Server invariant for same-worry redelivery exclusion metadata is enforced when users pass or answer.
 - [ ] TODO-1.35 Server invariant for rematch delivery limits is enforced: total human delivery cap `15`, active delivery limit `< 10`, and no redelivery of the same worry to the same user.
-- [ ] TODO-1.36 Server invariant for one reply per delivery is enforced with deterministic reply IDs and idempotency/duplicate-content behavior.
+- [x] TODO-1.36 Server invariant for one reply per delivery is enforced with deterministic reply IDs and idempotency/duplicate-content behavior.
 - [ ] TODO-1.37 Server invariant for one immutable feedback per reply is enforced with deterministic feedback IDs and delayed like-comment rules.
 - [ ] TODO-1.38 Server invariant for helpedCount is enforced: increments happen exactly once only for eligible human/example likes, and AI likes are excluded.
 - [ ] TODO-1.39 Server invariant for pass idempotency is enforced by status preconditions.
@@ -61,12 +61,12 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.41 Server invariant for AI fallback idempotency is enforced by deterministic AI reply state and status preconditions.
 - [ ] TODO-1.42 Server invariant for example job idempotency is enforced by per-user example state, deterministic jobs, and status preconditions.
 - [x] TODO-1.43 Server invariant for worry publication push failure is enforced: push failure never rolls back core worry publication.
-- [ ] TODO-1.44 Server invariant for reply publication push failure is enforced: push failure never rolls back core reply publication.
+- [x] TODO-1.44 Server invariant for reply publication push failure is enforced: push failure never rolls back core reply publication.
 - [ ] TODO-1.45 Server invariant for feedback push failure is enforced: push failure never rolls back core feedback mutation.
 - [ ] TODO-1.71 Server invariant for pass replacement push failure is enforced: push failure to the immediate replacement recipient never rolls back the pass transition or replacement delivery creation.
 - [x] TODO-1.46 Firestore rules invariant for initial PRD collections is enforced: clients cannot create/update/delete `worries`, `deliveries`, `moderationLogs`, `pushLogs`, or initial `deliveryBatches`.
 - [x] TODO-1.47 Firestore rules invariant for profile/token surfaces is enforced: users can read/write only narrow own profile fields and own push token docs during transition.
-- [ ] TODO-1.48 Firestore rules invariant for replies is enforced: users can read only permitted reply surfaces and cannot write replies directly.
+- [x] TODO-1.48 Firestore rules invariant for replies is enforced: users can read only permitted reply surfaces and cannot write replies directly.
 - [ ] TODO-1.49 Firestore rules invariant for feedback is enforced: publisher can read own feedback, replier can read only likes and like comments, and clients cannot write feedback directly.
 - [ ] TODO-1.50 Firestore rules invariant for hidden/admin-only data is enforced: users cannot read moderation logs, push logs, operational logs, hidden content, or admin-only feedback comments.
 - [ ] TODO-1.51 Firestore rules invariant for legacy removal is enforced: final rules deny legacy `letters` runtime reads/writes/deletes.
@@ -95,7 +95,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.59 Introduce a seam only when it hides an external dependency, enables deterministic tests, or owns a meaningful policy boundary.
 - [ ] TODO-1.60 Prefer one deep module with a small public interface over many shallow wrappers.
 - [x] TODO-1.61 Apply deep-module guardrails to `worryPublication`, `moderation`, and `answerFeed`.
-- [ ] TODO-1.62 Apply deep-module guardrails to `replyPublication`.
+- [x] TODO-1.62 Apply deep-module guardrails to `replyPublication`.
 - [ ] TODO-1.63 Apply deep-module guardrails to `replyMailbox` / `myWorries`.
 - [ ] TODO-1.64 Apply deep-module guardrails to `replyFeedback`.
 - [ ] TODO-1.65 Apply deep-module guardrails to `pass` / `rematch`.
@@ -175,18 +175,18 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 ### `replies/{replyId}`
 
-- [ ] TODO-2.38 Deterministic ID recommendation: `deliveryId`, so one reply per delivery is enforced by create-if-absent.
-- [ ] TODO-2.39 Core human reply fields: `deliveryId`, `worryId`, `authorUid`, `replierUid`, `content`, `status: 'active'`, `moderationLogId`, `createdAt`, `updatedAt`.
+- [x] TODO-2.38 Deterministic ID recommendation: `deliveryId`, so one reply per delivery is enforced by create-if-absent.
+- [x] TODO-2.39 Core human reply fields: `deliveryId`, `worryId`, `authorUid`, `replierUid`, `content`, `status: 'active'`, `moderationLogId`, `createdAt`, `updatedAt`.
 - [ ] TODO-2.40 Reply read-state field: `readByAuthorAt`.
 - [ ] TODO-2.41 Feedback summary fields: `feedbackType`, `likedAt`, `dislikedAt`.
 - [ ] TODO-2.42 AI reply fields: `isAiGenerated`.
 - [ ] TODO-2.43 Example reply fields: `isExampleReply`.
 - [ ] TODO-2.44 Hidden reply fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`.
-- [ ] TODO-2.45 Source of truth: final answer content.
-- [ ] TODO-2.46 Read access: replier can read own replies; worry author can read replies to own worries except disliked replies hidden from publisher UI/read model.
-- [ ] TODO-2.47 Write access: server only.
-- [ ] TODO-2.48 Lifecycle: immutable by users; admin can hide.
-- [ ] TODO-2.49 Replaces legacy `letters` replies.
+- [x] TODO-2.45 Source of truth: final answer content.
+- [x] TODO-2.46 Read access: replier can read own replies; worry author can read replies to own worries except disliked replies hidden from publisher UI/read model.
+- [x] TODO-2.47 Write access: server only.
+- [x] TODO-2.48 Lifecycle: immutable by users; admin can hide.
+- [x] TODO-2.49 Replaces legacy `letters` replies.
 
 ### `feedbacks/{feedbackId}`
 
@@ -205,7 +205,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 ### `moderationLogs/{logId}`
 
 - [x] TODO-2.57 Worry moderation log fields: `targetType: 'worry'`, `targetId`, `uid`, `originalContent`, `status: 'approved' | 'rejected' | 'invalid_provider_response' | 'provider_error'`, `reasonCode`, `userMessage`, `helpMessage`, `rawProviderResponse`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `provider`, `model`, `createdAt`, `updatedAt`.
-- [ ] TODO-2.58 Reply moderation log fields: `targetType: 'reply'` plus common moderation fields.
+- [x] TODO-2.58 Reply moderation log fields: `targetType: 'reply'` plus common moderation fields.
 - [ ] TODO-2.59 Feedback comment moderation log fields: `targetType: 'feedback_comment'` plus common moderation fields.
 - [ ] TODO-2.60 AI reply moderation log fields: `targetType: 'ai_reply'` plus common moderation fields.
 - [ ] TODO-2.61 Example reply moderation log fields: `targetType: 'example_reply'` plus common moderation fields.
@@ -288,13 +288,13 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Reply Publication: `POST /api/deliveries/:deliveryId/replies`
 
-- [ ] TODO-3.25 Request body: `{ content: string }`.
-- [ ] TODO-3.26 Auth: signed-in delivery recipient, not deleted.
-- [ ] TODO-3.27 Validation: trim non-empty max 1000, active delivery, no existing `replies/{deliveryId}`.
-- [ ] TODO-3.28 Transaction: moderation before transaction; create moderation log and `replies/{deliveryId}`; if delivery is still `active`, set delivery `answered`, increment worry human reply state for human replies, and decrement recipient `activeDeliveryCount` exactly once.
-- [ ] TODO-3.29 Response: `200 { status: 'published', replyId }` or `200 { status: 'rejected', reasonCode, userMessage, helpMessage?, moderationLogId }`.
-- [ ] TODO-3.30 Idempotency: deterministic reply ID makes duplicate create return existing success if content same; otherwise `409`.
-- [ ] TODO-3.31 Tests: one reply per delivery, ownership, status transition, moderation rejection, best-effort push to author.
+- [x] TODO-3.25 Request body: `{ content: string }`.
+- [x] TODO-3.26 Auth: signed-in delivery recipient, not deleted.
+- [x] TODO-3.27 Validation: trim non-empty max 1000, active delivery, no existing `replies/{deliveryId}`.
+- [x] TODO-3.28 Transaction: moderation before transaction; create moderation log and `replies/{deliveryId}`; if delivery is still `active`, set delivery `answered`, increment worry human reply state for human replies, and decrement recipient `activeDeliveryCount` exactly once.
+- [x] TODO-3.29 Response: `200 { status: 'published', replyId }` or `200 { status: 'rejected', reasonCode, userMessage, helpMessage?, moderationLogId }`.
+- [x] TODO-3.30 Idempotency: deterministic reply ID makes duplicate create return existing success if content same; otherwise `409`.
+- [x] TODO-3.31 Tests: one reply per delivery, ownership, status transition, moderation rejection, best-effort push to author.
 
 ### My Worries Replies Read State: `POST /api/worries/:worryId/replies/read`
 
@@ -363,11 +363,11 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### `replyPublication`
 
-- [ ] TODO-4.17 Purpose: create exactly one moderated reply for a delivery.
-- [ ] TODO-4.18 Public interface: `publishReplyForDelivery({ replierUid, deliveryId, content })`.
-- [ ] TODO-4.19 Files: `src/services/replyPublication/serverPublication.ts`, `serverFirestore.ts`, `adapters.ts`, `productionFactory.ts`, `server.ts`.
-- [ ] TODO-4.20 Tests: one reply per delivery, delivery answered transaction, no `letters` creation.
-- [ ] TODO-4.21 Deletion test: deleting module removes reply mutation API; client cannot write replies directly.
+- [x] TODO-4.17 Purpose: create exactly one moderated reply for a delivery.
+- [x] TODO-4.18 Public interface: `publishReplyForDelivery({ replierUid, deliveryId, content })`.
+- [x] TODO-4.19 Files: `src/services/replyPublication/serverPublication.ts`, `serverFirestore.ts`, `adapters.ts`, `productionFactory.ts`, `server.ts`.
+- [x] TODO-4.20 Tests: one reply per delivery, delivery answered transaction, no `letters` creation.
+- [x] TODO-4.21 Deletion test: deleting module removes reply mutation API; client cannot write replies directly.
 
 ### `replyFeedback`
 
@@ -453,16 +453,16 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 3: Reply migration
 
-- [ ] TODO-5.19 Goal: replies are created by server only; the API remains `POST /api/deliveries/:deliveryId/replies`, and the stored reply document ID is deterministic from `deliveryId` so one reply per delivery is enforceable.
-- [ ] TODO-5.20 Files: `src/services/replyPublication/*`, `src/services/moderation/*`, `server.ts`, `src/App.tsx`, answer detail components.
-- [ ] TODO-5.21 Data/API: add `POST /api/deliveries/:deliveryId/replies`.
-- [ ] TODO-5.22 Transaction: create moderation log and `replies/{deliveryId}`, set delivery answered, update worry human reply state and counters.
-- [ ] TODO-5.23 UI/read path: answer detail submits by delivery ID, not legacy worry letter ID.
-- [ ] TODO-5.24 Rules: deny client reply creation; preserve legacy reply read fallback until Slice 4.
-- [ ] TODO-5.25 Tests: moderation, deterministic reply ID, one reply per delivery, duplicate same-content idempotency, different-content duplicate rejection, answered status, notify author best-effort, no edit/delete, no writes to `letters`.
-- [ ] TODO-5.26 Manual verification: recipient answers once; second attempt blocked; author gets new reply signal.
-- [ ] TODO-5.27 Explicit non-goals: feedback migration, full my-worries UI.
-- [ ] TODO-5.28 Deletion test: no `letters` reply creation path remains after this slice.
+- [x] TODO-5.19 Goal: replies are created by server only; the API remains `POST /api/deliveries/:deliveryId/replies`, and the stored reply document ID is deterministic from `deliveryId` so one reply per delivery is enforceable.
+- [x] TODO-5.20 Files: `src/services/replyPublication/*`, `src/services/moderation/*`, `server.ts`, `src/App.tsx`, answer detail components.
+- [x] TODO-5.21 Data/API: add `POST /api/deliveries/:deliveryId/replies`.
+- [x] TODO-5.22 Transaction: create moderation log and `replies/{deliveryId}`, set delivery answered, update worry human reply state and counters.
+- [x] TODO-5.23 UI/read path: answer detail submits by delivery ID, not legacy worry letter ID.
+- [x] TODO-5.24 Rules: deny client reply creation; preserve legacy reply read fallback until Slice 4.
+- [x] TODO-5.25 Tests: moderation, deterministic reply ID, one reply per delivery, duplicate same-content idempotency, different-content duplicate rejection, answered status, notify author best-effort, no edit/delete, no writes to `letters`.
+- [x] TODO-5.26 Manual verification: recipient answers once; second attempt blocked; author gets new reply signal.
+- [x] TODO-5.27 Explicit non-goals: feedback migration, full my-worries UI.
+- [x] TODO-5.28 Deletion test: no `letters` reply creation path remains after this slice.
 
 ### Slice 4: My worries and reply mailbox migration
 
@@ -692,7 +692,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-6.8 Snapshot fields: recipient gender/interests/helpedCount, author gender, matching categories, overlap count, selection type, batch ID/round/slot.
 - [x] TODO-6.9 ActiveDeliveryCount source decision: `users/{uid}.activeDeliveryCount` is a transactionally maintained server-owned counter; query-based active delivery counting is not allowed as the production eligibility source.
 - [x] TODO-6.10 ActiveDeliveryCount publication increment: initial publication checks selected recipients have `activeDeliveryCount < 10` inside the creation transaction and increments selected recipients exactly once.
-- [ ] TODO-6.11 ActiveDeliveryCount reply decrement: replying transitions an active delivery to `answered` and decrements the recipient's `activeDeliveryCount` exactly once.
+- [x] TODO-6.11 ActiveDeliveryCount reply decrement: replying transitions an active delivery to `answered` and decrements the recipient's `activeDeliveryCount` exactly once.
 - [ ] TODO-6.12 ActiveDeliveryCount pass decrement: passing transitions an active delivery to `passed` and decrements the passer's `activeDeliveryCount` exactly once.
 - [ ] TODO-6.13 ActiveDeliveryCount rematch semantics: old active deliveries remain counted after additive rematch, rematch checks new recipients have `activeDeliveryCount < 10` inside the creation transaction, and rematch increments only newly created delivery recipients.
 - [ ] TODO-6.14 ActiveDeliveryCount hidden decrement: hiding an active delivery decrements the recipient's `activeDeliveryCount` exactly once.
@@ -723,7 +723,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-7.4 `users/{uid}/fcmTokens/{tokenId}`: own reads/writes/deletes during transition; server cleans invalid tokens.
 - [x] TODO-7.5 Transition `worries/{worryId}` rules: reads only for author or recipient with matching delivery; writes server only; no public read.
 - [x] TODO-7.6 Transition `deliveries/{deliveryId}` rules: recipient reads own delivery; author may read limited metadata if needed; writes server only.
-- [ ] TODO-7.7 Reply `replies/{replyId}` rules: reads for replier or worry author; writes server only.
+- [x] TODO-7.7 Reply `replies/{replyId}` rules: reads for replier or worry author; writes server only.
 - [ ] TODO-7.8 Feedback `feedbacks/{feedbackId}` rules: publisher reads own feedback, replier reads only likes and like comments, and writes are server only.
 - [ ] TODO-7.9 Admin/hidden rules: hidden/admin-only state is filtered in read models and denied by rules where possible.
 - [x] TODO-7.10 Initial log rules: `moderationLogs` and `pushLogs` client reads/writes denied.
@@ -767,11 +767,11 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.8 Publish rejected worry creates moderation log only.
 - [x] TODO-9.9 Publish approved worry creates one worry, one Round 0 `deliveryBatches/{batchId}` with no source batch, and five Round 0 deliveries; fewer-than-5 eligible recipients fails with no partial state.
 - [x] TODO-9.10 Worry publication push failure creates push log and does not roll back.
-- [ ] TODO-9.11 Reply publication push failure creates push log and does not roll back.
+- [x] TODO-9.11 Reply publication push failure creates push log and does not roll back.
 - [ ] TODO-9.12 Feedback push failure creates push log and does not roll back.
-- [ ] TODO-9.13 Reply publication creates one reply and sets delivery answered.
+- [x] TODO-9.13 Reply publication creates one reply and sets delivery answered.
 - [x] TODO-9.14 Publish increments each selected recipient's `activeDeliveryCount` exactly once.
-- [ ] TODO-9.15 Reply transitions active delivery to answered and decrements recipient `activeDeliveryCount` exactly once.
+- [x] TODO-9.15 Reply transitions active delivery to answered and decrements recipient `activeDeliveryCount` exactly once.
 - [ ] TODO-9.16 Pass transitions own active delivery to passed, removes it from the passer's feed, decrements passer `activeDeliveryCount` exactly once, and exposes no pass signal to the author.
 - [ ] TODO-9.17 Admin/system hide of an active delivery decrements recipient `activeDeliveryCount` exactly once.
 - [ ] TODO-9.18 Feedback creates deterministic doc and increments helpedCount once.
@@ -780,7 +780,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 ### API Tests
 
 - [x] TODO-9.20 Worry publication API rejects missing/invalid auth and ignores body-supplied uid.
-- [ ] TODO-9.21 Reply publication API rejects missing/invalid auth and ignores body-supplied uid.
+- [x] TODO-9.21 Reply publication API rejects missing/invalid auth and ignores body-supplied uid.
 - [ ] TODO-9.22 Read-state APIs reject missing/invalid auth and ignore body-supplied uid.
 - [ ] TODO-9.23 Pass API rejects missing/invalid auth, ignores body-supplied uid, rejects passing someone else's delivery, and rejects answered/hidden non-passable deliveries.
 - [ ] TODO-9.24 Feedback API rejects missing/invalid auth and ignores body-supplied uid.
@@ -794,7 +794,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 ### Firestore Rules Tests
 
 - [x] TODO-9.31 No client direct source-of-truth writes to worries/deliveries/initial batches/logs.
-- [ ] TODO-9.32 No client direct source-of-truth writes to replies.
+- [x] TODO-9.32 No client direct source-of-truth writes to replies.
 - [ ] TODO-9.33 No client direct source-of-truth writes to feedbacks.
 - [ ] TODO-9.34 No client direct source-of-truth writes to operational collections.
 - [x] TODO-9.35 Own profile safe fields allowed; server-owned fields denied.
@@ -807,7 +807,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 ### Read Model Tests
 
 - [x] TODO-9.41 Active delivery appears in answer feed.
-- [ ] TODO-9.42 Answered deliveries are excluded from answer feed.
+- [x] TODO-9.42 Answered deliveries are excluded from answer feed.
 - [ ] TODO-9.43 Passed deliveries are excluded from answer feed.
 - [ ] TODO-9.44 Hidden deliveries are excluded from answer feed.
 - [ ] TODO-9.45 Existing active delivery remains visible and answerable after rematch creates additional deliveries.

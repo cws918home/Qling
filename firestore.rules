@@ -185,6 +185,15 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    match /replies/{replyId} {
+      allow read: if isNotDeletedSelf()
+        && (
+          resource.data.replierUid == request.auth.uid
+          || resource.data.authorUid == request.auth.uid
+        );
+      allow create, update, delete: if false;
+    }
+
     match /letters/{letterId} {
       allow read: if isOwnLegacyLetterRead();
       allow create: if isLegacyReplyCreate();

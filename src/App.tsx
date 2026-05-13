@@ -56,8 +56,8 @@ import { cn } from './lib/utils';
 import { generateAIReply } from './services/llmClient';
 import {
   publishPublisherCommentWithProductionAdapters,
-  publishReplyWithProductionAdapters,
 } from './services/replyPublication/production';
+import { publishReplyViaApi } from './services/replyPublication/apiClient';
 import { publishWorryViaApi } from './services/worryPublication/apiClient';
 import { submitReplyFeedbackWithProductionAdapters } from './services/replyFeedback/production';
 import type { ReplyFeedback } from './services/replyFeedback/types';
@@ -351,22 +351,26 @@ export default function App() {
   // 2. Send Reply -> Filter Check First
   const sendReply = async (content: string, worry: HomeWorryFeedLetter) => {
     if (!user) return;
+    if (!worry.deliveryId) {
+      setFilterAlert("이전 형식의 사연에는 새 답장을 보낼 수 없습니다.");
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      const result = await publishReplyWithProductionAdapters({
-        authorUid: user.uid,
+      const result = await publishReplyViaApi({
+        user,
+        deliveryId: worry.deliveryId,
         content,
-        worry,
       });
 
-      if (result.type === 'rejected') {
-        setFilterAlert("부적절한 표현이 감지되었습니다.");
+      if (result.status === 'rejected') {
+        setFilterAlert(result.reason);
         return;
       }
 
-      if (result.type === 'failed') {
-        console.error(result.error);
-        setFilterAlert("답장 전송 실패");
+      if (result.status === 'failed') {
+        setFilterAlert(result.reason || "답장 전송 실패");
         return;
       }
 

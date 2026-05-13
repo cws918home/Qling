@@ -44,6 +44,20 @@ const replyLetter = {
   feedback: null,
 };
 
+const prdReply = {
+  deliveryId: 'worry1_recipient',
+  worryId: 'worry1',
+  authorUid: 'author',
+  replierUid: 'recipient',
+  content: 'reply',
+  status: 'active',
+  moderationLogId: 'mod1',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  isAiGenerated: false,
+  isExampleReply: false,
+};
+
 const rulesTestsEnabled = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
 
 function dbFor(uid?: string) {
@@ -322,6 +336,47 @@ describe('recipient and author reads', () => {
     await seed('users/recipient', { ...safeProfile('recipient'), deleted: true });
     await assertFails(dbFor('recipient').doc('deliveries/worry1_recipient').get());
     await assertFails(dbFor('recipient').doc('worries/worry1').get());
+  });
+});
+
+describe('server-owned replies rules', () => {
+  beforeEach(async () => {
+    await seedBaseUsers();
+    await seed('users/deletedUser', { ...safeProfile('deletedUser'), deleted: true });
+    await seed('users/missingDeletedUser', safeProfile('missingDeletedUser'));
+    await seed('replies/worry1_recipient', prdReply);
+    await seed('replies/worry1_missingDeletedUser', {
+      ...prdReply,
+      deliveryId: 'worry1_missingDeletedUser',
+      replierUid: 'missingDeletedUser',
+    });
+    await seed('replies/worry1_deletedUser', {
+      ...prdReply,
+      deliveryId: 'worry1_deletedUser',
+      replierUid: 'deletedUser',
+    });
+  });
+
+  test('replier and worry author can read PRD reply', async () => {
+    await assertSucceeds(dbFor('recipient').doc('replies/worry1_recipient').get());
+    await assertSucceeds(dbFor('author').doc('replies/worry1_recipient').get());
+  });
+
+  test('other unauthenticated and deleted users cannot read PRD reply', async () => {
+    await assertFails(dbFor('other').doc('replies/worry1_recipient').get());
+    await assertFails(dbFor().doc('replies/worry1_recipient').get());
+    await assertFails(dbFor('deletedUser').doc('replies/worry1_deletedUser').get());
+  });
+
+  test('missing deleted field does not block PRD reply read', async () => {
+    await assertSucceeds(dbFor('missingDeletedUser').doc('replies/worry1_missingDeletedUser').get());
+  });
+
+  test('direct PRD reply create update and delete are denied', async () => {
+    await assertFails(dbFor('recipient').doc('replies/new').set(prdReply));
+    await assertFails(dbFor('recipient').doc('replies/worry1_recipient').update({ content: 'edited' }));
+    await assertFails(dbFor('recipient').doc('replies/worry1_recipient').delete());
+    await assertFails(dbFor('author').doc('replies/worry1_recipient').update({ status: 'hidden' }));
   });
 });
 

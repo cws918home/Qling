@@ -13,6 +13,14 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
+export interface ActiveAuthenticatedRequest extends Request {
+  auth: { uid: string };
+  userRecord: {
+    uid: string;
+    deleted?: boolean;
+  };
+}
+
 function authError(res: express.Response, status: 401 | 403, code: string, message: string) {
   res.status(status).json({ error: { code, message } });
 }
@@ -76,6 +84,45 @@ export function createRequireFirebaseAuth(deps: {
         .filter((interest: unknown): interest is string => typeof interest === 'string' && interest.trim().length > 0)
         .map((interest: string) => interest.trim()),
       deleted: data.deleted,
+    };
+
+    next();
+  };
+}
+
+export function createRequireActiveFirebaseAuth(deps: {
+  auth: Pick<Auth, 'verifyIdToken'>;
+  db: Firestore;
+}): express.RequestHandler {
+  return async (req, res, next) => {
+    const token = parseBearerToken(req.headers.authorization);
+    if (!token) {
+      authError(res, 401, 'auth_missing', '로그인이 필요합니다.');
+      return;
+    }
+
+    let decoded;
+    try {
+      decoded = await deps.auth.verifyIdToken(token);
+    } catch {
+      authError(res, 401, 'auth_invalid', '로그인 정보를 확인할 수 없습니다.');
+      return;
+    }
+
+    const uid = decoded.uid;
+    const userDoc = await deps.db.collection('users').doc(uid).get();
+    const data = userDoc.data();
+
+    if (data?.deleted === true) {
+      authError(res, 403, 'user_deleted', '삭제된 계정입니다.');
+      return;
+    }
+
+    const authReq = req as ActiveAuthenticatedRequest;
+    authReq.auth = { uid };
+    authReq.userRecord = {
+      uid,
+      deleted: data?.deleted,
     };
 
     next();

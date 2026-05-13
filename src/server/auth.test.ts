@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createRequireFirebaseAuth, parseBearerToken } from './auth';
+import { createRequireActiveFirebaseAuth, createRequireFirebaseAuth, parseBearerToken } from './auth';
 
 function createRes() {
   return {
@@ -116,4 +116,35 @@ test('incomplete profile is blocked for publication', async () => {
 
   assert.equal(res.statusCode, 403);
   assert.deepEqual(res.body, { error: { code: 'profile_incomplete', message: '고민을 보내려면 프로필 설정이 필요합니다.' } });
+});
+
+test('active auth allows missing profile fields for reply endpoints', async () => {
+  const middleware = createRequireActiveFirebaseAuth({
+    auth: { verifyIdToken: async () => ({ uid: 'verified' }) } as never,
+    db: createDb({}) as never,
+  });
+  const req = {
+    headers: { authorization: 'Bearer good' },
+    body: { uid: 'body' },
+  };
+  const res = createRes();
+  let nextCalled = false;
+
+  await middleware(req as never, res as never, () => { nextCalled = true; });
+
+  assert.equal(nextCalled, true);
+  assert.deepEqual((req as never as { auth: unknown }).auth, { uid: 'verified' });
+});
+
+test('active auth blocks only deleted true', async () => {
+  const middleware = createRequireActiveFirebaseAuth({
+    auth: { verifyIdToken: async () => ({ uid: 'verified' }) } as never,
+    db: createDb({ deleted: true }) as never,
+  });
+  const res = createRes();
+
+  await middleware({ headers: { authorization: 'Bearer good' } } as never, res as never, () => undefined);
+
+  assert.equal(res.statusCode, 403);
+  assert.deepEqual(res.body, { error: { code: 'user_deleted', message: '삭제된 계정입니다.' } });
 });

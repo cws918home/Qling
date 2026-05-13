@@ -51,6 +51,38 @@ test('non-recipient, answered, passed, and hidden deliveries do not appear', () 
   assert.deepEqual(items, []);
 });
 
+test('status answered delivery is excluded even without answeredAt', () => {
+  const items = selectActivePrdAnswerFeedItems({
+    profileUid: 'recipient',
+    deliveries: [
+      { id: 'answered-status', worryId: 'w1', authorUid: 'a', recipientUid: 'recipient', status: 'answered' },
+    ],
+    worriesById: new Map([['w1', { id: 'w1', content: 'content' }]]),
+  });
+
+  assert.deepEqual(items, []);
+});
+
+test('successful reply transaction state excludes delivery from answer feed', () => {
+  const before = selectActivePrdAnswerFeedItems({
+    profileUid: 'recipient',
+    deliveries: [
+      { id: 'delivery1', worryId: 'w1', authorUid: 'a', recipientUid: 'recipient', status: 'active' },
+    ],
+    worriesById: new Map([['w1', { id: 'w1', content: 'content' }]]),
+  });
+  const after = selectActivePrdAnswerFeedItems({
+    profileUid: 'recipient',
+    deliveries: [
+      { id: 'delivery1', worryId: 'w1', authorUid: 'a', recipientUid: 'recipient', status: 'answered', answeredAt: {} },
+    ],
+    worriesById: new Map([['w1', { id: 'w1', content: 'content' }]]),
+  });
+
+  assert.equal(before.length, 1);
+  assert.deepEqual(after, []);
+});
+
 test('adapter preserves PRD identity fields for reply form compatibility', () => {
   const letter = adaptPrdAnswerFeedItemToHomeWorryFeedLetter({
     id: 'delivery1',

@@ -15,6 +15,7 @@ import {
 } from "./src/server/moderationResponses";
 import { moderateAndInferWorryCategories } from "./src/server/moderationProvider";
 import { registerWorryRoutes } from "./src/server/worryRoutes";
+import { registerReplyRoutes } from "./src/server/replyRoutes";
 
 // Read client config to get database ID
 const clientConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
@@ -274,8 +275,29 @@ async function startServer() {
       auth: getAuth(),
       moderationProvider: moderateAndInferWorryCategories,
     });
+    registerReplyRoutes(app, {
+      db,
+      messaging,
+      auth: getAuth(),
+      moderationProvider: replyContent => processSimpleModerationResponse(
+        replyContent,
+        content => fetchFromOpenRouter(`You are a moderator for a Korean anonymous worry-sharing app.
+1. Check if the reply is inappropriate, abusive, violent, or unhelpful spam.
+2. Return JSON exactly like this:
+   - If bad: { "status": "rejected", "reason": "부적절한 표현이 감지되었습니다." }
+   - If good: { "status": "approved" }`, content)
+      ).then(result => result.body),
+    });
   } else {
     app.post('/api/worries/publish', (_req, res) => {
+      res.status(500).json({
+        error: {
+          code: 'firebase_unavailable',
+          message: 'Firebase Admin is not initialized.',
+        },
+      });
+    });
+    app.post('/api/deliveries/:deliveryId/replies', (_req, res) => {
       res.status(500).json({
         error: {
           code: 'firebase_unavailable',
