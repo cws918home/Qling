@@ -7,19 +7,35 @@ import type {
   Phase1HumanCandidate,
 } from './types';
 
-function createFakeDb() {
+function createFakeDb(options: {
+  tokenDocsByUid?: Record<string, Array<{ id: string; token: string }>>;
+  onPushLog?: (data: unknown) => void;
+} = {}) {
   const pushLogs: unknown[] = [];
   return {
     pushLogs,
     collection(name: string) {
       if (name === 'pushLogs') {
-        return { add: async (data: unknown) => pushLogs.push(data) };
+        return { add: async (data: unknown) => {
+          options.onPushLog?.(data);
+          pushLogs.push(data);
+        } };
       }
       return {
-        doc() {
+        doc(uid?: string) {
           return {
-            collection() {
-              return { get: async () => ({ empty: true, docs: [] }) };
+            collection(collectionName: string) {
+              assert.equal(collectionName, 'fcmTokens');
+              const tokenDocs = uid ? (options.tokenDocsByUid?.[uid] ?? []) : [];
+              return {
+                get: async () => ({
+                  empty: tokenDocs.length === 0,
+                  docs: tokenDocs.map(tokenDoc => ({
+                    id: tokenDoc.id,
+                    data: () => ({ token: tokenDoc.token }),
+                  })),
+                }),
+              };
             },
           };
         },
@@ -50,7 +66,11 @@ function createFakeRepository(candidates: Phase1HumanCandidate[]): InitialWorryP
       batchId: 'batch1',
       moderationLogId: 'mod1',
     }),
-    fetchRecipientCandidates: async () => candidates,
+    fetchRecipientCandidates: async params => {
+      assert.equal(params.authorUid, 'author');
+      assert.equal(params.minimumCandidateCount, 5);
+      return candidates;
+    },
     commitRejectedWorryModeration: async ({ moderationLog }) => {
       (repo.moderationLogs as ModerationLogWriteModel[]).push(moderationLog);
       return { moderationLogId: moderationLog.id, targetId: moderationLog.targetId };
@@ -140,4 +160,57 @@ test('fewer than 5 eligible humans fails before writes', async () => {
 
   assert.equal(result.status, 'server_error');
   assert.equal(repo.commits, 0);
+});
+
+test('push logs run only after core transaction commit', async () => {
+  repo = createFakeRepository(['a', 'b', 'c', 'd', 'e', 'f'].map(uid => candidate(uid)));
+  const db = createFakeDb({
+    onPushLog: () => {
+      assert.equal(repo.commits, 1);
+    },
+  });
+
+  const result = await publishWorryOnServer({
+    db: db as never,
+    messaging: null,
+    author: { uid: 'author', gender: 'female', interests: ['취업'] },
+    content: 'content',
+    moderationProvider: async () => ({ status: 'approved', categories: ['취업'] }),
+    repository: repo,
+    random: () => 0.1,
+  });
+
+  assert.equal(result.status, 'published');
+  assert.equal(db.pushLogs.length, 5);
+});
+
+test('push failure does not roll back core publication result', async () => {
+  repo = createFakeRepository(['a', 'b', 'c', 'd', 'e', 'f'].map(uid => candidate(uid)));
+  const db = createFakeDb({
+    tokenDocsByUid: {
+      a: [{ id: 'token-a', token: 'token-a' }],
+      b: [{ id: 'token-b', token: 'token-b' }],
+      c: [{ id: 'token-c', token: 'token-c' }],
+      d: [{ id: 'token-d', token: 'token-d' }],
+      e: [{ id: 'token-e', token: 'token-e' }],
+    },
+  });
+
+  const result = await publishWorryOnServer({
+    db: db as never,
+    messaging: {
+      send: async () => {
+        throw new Error('push down');
+      },
+    } as never,
+    author: { uid: 'author', gender: 'female', interests: ['취업'] },
+    content: 'content',
+    moderationProvider: async () => ({ status: 'approved', categories: ['취업'] }),
+    repository: repo,
+    random: () => 0.1,
+  });
+
+  assert.equal(result.status, 'published');
+  assert.equal(repo.commits, 1);
+  assert.equal(db.pushLogs.every(log => (log as { status: string }).status === 'failed'), true);
 });

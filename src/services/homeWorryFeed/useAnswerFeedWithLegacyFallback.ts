@@ -1,5 +1,6 @@
 import { useLegacyLettersAnswerFeedFallback } from './useLegacyLettersAnswerFeedFallback';
 import { usePrdAnswerFeed } from './usePrdAnswerFeed';
+import { selectAnswerFeedWithLegacyFallback } from './prdPolicy';
 import type {
   HomeWorryFeedLetter,
   HomeWorryFeedProfile,
@@ -12,6 +13,9 @@ export function useAnswerFeedWithLegacyFallback(params: {
   const { legacyFeedWorries } = useLegacyLettersAnswerFeedFallback(params);
 
   return {
-    feedWorries: [...prdFeedWorries, ...legacyFeedWorries],
+    feedWorries: selectAnswerFeedWithLegacyFallback({
+      prdFeedWorries,
+      legacyFeedWorries,
+    }),
   };
 }

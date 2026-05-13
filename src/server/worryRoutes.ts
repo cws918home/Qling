@@ -38,6 +38,7 @@ export function registerWorryRoutes(app: express.Express, deps: {
   messaging: Messaging | null;
   auth: Auth;
   moderationProvider: WorryModerationProvider;
+  publishWorry?: typeof publishWorryOnServer;
 }): void {
   if (!deps.db) {
     app.post('/api/worries/publish', (_req, res) => {
@@ -57,7 +58,8 @@ export function registerWorryRoutes(app: express.Express, deps: {
     async (req, res) => {
       try {
         const authReq = req as AuthenticatedRequest;
-        const result = await publishWorryOnServer({
+        const publish = deps.publishWorry ?? publishWorryOnServer;
+        const result = await publish({
           db: deps.db as Firestore,
           messaging: deps.messaging,
           author: {

@@ -4,6 +4,7 @@ export { useLegacyLettersAnswerFeedFallback } from './useLegacyLettersAnswerFeed
 export { useAnswerFeedWithLegacyFallback } from './useAnswerFeedWithLegacyFallback';
 export {
   adaptPrdAnswerFeedItemToHomeWorryFeedLetter,
+  selectAnswerFeedWithLegacyFallback,
   selectActivePrdAnswerFeedItems,
 } from './prdPolicy';
 export type {

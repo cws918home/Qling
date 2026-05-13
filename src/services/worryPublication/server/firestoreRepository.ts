@@ -70,7 +70,10 @@ export function createInitialWorryPublicationRepository(params: {
       };
     },
 
-    async fetchRecipientCandidates() {
+    async fetchRecipientCandidates(_params) {
+      // Phase 1 correctness-first strategy: scan the broad user pool and keep
+      // final eligibility/ranking policy in the use case. Later phases can add
+      // indexed prefilters without changing publication semantics.
       const snap = await db.collection('users').get();
       return snap.docs.map(doc => userDocToCandidate(doc.id, doc.data()));
     },

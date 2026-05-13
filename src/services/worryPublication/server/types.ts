@@ -129,7 +129,11 @@ export interface InitialWorryPublicationRepository {
     moderationLogId: string;
   };
 
-  fetchRecipientCandidates(): Promise<Phase1HumanCandidate[]>;
+  fetchRecipientCandidates(params: {
+    authorUid: string;
+    minimumCandidateCount: 5;
+    limit?: number;
+  }): Promise<Phase1HumanCandidate[]>;
 
   commitRejectedWorryModeration(params: {
     moderationLog: ModerationLogWriteModel;

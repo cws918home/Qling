@@ -218,7 +218,10 @@ export async function publishWorryOnServer(params: {
     };
   }
 
-  const candidates = await repository.fetchRecipientCandidates();
+  const candidates = await repository.fetchRecipientCandidates({
+    authorUid: params.author.uid,
+    minimumCandidateCount: 5,
+  });
   const selection = selectInitialWorryRecipients({
     author: params.author,
     candidates,
