@@ -103,3 +103,10 @@ export async function moderateReplyForPublication(params: {
     return { status: 'provider_error', error };
   }
 }
+
+export async function moderateAiReply(params: {
+  content: string;
+  provider: ReplyModerationProvider;
+}): Promise<ReplyModerationResult> {
+  return moderateReplyForPublication(params);
+}

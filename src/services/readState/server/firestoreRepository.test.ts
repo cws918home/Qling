@@ -164,6 +164,31 @@ test('reply read marks current replies privately and repeat is no-op', async () 
   assert.equal(db.store.get('replies/r1')?.readByAuthorAt, undefined);
 });
 
+test('reply read can mark an AI reply by deterministic reply ID', async () => {
+  const db = createFakeFirestore({
+    'worries/w1': { authorUid: 'author' },
+    'replies/w1_ai': {
+      deliveryId: 'ai:w1',
+      worryId: 'w1',
+      authorUid: 'author',
+      replierUid: 'ai_fallback',
+      status: 'active',
+      isAiGenerated: true,
+      isExampleReply: false,
+    },
+  });
+  const repo = createReadStateRepository({ db: db as never });
+
+  const result = await repo.markRepliesForWorryRead({
+    authorUid: 'author',
+    worryId: 'w1',
+    replyIds: ['w1_ai'],
+  });
+
+  assert.equal(result.markedCount, 1);
+  assert.equal(db.store.get('users/author/replyReadStates/w1_ai')?.replyId, 'w1_ai');
+});
+
 test('reply subset read is all-or-nothing for invalid requested replies', async () => {
   const db = createFakeFirestore({
     'worries/w1': { authorUid: 'author' },

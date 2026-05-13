@@ -20,6 +20,7 @@ import { registerReadStateRoutes } from "./src/server/readStateRoutes";
 import { registerPassRoutes } from "./src/server/passRoutes";
 import { registerFeedbackRoutes } from "./src/server/feedbackRoutes";
 import { registerRematchRoutes } from "./src/server/rematchRoutes";
+import { registerAiFallbackRoutes } from "./src/server/aiFallbackRoutes";
 
 // Read client config to get database ID
 const clientConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
@@ -318,6 +319,10 @@ async function startServer() {
       db,
       messaging,
     });
+    registerAiFallbackRoutes(app, {
+      db,
+      messaging,
+    });
   } else {
     app.post('/api/worries/publish', (_req, res) => {
       res.status(500).json({
@@ -368,6 +373,10 @@ async function startServer() {
       });
     });
     registerRematchRoutes(app, {
+      db: null,
+      messaging: null,
+    });
+    registerAiFallbackRoutes(app, {
       db: null,
       messaging: null,
     });

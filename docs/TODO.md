@@ -24,7 +24,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.4 Pass mutation boundary is server-owned: pass status changes, same-worry exclusion, immediate replacement attempt, and `activeDeliveryCount` decrement/increment behavior happen only in an authenticated server transaction or transaction-plus-best-effort-push flow.
 - [x] TODO-1.5 Feedback mutation boundary is server-owned: like/dislike/comment writes and helpedCount changes happen only through an authenticated server transaction.
 - [x] TODO-1.6 Rematch job mutation boundary is server-owned: rematch runs are performed only by authenticated internal endpoints or server jobs.
-- [ ] TODO-1.7 AI fallback job mutation boundary is server-owned: AI fallback runs are performed only by authenticated internal endpoints or server jobs.
+- [x] TODO-1.7 AI fallback job mutation boundary is server-owned: AI fallback runs are performed only by authenticated internal endpoints or server jobs.
 - [ ] TODO-1.8 Example feedback job mutation boundary is server-owned: example creation and delayed example feedback are performed only by authenticated server endpoints or internal jobs.
 - [ ] TODO-1.9 Account deletion mutation boundary is server-owned: delete requests use authenticated user identity, soft-delete the user, remove tokens, and block future user actions.
 - [ ] TODO-1.10 Final source-of-truth mutation boundary is closed: after legacy removal, the browser cannot create or mutate `worries`, `deliveries`, `replies`, `feedbacks`, `moderationLogs`, `pushLogs`, operational job collections, or legacy `letters`.
@@ -36,7 +36,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.16 Firestore ownership for replies is enforced: `replies` are server-owned and legacy reply write paths are not needed for PRD replies.
 - [x] TODO-1.17 Firestore ownership for feedback is enforced: `feedbacks` and helpedCount changes are server-owned.
 - [x] TODO-1.18 Firestore ownership for rematch operational collections is enforced.
-- [ ] TODO-1.19 Firestore ownership for AI fallback operational collections is enforced.
+- [x] TODO-1.19 Firestore ownership for AI fallback operational collections is enforced.
 - [ ] TODO-1.20 Firestore ownership for example operational collections is enforced.
 - [ ] TODO-1.21 Final Firestore ownership is enforced: legacy `letters` runtime access is removed or fully denied.
 - [ ] TODO-1.22 Server invariant for auth/deleted-user blocking is enforced for all user endpoints. Compatibility rule: until Phase 14 backfills/sets deletion state, a missing `deleted` field means "not deleted"; only `deleted === true` or another final explicit inactive/deleted marker blocks activity and matching.
@@ -46,7 +46,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.26 Server invariant for worry moderation is enforced before saving user-visible worries.
 - [x] TODO-1.27 Server invariant for reply moderation is enforced before saving user-visible replies.
 - [x] TODO-1.28 Server invariant for feedback comment moderation is enforced before saving user-visible feedback comments.
-- [ ] TODO-1.29 Server invariant for AI reply moderation is enforced before saving AI replies.
+- [x] TODO-1.29 Server invariant for AI reply moderation is enforced before saving AI replies.
 - [ ] TODO-1.30 Server invariant for example reply moderation is enforced before saving example replies.
 - [x] TODO-1.31 Server invariant for category preservation is enforced for worry publication: raw, valid, invalid, and matching categories are stored.
 - [x] TODO-1.32 Server invariant for initial matching is enforced: exactly 5 initial human deliveries, 4 matched plus 1 random. If fewer than 5 eligible human recipients exist, publication fails without partial worry, batch, delivery, counter, or push state.
@@ -58,7 +58,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.38 Server invariant for helpedCount is enforced: increments happen exactly once only for eligible human/example likes, and AI likes are excluded.
 - [x] TODO-1.39 Server invariant for pass idempotency is enforced by status preconditions.
 - [x] TODO-1.40 Server invariant for rematch job idempotency is enforced by deterministic IDs, job locks, and status preconditions.
-- [ ] TODO-1.41 Server invariant for AI fallback idempotency is enforced by deterministic AI reply state and status preconditions.
+- [x] TODO-1.41 Server invariant for AI fallback idempotency is enforced by deterministic AI reply state and status preconditions.
 - [ ] TODO-1.42 Server invariant for example job idempotency is enforced by per-user example state, deterministic jobs, and status preconditions.
 - [x] TODO-1.43 Server invariant for worry publication push failure is enforced: push failure never rolls back core worry publication.
 - [x] TODO-1.44 Server invariant for reply publication push failure is enforced: push failure never rolls back core reply publication.
@@ -99,7 +99,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.63 Apply deep-module guardrails to `replyMailbox` / `myWorries`.
 - [x] TODO-1.64 Apply deep-module guardrails to `replyFeedback`.
 - [x] TODO-1.65 Apply deep-module guardrails to `pass` / `rematch`.
-- [ ] TODO-1.66 Apply deep-module guardrails to `aiFallback`.
+- [x] TODO-1.66 Apply deep-module guardrails to `aiFallback`.
 - [ ] TODO-1.67 Apply deep-module guardrails to `exampleWorries`.
 - [ ] TODO-1.68 Apply deep-module guardrails to `userAccount`.
 - [ ] TODO-1.69 Each slice includes a deletion test or equivalent observable-behavior removal check:
@@ -135,7 +135,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 - [x] TODO-2.15 Core publication fields: `authorUid`, `content`, `status: 'active'`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `moderationLogId`, `initialDeliveryBatchId`, `initialDeliveryTargetCount: 5`, `humanDeliveryLimit: 15`, `humanDeliveryCount`, `humanReplyCount`, `hasHumanReply`, `createdAt`, `updatedAt`, `lastDeliveryCreatedAt`.
 - [x] TODO-2.16 Rematch metadata fields: `lastRematchRunId`, `lastRematchBatchId`, `lastRematchCreatedAt`.
-- [ ] TODO-2.17 AI fallback fields: `hasAiReply`, `aiReplyId`, `aiFallbackCheckedAt`.
+- [x] TODO-2.17 AI fallback fields: `hasAiReply`, `aiReplyId`, `aiFallbackCheckedAt`.
 - [ ] TODO-2.18 Example fields: `isExample`, `exampleSeedId`, `exampleOwnerUid`.
 - [ ] TODO-2.19 Hidden/deleted-author fields: `status: 'hidden' | 'deleted_author'`, `hiddenAt`, `hiddenReason`, `hiddenBy`.
 - [x] TODO-2.20 Source of truth: canonical worry content and moderation/category state.
@@ -179,7 +179,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 - [x] TODO-2.39 Core human reply fields: `deliveryId`, `worryId`, `authorUid`, `replierUid`, `content`, `status: 'active'`, `moderationLogId`, `createdAt`, `updatedAt`.
 - [x] TODO-2.40 Reply read-state field: `readByAuthorAt` lives under `users/{authorUid}/replyReadStates/{replyId}`, not on `replies/{replyId}`.
 - [x] TODO-2.41 Feedback summary fields: `feedbackType`, `likedAt`, `dislikedAt`.
-- [ ] TODO-2.42 AI reply fields: `isAiGenerated`.
+- [x] TODO-2.42 AI reply fields: `isAiGenerated`.
 - [ ] TODO-2.43 Example reply fields: `isExampleReply`.
 - [ ] TODO-2.44 Hidden reply fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`.
 - [x] TODO-2.45 Source of truth: final answer content.
@@ -207,7 +207,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 - [x] TODO-2.57 Worry moderation log fields: `targetType: 'worry'`, `targetId`, `uid`, `originalContent`, `status: 'approved' | 'rejected' | 'invalid_provider_response' | 'provider_error'`, `reasonCode`, `userMessage`, `helpMessage`, `rawProviderResponse`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `provider`, `model`, `createdAt`, `updatedAt`.
 - [x] TODO-2.58 Reply moderation log fields: `targetType: 'reply'` plus common moderation fields.
 - [x] TODO-2.59 Feedback comment moderation log fields: `targetType: 'feedback_comment'` plus common moderation fields.
-- [ ] TODO-2.60 AI reply moderation log fields: `targetType: 'ai_reply'` plus common moderation fields.
+- [x] TODO-2.60 AI reply moderation log fields: `targetType: 'ai_reply'` plus common moderation fields.
 - [ ] TODO-2.61 Example reply moderation log fields: `targetType: 'example_reply'` plus common moderation fields.
 - [x] TODO-2.62 Reason codes: `abuse_hate_profanity`, `sexual`, `self_harm_suicide`, `crime_violence_victim`, `personal_info`, `spam_promotion`, `empty`, `too_long`, `provider_invalid`.
 - [x] TODO-2.63 Source of truth: filtering and category audit.
@@ -238,7 +238,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
   - Round 2 batch references Round 1 as `sourceBatchId`/`sourceBatchRound`.
   - The source batch is the relevant 5-slot batch used for PRD 8.5 random-slot replacement semantics.
   - Do not use batch lineage to expire old deliveries.
-- [ ] TODO-2.77 `aiFallbackRuns/{runId}`: `startedAt`, `completedAt`, `status`, `checkedCount`, `createdReplyCount`, `error`; server/admin only.
+- [x] TODO-2.77 `aiFallbackRuns/{runId}`: `startedAt`, `completedAt`, `status`, `checkedCount`, `createdReplyCount`, `error`; server/admin only.
 - [ ] TODO-2.78 `exampleWorrySeeds/{seedId}`: `content`, `categories`, `status`, `createdAt`, `updatedAt`; server/admin write, server read.
 - [ ] TODO-2.79 `scheduledJobs/{jobId}` or `exampleFeedbackJobs/{jobId}`: `kind`, `runAfter`, `status`, `replyId`, `targetUid`, `attempts`, `createdAt`, `updatedAt`; server only.
 - [x] TODO-2.80 Immediate pass replacement metadata:
@@ -329,7 +329,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 ### Internal Jobs
 
 - [x] TODO-3.53 `POST /api/internal/rematch-due-deliveries`: internal auth; body `{ now?: string, dryRun?: boolean, limit?: number }`; scan worries/deliveries that still need 8-hour additive exposure according to PRD; create linear Round 1/Round 2 additive delivery batches for new recipients; never change old active deliveries merely because 8 hours passed; do not own immediate pass replacement delivery creation; cap total human deliveries at 15; use job lock and deterministic IDs.
-- [ ] TODO-3.54 `POST /api/internal/create-ai-fallbacks`: internal auth; body `{ now?: string, dryRun?: boolean, limit?: number }`; create one moderated AI reply only after 24h, human delivery limit exhausted, zero human replies, and no existing AI reply.
+- [x] TODO-3.54 `POST /api/internal/create-ai-fallbacks`: internal auth; body `{ now?: string, dryRun?: boolean, limit?: number }`; create one moderated AI reply only after 24h, human delivery limit exhausted, zero human replies, and no existing AI reply.
 - [ ] TODO-3.55 `POST /api/internal/create-example-feedbacks`: internal auth; body `{ now?: string, limit?: number }`; processes delayed example likes after 5-15 minutes.
 - [ ] TODO-3.56 Seed/admin utility endpoint: avoid unless strictly necessary. Recommended default is seed `exampleWorrySeeds` by script/manual Firebase import, not public API.
 - [ ] TODO-3.57 Tests: internal auth, dry run where supported, idempotent repeated calls, exact condition matrices.
@@ -403,11 +403,11 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### `aiFallback`
 
-- [ ] TODO-4.45 Purpose: create one moderated AI reply only when PRD conditions are exactly met.
-- [ ] TODO-4.46 Public interface: `createAiFallbacks({ now, limit })`.
-- [ ] TODO-4.47 Files: `src/services/aiFallback/createAiFallbacks.ts`, `generateAiReply.ts`, `server.ts`.
-- [ ] TODO-4.48 Tests: 24h, delivery cap exhausted, zero human replies, no duplicate AI.
-- [ ] TODO-4.49 Deletion test: deleting module disables only fallback, not human replies.
+- [x] TODO-4.45 Purpose: create one moderated AI reply only when PRD conditions are exactly met.
+- [x] TODO-4.46 Public interface: `createAiFallbacks({ now, limit })`.
+- [x] TODO-4.47 Files: `src/services/aiFallback/createAiFallbacks.ts`, `generateAiReply.ts`, `server.ts`.
+- [x] TODO-4.48 Tests: 24h, delivery cap exhausted, zero human replies, no duplicate AI.
+- [x] TODO-4.49 Deletion test: deleting module disables only fallback, not human replies.
 
 ### `exampleWorries`
 
@@ -562,17 +562,17 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 9: AI fallback
 
-- [ ] TODO-5.78 Goal: one moderated AI reply only under exact 24-hour no-human-reply condition.
-- [ ] TODO-5.79 Files: `src/services/aiFallback/*`, `src/services/moderation/*`, `server.ts`.
-- [ ] TODO-5.80 API/job: `POST /api/internal/create-ai-fallbacks`.
-- [ ] TODO-5.81 Conditions: 24h since worry creation, human delivery limit exhausted, zero human replies stored, disliked human replies still count as human replies, no existing AI reply.
-- [ ] TODO-5.82 Late human replies: AI fallback must check current `worries.humanReplyCount`/`replies` at job time. A human reply submitted after 8 hours by an original recipient still blocks AI fallback because original deliveries do not expire.
-- [ ] TODO-5.83 AI fallback does not require original deliveries to expire; they do not expire under the PRD.
-- [ ] TODO-5.84 Data/UI: `replies.isAiGenerated`, `worries.hasAiReply`, `aiReplyId`, moderation log; AI reply looks like normal reply with no label.
-- [ ] TODO-5.85 Tests: condition matrix, moderation before save, no duplicates, notify author.
-- [ ] TODO-5.86 Manual verification: simulate no replies after 24h; verify one AI reply.
-- [ ] TODO-5.87 Explicit non-goals: professional counseling copy.
-- [ ] TODO-5.88 Deletion test: deleting AI fallback affects only no-reply fallback.
+- [x] TODO-5.78 Goal: one moderated AI reply only under exact 24-hour no-human-reply condition.
+- [x] TODO-5.79 Files: `src/services/aiFallback/*`, `src/services/moderation/*`, `server.ts`.
+- [x] TODO-5.80 API/job: `POST /api/internal/create-ai-fallbacks`.
+- [x] TODO-5.81 Conditions: 24h since worry creation, human delivery limit exhausted, zero human replies stored, disliked human replies still count as human replies, no existing AI reply.
+- [x] TODO-5.82 Late human replies: AI fallback must check current `worries.humanReplyCount`/`replies` at job time. A human reply submitted after 8 hours by an original recipient still blocks AI fallback because original deliveries do not expire.
+- [x] TODO-5.83 AI fallback does not require original deliveries to expire; they do not expire under the PRD.
+- [x] TODO-5.84 Data/UI: `replies.isAiGenerated`, `worries.hasAiReply`, `aiReplyId`, moderation log; AI reply looks like normal reply with no label.
+- [x] TODO-5.85 Tests: condition matrix, moderation before save, no duplicates, notify author.
+- [x] TODO-5.86 Manual verification: simulate no replies after 24h; verify one AI reply.
+- [x] TODO-5.87 Explicit non-goals: professional counseling copy.
+- [x] TODO-5.88 Deletion test: deleting AI fallback affects only no-reply fallback.
 
 ### Slice 10: Example worries
 
@@ -730,7 +730,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-7.9 Admin/hidden rules: hidden/admin-only state is filtered in read models and denied by rules where possible.
 - [x] TODO-7.10 Initial log rules: `moderationLogs` and `pushLogs` client reads/writes denied.
 - [x] TODO-7.11 Rematch operational collection rules: `jobLocks` and `rematchRuns` client reads/writes denied when introduced.
-- [ ] TODO-7.12 AI fallback operational collection rules: `aiFallbackRuns` client reads/writes denied when introduced.
+- [x] TODO-7.12 AI fallback operational collection rules: `aiFallbackRuns` client reads/writes denied when introduced.
 - [ ] TODO-7.13 Example operational collection rules: `exampleWorrySeeds` and scheduled/example feedback jobs client reads/writes denied when introduced.
 - [x] TODO-7.14 Legacy `letters` transition rules: deny worry create and delete while preserving only minimum legacy read/reply paths needed during migration.
 - [ ] TODO-7.15 Legacy `letters` final rules: deny all runtime reads/writes/deletes or remove the match block after runtime code no longer depends on `letters`.
@@ -790,7 +790,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-9.26 Deleted users are blocked from all user endpoints; users with a missing `deleted` field are not blocked before Phase 14.
 - [ ] TODO-9.27 API responses use correct status/error shape for validation, ownership, conflicts, and provider failures.
 - [x] TODO-9.28 Rematch internal job requires internal auth.
-- [ ] TODO-9.29 AI fallback internal job requires internal auth.
+- [x] TODO-9.29 AI fallback internal job requires internal auth.
 - [ ] TODO-9.30 Example feedback internal job requires internal auth.
 
 ### Firestore Rules Tests
@@ -847,9 +847,9 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.74 Publication retry paths do not double-increment `activeDeliveryCount`.
 - [ ] TODO-9.75 Reply/pass/hide retry paths do not double-decrement `activeDeliveryCount`.
 - [x] TODO-9.76 Rematch retry paths do not double-increment or double-decrement `activeDeliveryCount`.
-- [ ] TODO-9.77 AI fallback only when 24h, delivery cap exhausted, zero human replies, no existing AI.
-- [ ] TODO-9.78 AI fallback does not trigger if any human reply exists, including a reply submitted after 8 hours by an original recipient.
-- [ ] TODO-9.79 AI fallback does not require all original deliveries to expire, because they do not expire.
+- [x] TODO-9.77 AI fallback only when 24h, delivery cap exhausted, zero human replies, no existing AI.
+- [x] TODO-9.78 AI fallback does not trigger if any human reply exists, including a reply submitted after 8 hours by an original recipient.
+- [x] TODO-9.79 AI fallback does not require all original deliveries to expire, because they do not expire.
 - [ ] TODO-9.80 Example worries created once/max 5.
 - [ ] TODO-9.81 Example feedback delayed, no comment, helpedCount increments.
 - [x] TODO-9.97 Pass replacement creates one immediate active delivery when an eligible user exists, with pass-replacement metadata and no Round 1/Round 2 rematch batch.
@@ -872,7 +872,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-9.91 Rejection path: unsafe feedback comment not saved.
 - [x] TODO-9.92 Pass manual simulation, including immediate replacement success and no-eligible-recipient shortfall.
 - [x] TODO-9.93 Additive rematch manual simulation, including old active deliveries remaining answerable.
-- [ ] TODO-9.94 AI fallback manual simulation, including old active deliveries remaining answerable.
+- [x] TODO-9.94 AI fallback manual simulation, including old active deliveries remaining answerable.
 - [ ] TODO-9.95 Notification permission granted/denied behavior.
 - [ ] TODO-9.96 Account deletion blocks future activity.
 
@@ -908,7 +908,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-11.6 Rematch branching from historical batches:
   - Risk: if historical batches are scanned independently, rematch can over-create deliveries beyond the intended Round 0 -> Round 1 -> Round 2 flow.
   - Mitigation: required `deliveryBatches` with `sourceBatchId`/`sourceBatchRound`, job idempotency, tests for no branching, and max 15 cap.
-- [ ] TODO-11.7 AI fallback with late human replies:
+- [x] TODO-11.7 AI fallback with late human replies:
   - Risk: fallback job may create AI after an original recipient answers late unless it checks current reply state at execution time.
   - Mitigation: query/transactionally verify zero human replies immediately before saving AI reply; disliked human replies still count as human replies.
 - [ ] TODO-11.8 Legacy `letters` compatibility causing duplicate data:

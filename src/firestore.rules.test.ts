@@ -343,6 +343,15 @@ describe('PRD source-of-truth rules', () => {
     await assertFails(dbFor('author').doc('rematchRuns/run1').delete());
   });
 
+  test('aiFallbackRuns are denied for client reads and writes', async () => {
+    await seed('aiFallbackRuns/run1', { status: 'completed' });
+    await assertFails(dbFor('author').doc('aiFallbackRuns/run1').get());
+    await assertFails(dbFor().doc('aiFallbackRuns/run1').get());
+    await assertFails(dbFor('author').doc('aiFallbackRuns/run2').set({ status: 'running' }));
+    await assertFails(dbFor('author').doc('aiFallbackRuns/run1').update({ status: 'failed' }));
+    await assertFails(dbFor('author').doc('aiFallbackRuns/run1').delete());
+  });
+
   test('moderationLogs are denied for reads and writes', async () => {
     await seed('moderationLogs/log1', { targetType: 'worry' });
     await assertFails(dbFor('author').doc('moderationLogs/log1').get());

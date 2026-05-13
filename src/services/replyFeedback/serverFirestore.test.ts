@@ -195,3 +195,33 @@ test('helpedCount eligibility includes examples and excludes AI or malformed fla
   }, { type: 'like' });
   assert.equal(malformed.store['feedbacks/reply1'].helpedCountApplied, false);
 });
+
+test('AI reply feedback accepts synthetic delivery ID without loading a delivery doc', async () => {
+  const store: Store = {
+    'worries/worry1': { authorUid: 'publisher' },
+    'replies/worry1_ai': {
+      deliveryId: 'ai:worry1',
+      worryId: 'worry1',
+      authorUid: 'publisher',
+      replierUid: 'ai_fallback',
+      content: 'reply',
+      isAiGenerated: true,
+      isExampleReply: false,
+    },
+  };
+  const db = createDb(store);
+
+  const result = await createReplyFeedbackRepository({ db: db as never }).saveFeedback({
+    publisherUid: 'publisher',
+    replyId: 'worry1_ai',
+    type: 'like',
+    comment: null,
+    commentModerationLogId: null,
+  });
+
+  assert.equal(result.helpedCountApplied, false);
+  assert.equal(db.store['feedbacks/worry1_ai'].deliveryId, 'ai:worry1');
+  assert.equal(db.store['feedbacks/worry1_ai'].isForAiReply, true);
+  assert.equal(db.store['users/ai_fallback'], undefined);
+  assert.equal(db.store['deliveries/ai:worry1'], undefined);
+});

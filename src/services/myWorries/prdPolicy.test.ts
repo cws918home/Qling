@@ -127,6 +127,42 @@ test('written replies are selected by replierUid', () => {
   assert.equal(selected[0].hasUnread, false);
 });
 
+test('AI reply appears to author as a normal reply without visible label', () => {
+  const aiReply = prdReply({
+    id: 'w1_ai',
+    deliveryId: 'ai:w1',
+    worryId: 'w1',
+    authorUid: 'author',
+    replierUid: 'ai_fallback',
+    isAiGenerated: true,
+    isExampleReply: false,
+  });
+
+  const selected = selectRepliesForWorry({ replies: [aiReply], userUid: 'author', worryId: 'w1' });
+
+  assert.equal(selected.length, 1);
+  assert.equal(selected[0].id, 'w1_ai');
+  assert.equal(selected[0].deliveryId, 'ai:w1');
+  assert.equal(selected[0].replierUid, 'ai_fallback');
+  assert.equal(selected[0].isAiGenerated, true);
+  assert.equal('label' in selected[0], false);
+  assert.equal('aiLabel' in selected[0], false);
+});
+
+test('AI reply is not shown in a real user given-replies path', () => {
+  const aiReply = prdReply({
+    id: 'w1_ai',
+    deliveryId: 'ai:w1',
+    worryId: 'w1',
+    authorUid: 'author',
+    replierUid: 'ai_fallback',
+    isAiGenerated: true,
+    isExampleReply: false,
+  });
+
+  assert.deepEqual(selectMyGivenReplies({ replies: [aiReply], userUid: 'recipient' }), []);
+});
+
 test('composed read model works without legacy fallback output', () => {
   const prdReplies = [replyItem({ id: 'prd-only', source: 'prd_replies' })];
 
