@@ -708,12 +708,14 @@ All error responses should use `{ error: { code: string, message: string, detail
   - Replacement recipient must not be the passing user, worry author, any previous recipient of the same worry, any previous passer, any user who already replied, a deleted/inactive user, a user at `activeDeliveryCount >= 10`, a user who would exceed `worries.humanDeliveryLimit`, or any user excluded by normal matching policy.
   - Missing `deleted` is treated as not deleted until Phase 14 introduces the final deletion lifecycle.
   - If no eligible replacement exists, pass still succeeds, original delivery remains `passed`, no duplicate/self-redelivery is created, shortfall is logged, and the author receives no pass signal.
+  - Evidence: `src/services/deliveries/firestoreRepository.test.ts` covers final transaction rechecks for candidates who become repliers after the broad scan, candidates who receive a same-worry delivery after the broad scan, all ranked candidates failing final recheck, read-before-write ordering, and cap exhaustion becoming true before transaction commit.
 - [x] TODO-6.24 ActiveDeliveryCount immediate pass replacement semantics:
   - Replacement active delivery creation increments the replacement recipient's `activeDeliveryCount` exactly once.
   - Replacement delivery creation increments the worry's human delivery accounting exactly once when that accounting is stored separately from delivery docs.
   - If replacement succeeds, global net active count may remain unchanged: passer decremented once, replacement recipient incremented once.
   - If replacement shortfall occurs, only the passer decrement happens.
   - Repeated pass calls return the recorded result and never double-decrement or double-increment.
+  - Evidence: `src/services/deliveries/firestoreRepository.test.ts` covers replacement success counters, shortfall counters, missing-passer-user retry idempotency, cap exhaustion, and malformed `humanDeliveryCount` fallback count derived inside the transaction.
 
 ## 7. Firestore Rules Final Design
 

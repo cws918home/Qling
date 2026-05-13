@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createDeliveryPassRepository } from './firestoreRepository';
+import { passDelivery } from './passDelivery';
+import type { DeliveryPassRepository } from './types';
 
 type Store = Map<string, Record<string, unknown>>;
 
@@ -25,6 +27,43 @@ function createFakeFirestore(initial: Record<string, Record<string, unknown>>) {
         return data ? clone(data) : undefined;
       },
     };
+  }
+
+  function queryRef(name: string, filters: Array<[string, unknown]> = [], maxResults?: number) {
+    return {
+      __query: true,
+      collectionName: name,
+      filters,
+      maxResults,
+      where(field: string, op: string, expected: unknown) {
+        assert.equal(op, '==');
+        return queryRef(name, [...filters, [field, expected]], maxResults);
+      },
+      limit(limitValue: number) {
+        return queryRef(name, filters, limitValue);
+      },
+      async get() {
+        return querySnapshot(name, filters, store, maxResults);
+      },
+    };
+  }
+
+  function querySnapshot(
+    name: string,
+    filters: Array<[string, unknown]>,
+    state: Store,
+    maxResults?: number
+  ) {
+    const prefix = `${name}/`;
+    const docs = [...state.entries()]
+      .filter(([path, data]) => (
+        path.startsWith(prefix)
+        && !path.slice(prefix.length).includes('/')
+        && filters.every(([field, expected]) => data[field] === expected)
+      ))
+      .slice(0, maxResults)
+      .map(([path]) => snapshot(path, state));
+    return { empty: docs.length === 0, docs };
   }
 
   return {
@@ -52,15 +91,7 @@ function createFakeFirestore(initial: Record<string, Record<string, unknown>>) {
         },
         where(field: string, op: string, expected: unknown) {
           assert.equal(op, '==');
-          return {
-            async get() {
-              const prefix = `${name}/`;
-              const docs = [...store.entries()]
-                .filter(([path, data]) => path.startsWith(prefix) && !path.slice(prefix.length).includes('/') && data[field] === expected)
-                .map(([path]) => snapshot(path, store));
-              return { empty: docs.length === 0, docs };
-            },
-          };
+          return queryRef(name, [[field, expected]]);
         },
         async get() {
           const prefix = `${name}/`;
@@ -88,11 +119,14 @@ function createFakeFirestore(initial: Record<string, Record<string, unknown>>) {
         return next;
       };
       const result = await callback({
-        get: async (docRef: { path: string }) => {
+        get: async (docRef: { path?: string; __query?: boolean; collectionName?: string; filters?: Array<[string, unknown]>; maxResults?: number }) => {
           if (hasWritten) {
-            throw new Error(`read_after_write:${docRef.path}`);
+            throw new Error(`read_after_write:${docRef.path ?? docRef.collectionName}`);
           }
-          return snapshot(docRef.path, stateWithStaged());
+          if (docRef.__query && docRef.collectionName && docRef.filters) {
+            return querySnapshot(docRef.collectionName, docRef.filters, stateWithStaged(), docRef.maxResults);
+          }
+          return snapshot(docRef.path as string, stateWithStaged());
         },
         set: (docRef: { path: string }, data: Record<string, unknown>, options?: { merge?: boolean }) => {
           hasWritten = true;
@@ -137,6 +171,18 @@ function baseState(overrides: Record<string, Record<string, unknown>> = {}) {
       isAiRecipient: false,
     },
     ...overrides,
+  };
+}
+
+function rankedCandidate(uid: string) {
+  return {
+    uid,
+    gender: 'female',
+    interests: ['career'],
+    helpedCount: uid === 'first' ? 10 : 1,
+    activeDeliveryCount: 0,
+    matchOverlapCount: 1,
+    randomTieBreaker: 0,
   };
 }
 
@@ -307,4 +353,199 @@ test('repository reads before transaction writes', async () => {
     },
     existingHumanDeliveryCount: 1,
   }));
+});
+
+test('final transaction recheck skips candidate who became replier after broad scan and retries next candidate', async () => {
+  const db = createFakeFirestore(baseState({
+    'users/replacement': { deleted: true },
+    'users/first': { gender: 'female', interests: ['career'], helpedCount: 10, activeDeliveryCount: 0 },
+    'users/second': { gender: 'female', interests: ['career'], helpedCount: 1, activeDeliveryCount: 0 },
+  }));
+  const realRepo = createDeliveryPassRepository({ db: db as never });
+  let mutatedAfterScan = false;
+  const repo: DeliveryPassRepository = {
+    fetchReplacementScan: async params => {
+      const scan = await realRepo.fetchReplacementScan(params);
+      db.store.set('replies/race-first', {
+        worryId: 'worry1',
+        replierUid: 'first',
+        authorUid: 'author',
+      });
+      mutatedAfterScan = true;
+      return scan;
+    },
+    commitPassDelivery: params => realRepo.commitPassDelivery(params),
+    markReplacementPushResult: params => realRepo.markReplacementPushResult(params),
+  };
+
+  const result = await passDelivery({
+    db: db as never,
+    messaging: null,
+    uid: 'passer',
+    deliveryId: 'delivery1',
+    repository: repo,
+    random: () => 0,
+  });
+
+  assert.equal(mutatedAfterScan, true);
+  assert.equal(result.status, 'passed');
+  assert.equal(result.replacementStatus, 'created');
+  assert.equal(result.replacementDeliveryId, 'worry1_second');
+  assert.equal(db.store.has('deliveries/worry1_first'), false);
+  assert.equal(db.store.get('deliveries/worry1_second')?.recipientUid, 'second');
+});
+
+test('final transaction recheck skips candidate who received same-worry delivery after broad scan', async () => {
+  const db = createFakeFirestore(baseState({
+    'users/replacement': { deleted: true },
+    'users/first': { gender: 'female', interests: ['career'], helpedCount: 10, activeDeliveryCount: 0 },
+    'users/second': { gender: 'female', interests: ['career'], helpedCount: 1, activeDeliveryCount: 0 },
+  }));
+  const realRepo = createDeliveryPassRepository({ db: db as never });
+  const repo: DeliveryPassRepository = {
+    fetchReplacementScan: async params => {
+      const scan = await realRepo.fetchReplacementScan(params);
+      db.store.set('deliveries/manual-first-race', {
+        worryId: 'worry1',
+        authorUid: 'author',
+        recipientUid: 'first',
+        status: 'active',
+        isAiRecipient: false,
+      });
+      return scan;
+    },
+    commitPassDelivery: params => realRepo.commitPassDelivery(params),
+    markReplacementPushResult: params => realRepo.markReplacementPushResult(params),
+  };
+
+  const result = await passDelivery({
+    db: db as never,
+    messaging: null,
+    uid: 'passer',
+    deliveryId: 'delivery1',
+    repository: repo,
+    random: () => 0,
+  });
+
+  assert.equal(result.status, 'passed');
+  assert.equal(result.replacementStatus, 'created');
+  assert.equal(result.replacementDeliveryId, 'worry1_second');
+  assert.equal(db.store.has('deliveries/worry1_first'), false);
+  assert.equal(db.store.get('deliveries/worry1_second')?.recipientUid, 'second');
+});
+
+test('all ranked candidates failing final recheck records shortfall and creates no replacement', async () => {
+  const db = createFakeFirestore(baseState({
+    'users/replacement': { deleted: true },
+    'users/first': { gender: 'female', interests: ['career'], helpedCount: 10, activeDeliveryCount: 0 },
+    'users/second': { gender: 'female', interests: ['career'], helpedCount: 1, activeDeliveryCount: 0 },
+  }));
+  const realRepo = createDeliveryPassRepository({ db: db as never });
+  const repo: DeliveryPassRepository = {
+    fetchReplacementScan: async params => {
+      const scan = await realRepo.fetchReplacementScan(params);
+      db.store.set('replies/race-first', { worryId: 'worry1', replierUid: 'first' });
+      db.store.set('deliveries/manual-second-race', {
+        worryId: 'worry1',
+        authorUid: 'author',
+        recipientUid: 'second',
+        status: 'active',
+        isAiRecipient: false,
+      });
+      return scan;
+    },
+    commitPassDelivery: params => realRepo.commitPassDelivery(params),
+    markReplacementPushResult: params => realRepo.markReplacementPushResult(params),
+  };
+
+  const result = await passDelivery({
+    db: db as never,
+    messaging: null,
+    uid: 'passer',
+    deliveryId: 'delivery1',
+    repository: repo,
+    random: () => 0,
+  });
+
+  assert.equal(result.status, 'passed');
+  assert.equal(result.replacementStatus, 'shortfall');
+  assert.equal(db.store.get('deliveries/delivery1')?.status, 'passed');
+  assert.equal(db.store.get('passReplacementAttempts/delivery1')?.status, 'shortfall');
+  assert.equal(db.store.has('deliveries/worry1_first'), false);
+  assert.equal(db.store.has('deliveries/worry1_second'), false);
+});
+
+test('cap exhaustion becoming true after scan records shortfall', async () => {
+  const db = createFakeFirestore(baseState({
+    'users/replacement': { deleted: true },
+    'users/first': { gender: 'female', interests: ['career'], helpedCount: 10, activeDeliveryCount: 0 },
+    'worries/worry1': {
+      authorUid: 'author',
+      status: 'active',
+      matchingCategories: ['career'],
+      humanDeliveryCount: 1,
+      humanDeliveryLimit: 2,
+    },
+  }));
+  const realRepo = createDeliveryPassRepository({ db: db as never });
+  const repo: DeliveryPassRepository = {
+    fetchReplacementScan: async params => {
+      const scan = await realRepo.fetchReplacementScan(params);
+      db.store.set('worries/worry1', {
+        ...(db.store.get('worries/worry1') ?? {}),
+        humanDeliveryCount: 2,
+      });
+      return scan;
+    },
+    commitPassDelivery: params => realRepo.commitPassDelivery(params),
+    markReplacementPushResult: params => realRepo.markReplacementPushResult(params),
+  };
+
+  const result = await passDelivery({
+    db: db as never,
+    messaging: null,
+    uid: 'passer',
+    deliveryId: 'delivery1',
+    repository: repo,
+    random: () => 0,
+  });
+
+  assert.equal(result.status, 'passed');
+  assert.equal(result.replacementStatus, 'shortfall');
+  assert.equal(db.store.has('deliveries/worry1_first'), false);
+});
+
+test('malformed humanDeliveryCount fallback derives cap state inside transaction', async () => {
+  const extraDeliveries = Object.fromEntries(
+    Array.from({ length: 14 }, (_, index) => [`deliveries/extra-${index}`, {
+      worryId: 'worry1',
+      authorUid: 'author',
+      recipientUid: `extra-${index}`,
+      status: 'active',
+      isAiRecipient: false,
+    }])
+  );
+  const db = createFakeFirestore(baseState({
+    ...extraDeliveries,
+    'users/first': { gender: 'female', interests: ['career'], helpedCount: 10, activeDeliveryCount: 0 },
+    'worries/worry1': {
+      authorUid: 'author',
+      status: 'active',
+      matchingCategories: ['career'],
+      humanDeliveryCount: 'malformed',
+      humanDeliveryLimit: 15,
+    },
+  }));
+  const repo = createDeliveryPassRepository({ db: db as never });
+
+  const result = await repo.commitPassDelivery({
+    uid: 'passer',
+    deliveryId: 'delivery1',
+    selectedRecipient: rankedCandidate('first'),
+    existingHumanDeliveryCount: 1,
+  });
+
+  assert.equal(result.status, 'passed');
+  assert.equal(result.replacementStatus, 'shortfall');
+  assert.equal(db.store.has('deliveries/worry1_first'), false);
 });

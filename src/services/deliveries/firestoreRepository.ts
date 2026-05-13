@@ -62,6 +62,14 @@ function isHiddenWorry(worry: FirebaseFirestore.DocumentData): boolean {
   return worry.status === 'hidden' || Boolean(worry.hiddenAt);
 }
 
+function queryIsEmpty(snapshot: FirebaseFirestore.QuerySnapshot): boolean {
+  return snapshot.empty || snapshot.docs.length === 0;
+}
+
+function countHumanDeliveries(snapshot: FirebaseFirestore.QuerySnapshot): number {
+  return snapshot.docs.filter(doc => doc.data().isAiRecipient !== true).length;
+}
+
 function replacementDelivery(params: {
   passedDeliveryId: string;
   worryId: string;
@@ -286,11 +294,13 @@ export function createDeliveryPassRepository(params: {
         const { worryRef, worryId, authorUid, worry } = await getOwnedWorry(transaction, db, delivery);
         const passerUserRef = db.collection('users').doc(uid);
         const passerUserDoc = await transaction.get(passerUserRef);
+        const deliveriesForWorryQuery = db.collection('deliveries').where('worryId', '==', worryId);
+        const deliveriesForWorryDoc = await transaction.get(deliveriesForWorryQuery);
 
         const humanDeliveryLimit = typeof worry.humanDeliveryLimit === 'number' ? worry.humanDeliveryLimit : 15;
         const existingCount = typeof worry.humanDeliveryCount === 'number'
           ? worry.humanDeliveryCount
-          : existingHumanDeliveryCount;
+          : countHumanDeliveries(deliveriesForWorryDoc);
         const capExhausted = existingCount >= humanDeliveryLimit;
         if (!selectedRecipient || capExhausted) {
           const attempt = attemptForShortfall({ deliveryId, worryId, passerUid: uid, authorUid, timestamp });
@@ -319,9 +329,28 @@ export function createDeliveryPassRepository(params: {
 
         const recipientRef = db.collection('users').doc(selectedRecipient.uid);
         const replacementRef = db.collection('deliveries').doc(`${worryId}_${selectedRecipient.uid}`);
+        const candidateDeliveryQuery = db.collection('deliveries')
+          .where('worryId', '==', worryId)
+          .where('recipientUid', '==', selectedRecipient.uid)
+          .limit(1);
+        const candidatePasserQuery = db.collection('deliveries')
+          .where('worryId', '==', worryId)
+          .where('passerUid', '==', selectedRecipient.uid)
+          .limit(1);
+        const candidateReplyQuery = db.collection('replies')
+          .where('worryId', '==', worryId)
+          .where('replierUid', '==', selectedRecipient.uid)
+          .limit(1);
         const recipientDoc = await transaction.get(recipientRef);
         const replacementDoc = await transaction.get(replacementRef);
+        const candidateDeliveryDoc = await transaction.get(candidateDeliveryQuery);
+        const candidatePasserDoc = await transaction.get(candidatePasserQuery);
+        const candidateReplyDoc = await transaction.get(candidateReplyQuery);
         if (!recipientDoc.exists || replacementDoc.exists) return { status: 'candidate_unavailable' as const };
+        if (selectedRecipient.uid === uid || selectedRecipient.uid === authorUid) return { status: 'candidate_unavailable' as const };
+        if (!queryIsEmpty(candidateDeliveryDoc) || !queryIsEmpty(candidatePasserDoc) || !queryIsEmpty(candidateReplyDoc)) {
+          return { status: 'candidate_unavailable' as const };
+        }
         const candidate = userDocToCandidate(selectedRecipient.uid, recipientDoc.data());
         if (!isEligibleHumanCandidate(candidate, authorUid)) return { status: 'candidate_unavailable' as const };
 
