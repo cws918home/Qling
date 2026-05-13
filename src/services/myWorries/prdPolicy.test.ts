@@ -1,0 +1,175 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import {
+  adaptLegacyLettersReplies,
+  composeReplyReadModel,
+  selectMyGivenReplies,
+  selectMyWorries,
+  selectRepliesForWorry,
+} from './prdPolicy';
+import type {
+  LegacyLettersReplyDoc,
+  PrdReplyDoc,
+  PrdWorryDoc,
+  ReplyReadModelItem,
+} from './types';
+
+const ts = (value: number) => ({ toMillis: () => value });
+
+test('own worries are included by authorUid and other users worries are excluded', () => {
+  const worries: PrdWorryDoc[] = [
+    {
+      id: 'mine-new',
+      authorUid: 'me',
+      content: 'my newer worry',
+      matchingCategories: ['career'],
+      createdAt: ts(2),
+    },
+    {
+      id: 'other',
+      authorUid: 'other',
+      content: 'hidden worry',
+      matchingCategories: ['career'],
+      createdAt: ts(3),
+    },
+    {
+      id: 'mine-old',
+      authorUid: 'me',
+      content: 'my older worry',
+      validCategories: ['family'],
+      createdAt: ts(1),
+      humanReplyCount: 1,
+    },
+  ];
+
+  const selected = selectMyWorries({ worries, userUid: 'me' });
+
+  assert.deepEqual(selected.map(worry => worry.id), ['mine-new', 'mine-old']);
+  assert.deepEqual(selected.map(worry => worry.source), ['prd_worries', 'prd_worries']);
+  assert.deepEqual(selected[1].categories, ['family']);
+  assert.equal(selected[1].humanReplyCount, 1);
+});
+
+test('received replies are selected by worryId and authorUid', () => {
+  const replies: PrdReplyDoc[] = [
+    prdReply({ id: 'include', worryId: 'w1', authorUid: 'author', replierUid: 'r1' }),
+    prdReply({ id: 'other-worry', worryId: 'w2', authorUid: 'author', replierUid: 'r1' }),
+    prdReply({ id: 'other-author', worryId: 'w1', authorUid: 'other', replierUid: 'r1' }),
+  ];
+
+  const selected = selectRepliesForWorry({ replies, userUid: 'author', worryId: 'w1' });
+
+  assert.deepEqual(selected.map(reply => reply.id), ['include']);
+  assert.equal(selected[0].source, 'prd_replies');
+  assert.equal(selected[0].worryId, 'w1');
+  assert.equal(selected[0].authorUid, 'author');
+});
+
+test('written replies are selected by replierUid', () => {
+  const replies: PrdReplyDoc[] = [
+    prdReply({ id: 'mine', worryId: 'w1', authorUid: 'author', replierUid: 'me' }),
+    prdReply({ id: 'other', worryId: 'w2', authorUid: 'author', replierUid: 'other' }),
+  ];
+
+  const selected = selectMyGivenReplies({ replies, userUid: 'me' });
+
+  assert.deepEqual(selected.map(reply => reply.id), ['mine']);
+  assert.equal(selected[0].source, 'prd_replies');
+  assert.equal(selected[0].replierUid, 'me');
+});
+
+test('composed read model works without legacy fallback output', () => {
+  const prdReplies = [replyItem({ id: 'prd-only', source: 'prd_replies' })];
+
+  const selected = composeReplyReadModel({
+    prdReplies,
+    mode: 'received_for_worry',
+  });
+
+  assert.deepEqual(selected.map(reply => reply.id), ['prd-only']);
+  assert.deepEqual(selected.map(reply => reply.source), ['prd_replies']);
+});
+
+test('PRD and legacy replies coexist when no reliable shared identity proves duplication', () => {
+  const prdReplies = [replyItem({ id: 'prd', deliveryId: 'delivery-1', source: 'prd_replies' })];
+  const legacyLettersReplies = [replyItem({ id: 'legacy', source: 'legacy_letters' })];
+
+  const selected = composeReplyReadModel({
+    prdReplies,
+    legacyLettersReplies,
+    mode: 'received_for_worry',
+  });
+
+  assert.deepEqual(selected.map(reply => reply.id), ['prd', 'legacy']);
+  assert.deepEqual(selected.map(reply => reply.source), ['prd_replies', 'legacy_letters']);
+});
+
+test('conservative dedupe removes legacy only when deliveryId is shared', () => {
+  const prdReplies = [replyItem({ id: 'prd', deliveryId: 'delivery-1', source: 'prd_replies' })];
+  const legacyLettersReplies = [
+    replyItem({ id: 'duplicate-legacy', deliveryId: 'delivery-1', source: 'legacy_letters' }),
+    replyItem({ id: 'unrelated-legacy', source: 'legacy_letters' }),
+  ];
+
+  const selected = composeReplyReadModel({
+    prdReplies,
+    legacyLettersReplies,
+    mode: 'given_by_me',
+  });
+
+  assert.deepEqual(selected.map(reply => reply.id), ['prd', 'unrelated-legacy']);
+  assert.deepEqual(selected.map(reply => reply.source), ['prd_replies', 'legacy_letters']);
+});
+
+test('legacy adapter source-marks fallback replies', () => {
+  const legacy: LegacyLettersReplyDoc[] = [{
+    id: 'legacy',
+    type: 'reply',
+    senderId: 'replier',
+    receiverId: 'author',
+    refinedContent: 'legacy content',
+    replyTo: 'legacy-worry',
+    createdAt: ts(1),
+    isRead: false,
+  }];
+
+  const selected = adaptLegacyLettersReplies(legacy);
+
+  assert.equal(selected.length, 1);
+  assert.equal(selected[0].id, 'legacy');
+  assert.equal(selected[0].source, 'legacy_letters');
+  assert.equal(selected[0].replyTo, 'legacy-worry');
+});
+
+function prdReply(overrides: Partial<PrdReplyDoc>): PrdReplyDoc {
+  return {
+    id: 'reply',
+    deliveryId: 'delivery',
+    worryId: 'worry',
+    authorUid: 'author',
+    replierUid: 'replier',
+    content: 'reply content',
+    createdAt: ts(1),
+    ...overrides,
+  };
+}
+
+function replyItem(overrides: Partial<ReplyReadModelItem>): ReplyReadModelItem {
+  return {
+    id: 'reply',
+    deliveryId: undefined,
+    worryId: 'worry',
+    authorUid: 'author',
+    replierUid: 'replier',
+    content: 'reply content',
+    createdAt: ts(1),
+    source: 'prd_replies',
+    senderId: 'replier',
+    receiverId: 'author',
+    originalContent: 'reply content',
+    refinedContent: 'reply content',
+    replyTo: 'worry',
+    isRead: true,
+    ...overrides,
+  };
+}

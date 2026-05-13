@@ -12,19 +12,13 @@ import {
   signOut,
 } from 'firebase/auth';
 import {
-  collection,
-  query,
-  where,
-  onSnapshot,
   serverTimestamp,
   doc,
   updateDoc,
   deleteDoc,
-  orderBy,
   Timestamp,
   setDoc,
   getDoc,
-  getDocs,
 } from 'firebase/firestore';
 import { onMessage } from 'firebase/messaging';
 import { auth, db, googleProvider, messaging } from './firebase';
@@ -62,11 +56,13 @@ import { publishWorryViaApi } from './services/worryPublication/apiClient';
 import { submitReplyFeedbackWithProductionAdapters } from './services/replyFeedback/production';
 import type { ReplyFeedback } from './services/replyFeedback/types';
 import {
-  buildSentPublicationGroups,
-  type SentPublicationGroup,
-} from './services/worryPublication/readModel';
+  useMyGivenReplies,
+  useMyWorries,
+  useRepliesForWorry,
+  type MyWorryListItem,
+  type ReplyReadModelItem,
+} from './services/myWorries';
 import { usePushRegistration } from './services/pushRegistration';
-import { useReplyMailbox } from './services/replyMailbox';
 import {
   useHomeWorryFeed,
   type HomeWorryFeedLetter,
@@ -119,10 +115,9 @@ export default function App() {
   
   const [view, setView] = useState<'login' | 'onboarding' | 'home' | 'write_worry' | 'write_reply' | 'inbox' | 'my_replies' | 'read_reply' | 'read_my_reply' | 'settings'>('login');
   
-  const [myWorries, setMyWorries] = useState<Letter[]>([]);
-  
   const [selectedWorry, setSelectedWorry] = useState<HomeWorryFeedLetter | null>(null);
-  const [selectedReply, setSelectedReply] = useState<Letter | null>(null);
+  const [selectedMyWorry, setSelectedMyWorry] = useState<MyWorryListItem | null>(null);
+  const [selectedReply, setSelectedReply] = useState<ReplyReadModelItem | null>(null);
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -159,13 +154,13 @@ export default function App() {
     requestNotificationPermission,
     resetPushRegistrationOnSignOut,
   } = usePushRegistration({ user, loading });
-  const {
-    inboxReplies,
-    myGivenReplies,
-    unreadRepliesCount,
-    markReplyRead,
-  } = useReplyMailbox<Letter>({ user });
   const { feedWorries } = useHomeWorryFeed({ profile });
+  const { myWorries } = useMyWorries({ user });
+  const { repliesForWorry } = useRepliesForWorry({
+    user,
+    worryId: selectedMyWorry?.id ?? null,
+  });
+  const { myGivenReplies } = useMyGivenReplies({ user });
 
   // Auth & Profile Listener
   useEffect(() => {
@@ -250,21 +245,6 @@ export default function App() {
     const interval = setInterval(updatePresence, 60000);
     return () => clearInterval(interval);
   }, [profile]);
-
-  // My Sent Worries Listener
-  useEffect(() => {
-    if (!user) return;
-    const q = query(
-      collection(db, 'letters'),
-      where('type', '==', 'worry'),
-      where('senderId', '==', user.uid),
-      orderBy('createdAt', 'desc')
-    );
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      setMyWorries(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Letter)));
-    });
-    return () => unsubscribe();
-  }, [user]);
 
   const handleOnboardingSubmit = async (gender: string, interests: string[]) => {
     if (!user) {
@@ -410,7 +390,10 @@ export default function App() {
     }
   };
 
-  const groupedMyWorries: SentPublicationGroup[] = buildSentPublicationGroups(myWorries);
+  const selectedMyWorryReplies = repliesForWorry.map(reply => ({
+    ...reply,
+    replyToContent: reply.replyToContent ?? selectedMyWorry?.content,
+  }));
   const profileInterests = profile?.interests ?? [];
   const visibleHomeInterestBadgeText = profileInterests.slice(0, 5).join(', ');
   const homeInterestBadgeText = profileInterests.length === 0
@@ -485,11 +468,6 @@ export default function App() {
                 className="relative p-2 hover:bg-[#FAEDCD] rounded-full transition-colors"
               >
                 <Inbox className="w-6 h-6" />
-                {unreadRepliesCount > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 bg-[#E07A5F] rounded-full flex items-center justify-center text-[10px] text-white font-bold border-2 border-[#FDFCF8]">
-                    {unreadRepliesCount}
-                  </span>
-                )}
               </button>
             </div>
           </div>
@@ -718,7 +696,11 @@ export default function App() {
                       <p className="text-[#5A5A40] leading-relaxed mb-6 whitespace-pre-wrap font-medium">
                         "{worry.refinedContent}"
                       </p>
-                      {myGivenReplies.some(r => r.replyTo === worry.id) ? (
+                      {myGivenReplies.some(r => (
+                        r.deliveryId === worry.deliveryId
+                        || r.worryId === worry.worryId
+                        || r.replyTo === worry.id
+                      )) ? (
                         <div className="w-full py-3 bg-[#E9EDC9]/30 text-[#A3B18A] font-bold border border-[#E9EDC9] rounded-xl flex items-center justify-center gap-2">
                           <CheckCircle2 className="w-4 h-4" /> 답장 완료!
                         </div>
@@ -784,42 +766,46 @@ export default function App() {
               
               <Tabs 
                 tabs={[
-                  { id: 'received', label: `받은 답장 (${inboxReplies.length})` },
+                  { id: 'received', label: `받은 답장 (${selectedMyWorryReplies.length})` },
                   { id: 'given', label: `내가 한 위로 (${myGivenReplies.length})` },
-                  { id: 'sent', label: `내 고민 내역 (${groupedMyWorries.length})` }
+                  { id: 'sent', label: `내 고민 내역 (${myWorries.length})` }
                 ]}
                 render={(activeTab) => (
                   <div className="mt-6">
                     {activeTab === 'received' && (
-                      inboxReplies.length === 0 ? (
+                      !selectedMyWorry ? (
+                        <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
+                          <Inbox className="w-12 h-12 text-[#E9EDC9] mx-auto mb-3" />
+                          <p className="text-[#8B8B6B]">내 고민 내역에서 답장을 확인할 고민을 먼저 선택해주세요.</p>
+                        </div>
+                      ) : selectedMyWorryReplies.length === 0 ? (
                         <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
                           <Inbox className="w-12 h-12 text-[#E9EDC9] mx-auto mb-3" />
                           <p className="text-[#8B8B6B]">아직 도착한 답장이 없어요.</p>
                         </div>
                       ) : (
                         <div className="grid gap-4">
-                          {inboxReplies.map(reply => (
+                          <div className="bg-[#FAEDCD]/50 p-4 rounded-2xl border border-[#FAEDCD]">
+                            <div className="text-xs font-bold text-[#D4A373] mb-2">선택한 고민</div>
+                            <p className="text-sm text-[#5A5A40] line-clamp-3 whitespace-pre-wrap">{selectedMyWorry.content}</p>
+                          </div>
+                          {selectedMyWorryReplies.map(reply => (
                             <button 
                               key={reply.id}
                               onClick={() => { 
-                                void markReplyRead(reply.id);
                                 setSelectedReply(reply); 
                                 setView('read_reply'); 
                               }}
-                              className={cn(
-                                "w-full text-left p-6 rounded-2xl border transition-all relative group",
-                                reply.isRead ? "bg-white border-[#E9EDC9]" : "bg-[#FAEDCD] border-[#D4A373] shadow-md"
-                              )}
+                              className="w-full text-left p-6 bg-white rounded-2xl border border-[#E9EDC9] transition-all hover:bg-[#FAEDCD] relative group"
                             >
                               <div className="flex items-center gap-2 mb-3">
-                                <Headphones className={cn("w-4 h-4", reply.isRead ? "text-[#A3B18A]" : "text-[#E07A5F]")} />
+                                <Headphones className="w-4 h-4 text-[#A3B18A]" />
                                 <span className="text-xs font-semibold text-[#8B8B6B]">누군가의 따뜻한 답장</span>
-                                {!reply.isRead && <span className="ml-auto w-2 h-2 bg-[#E07A5F] rounded-full" />}
                               </div>
                               <p className="text-[#5A5A40] font-medium line-clamp-2 leading-relaxed">
                                 {reply.refinedContent}
                               </p>
-                              {!reply.publisherComment && (
+                              {reply.source === 'legacy_letters' && !reply.publisherComment && (
                                 <div className="mt-3 text-xs text-[#E07A5F] font-bold">코멘트를 남겨주세요!</div>
                               )}
                             </button>
@@ -852,12 +838,12 @@ export default function App() {
                               <p className="text-[#5A5A40] font-medium line-clamp-2 leading-relaxed">
                                 {reply.refinedContent}
                               </p>
-                              {reply.feedback === 'helpful' ? (
+                              {reply.source === 'legacy_letters' && reply.feedback === 'helpful' ? (
                                 <div className="mt-3 text-xs text-[#E07A5F] font-bold">
                                   {reply.publisherComment ? '답장이 왔어요!' : '따뜻한 한 마디 감사해요!'}
                                 </div>
                               ) : null}
-                              {reply.publisherComment && (
+                              {reply.source === 'legacy_letters' && reply.publisherComment && (
                                 <div className="mt-3 bg-[#FAEDCD]/50 p-2 rounded text-xs text-[#5A5A40]">
                                   <strong>답장받은 분의 코멘트:</strong> {reply.publisherComment}
                                 </div>
@@ -869,26 +855,65 @@ export default function App() {
                     )}
 
                     {activeTab === 'sent' && (
-                      groupedMyWorries.length === 0 ? (
+                      myWorries.length === 0 ? (
                         <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
                           <FileText className="w-12 h-12 text-[#E9EDC9] mx-auto mb-3" />
                           <p className="text-[#8B8B6B]">아직 송출한 고민이 없어요.</p>
                         </div>
                       ) : (
                         <div className="grid gap-4">
-                          {groupedMyWorries.map((worryGroup) => (
-                            <div key={worryGroup.groupKey} className="w-full text-left p-6 bg-white rounded-2xl border border-[#E9EDC9] relative group">
+                          {myWorries.map((worry) => (
+                            <button
+                              key={worry.id}
+                              onClick={() => setSelectedMyWorry(worry)}
+                              className={cn(
+                                "w-full text-left p-6 rounded-2xl border relative group transition-all",
+                                selectedMyWorry?.id === worry.id
+                                  ? "bg-[#FAEDCD] border-[#D4A373]"
+                                  : "bg-white border-[#E9EDC9] hover:bg-[#FAEDCD]"
+                              )}
+                            >
                               <div className="flex items-center gap-2 mb-3">
                                 <Signal className="w-4 h-4 text-[#D4A373]" />
                                 <span className="text-[10px] font-bold text-[#8B8B6B]">
-                                  {worryGroup.categories.join(', ') || '기타'}
+                                  {worry.categories.join(', ') || '기타'}
                                 </span>
                               </div>
                               <p className="text-[#5A5A40] font-medium line-clamp-2 leading-relaxed italic">
-                                "{worryGroup.originalContent}"
+                                "{worry.content}"
                               </p>
-                            </div>
+                              <div className="mt-3 text-xs text-[#A3B18A] font-bold">
+                                {selectedMyWorry?.id === worry.id ? '받은 답장 탭에서 확인 중' : '답장 확인하기'}
+                              </div>
+                            </button>
                           ))}
+                          {selectedMyWorry && (
+                            <div className="mt-2 grid gap-4">
+                              <div className="text-sm font-bold text-[#5A5A40]">선택한 고민의 답장 ({selectedMyWorryReplies.length})</div>
+                              {selectedMyWorryReplies.length === 0 ? (
+                                <div className="text-center py-10 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
+                                  <p className="text-[#8B8B6B] text-sm">아직 이 고민에 도착한 답장이 없어요.</p>
+                                </div>
+                              ) : selectedMyWorryReplies.map(reply => (
+                                <button
+                                  key={reply.id}
+                                  onClick={() => {
+                                    setSelectedReply(reply);
+                                    setView('read_reply');
+                                  }}
+                                  className="w-full text-left p-6 bg-white rounded-2xl border border-[#E9EDC9] transition-all hover:bg-[#FAEDCD]"
+                                >
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <Headphones className="w-4 h-4 text-[#A3B18A]" />
+                                    <span className="text-xs font-semibold text-[#8B8B6B]">누군가의 따뜻한 답장</span>
+                                  </div>
+                                  <p className="text-[#5A5A40] font-medium line-clamp-2 leading-relaxed">
+                                    {reply.refinedContent}
+                                  </p>
+                                </button>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       )
                     )}
@@ -910,7 +935,7 @@ export default function App() {
                 <div className="bg-white p-6 rounded-2xl border border-[#E9EDC9]">
                   <div className="text-xs font-bold text-[#A3B18A] mb-3">내가 보냈던 고민</div>
                   <p className="text-[#8B8B6B] text-sm leading-relaxed whitespace-pre-wrap opacity-80">
-                    {selectedReply.replyToContent}
+                    {selectedReply.replyToContent ?? '선택한 고민의 답장입니다.'}
                   </p>
                 </div>
 
@@ -925,7 +950,7 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Feedback Section */}
+                {selectedReply.source === 'legacy_letters' && (
                 <div className="pt-8 text-center border-t border-[#E9EDC9]">
                   {selectedReply.feedback ? (
                     <div className="space-y-6">
@@ -975,6 +1000,7 @@ export default function App() {
                     </>
                   )}
                 </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -991,7 +1017,7 @@ export default function App() {
                 <div className="bg-white p-6 rounded-2xl border border-[#E9EDC9]">
                   <div className="text-xs font-bold text-[#A3B18A] mb-3">전달받은 고민</div>
                   <p className="text-[#8B8B6B] text-sm leading-relaxed whitespace-pre-wrap opacity-80">
-                    {selectedReply.replyToContent}
+                    {selectedReply.replyToContent ?? '내가 답장한 고민입니다.'}
                   </p>
                 </div>
 
@@ -1008,14 +1034,14 @@ export default function App() {
 
                 {/* Feedback & Comment Section */}
                 <div className="pt-4 space-y-4">
-                  {selectedReply.feedback === 'helpful' && (
+                  {selectedReply.source === 'legacy_letters' && selectedReply.feedback === 'helpful' && (
                     <div className="flex items-center justify-center gap-2 px-6 py-4 bg-white border border-[#E9EDC9] rounded-2xl text-[#5A5A40] font-bold">
                       <Heart className="w-5 h-5 text-[#E07A5F]" /> 
                       작성자에게 위로가 되었다는 답신이 왔어요! (해결 횟수 +1)
                     </div>
                   )}
 
-                  {selectedReply.publisherComment && (
+                  {selectedReply.source === 'legacy_letters' && selectedReply.publisherComment && (
                     <div className="bg-white p-6 rounded-2xl border border-[#D4A373]">
                       <div className="text-xs font-bold text-[#D4A373] mb-3">작성자가 남긴 코멘트</div>
                       <p className="text-[#5A5A40] text-sm leading-relaxed whitespace-pre-wrap">

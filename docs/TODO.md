@@ -29,7 +29,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.9 Account deletion mutation boundary is server-owned: delete requests use authenticated user identity, soft-delete the user, remove tokens, and block future user actions.
 - [ ] TODO-1.10 Final source-of-truth mutation boundary is closed: after legacy removal, the browser cannot create or mutate `worries`, `deliveries`, `replies`, `feedbacks`, `moderationLogs`, `pushLogs`, operational job collections, or legacy `letters`.
 - [x] TODO-1.11 Answer feed read path reads active `deliveries` for the signed-in recipient plus enough worry display data, with any legacy fallback isolated behind an explicitly named adapter.
-- [ ] TODO-1.12 My worries and reply mailbox read paths read `worries` authored by the signed-in user, `replies` for those worries, and replies written by the signed-in user, with legacy fallback isolated behind an explicitly named adapter.
+- [x] TODO-1.12 My worries and reply mailbox read paths read `worries` authored by the signed-in user, `replies` for those worries, and replies written by the signed-in user, with legacy fallback isolated behind an explicitly named adapter.
 - [ ] TODO-1.13 My page read path reads own profile, own written replies, and like/comment state visible to the replier.
 - [ ] TODO-1.14 Temporary legacy read fallbacks are removed from runtime code.
 - [x] TODO-1.15 Firestore ownership for initial PRD collections is enforced: `worries`, `deliveries`, `moderationLogs`, `pushLogs`, and initial `deliveryBatches` are server-owned; clients keep only narrow profile/token writes and temporary legacy reads.
@@ -96,7 +96,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.60 Prefer one deep module with a small public interface over many shallow wrappers.
 - [x] TODO-1.61 Apply deep-module guardrails to `worryPublication`, `moderation`, and `answerFeed`.
 - [x] TODO-1.62 Apply deep-module guardrails to `replyPublication`.
-- [ ] TODO-1.63 Apply deep-module guardrails to `replyMailbox` / `myWorries`.
+- [x] TODO-1.63 Apply deep-module guardrails to `replyMailbox` / `myWorries`.
 - [ ] TODO-1.64 Apply deep-module guardrails to `replyFeedback`.
 - [ ] TODO-1.65 Apply deep-module guardrails to `pass` / `rematch`.
 - [ ] TODO-1.66 Apply deep-module guardrails to `aiFallback`.
@@ -379,14 +379,14 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### `replyMailbox` / `myWorries`
 
-- [ ] TODO-4.27 Purpose: show worries authored by me, replies received for my worries, and replies written by me.
-- [ ] TODO-4.28 Public interface: `useMyWorries`, `useRepliesForWorry`, `useMyGivenReplies`.
-- [ ] TODO-4.29 Files: `src/services/replyMailbox/*`, new `src/services/myWorries/*`, `src/App.tsx` decomposition.
-- [ ] TODO-4.30 Tests: authored worries, received replies, own written replies, and isolated legacy fallback behavior.
+- [x] TODO-4.27 Purpose: show worries authored by me, replies received for my worries, and replies written by me.
+- [x] TODO-4.28 Public interface: `useMyWorries`, `useRepliesForWorry`, `useMyGivenReplies`.
+- [x] TODO-4.29 Files: `src/services/replyMailbox/*`, new `src/services/myWorries/*`, `src/App.tsx` decomposition.
+- [x] TODO-4.30 Tests: authored worries, received replies, own written replies, and isolated legacy fallback behavior.
 - [ ] TODO-4.31 Read-state extension: unread counts and unread emphasis are added by Slice 5 after read APIs exist.
 - [ ] TODO-4.32 Feedback extension: disliked filtering is completed by Slice 7 after feedback exists.
 - [ ] TODO-4.33 Admin hiding extension: hidden filtering is completed by Slice 15 after admin hiding exists.
-- [ ] TODO-4.34 Deletion test: legacy mailbox deletion does not remove PRD mailbox behavior.
+- [x] TODO-4.34 Deletion test: legacy mailbox deletion does not remove PRD mailbox behavior.
 
 ### `pass` / `rematch`
 
@@ -466,15 +466,15 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 4: My worries and reply mailbox migration
 
-- [ ] TODO-5.29 Goal: PRD read models replace `letters` mailbox/inbox concepts.
-- [ ] TODO-5.30 Files: `src/services/replyMailbox/*`, new `src/services/myWorries/*`, `src/App.tsx`.
-- [ ] TODO-5.31 Data model: read `worries` by `authorUid` and `replies` by `worryId`/`replierUid`; do not require feedback summaries before Slice 7.
-- [ ] TODO-5.32 UI/read path: my worries list, replies received, and replies written by me; unread reply emphasis waits for Slice 5, disliked filtering waits for Slice 7, and admin hidden filtering waits for Slice 15.
-- [ ] TODO-5.33 Legacy fallback removal strategy: read both new `replies` and old `letters` replies behind one adapter, then remove fallback in Slice 16.
-- [ ] TODO-5.34 Tests: my worries list, replies received, replies written, and legacy fallback isolation.
+- [x] TODO-5.29 Goal: PRD read models replace `letters` mailbox/inbox concepts.
+- [x] TODO-5.30 Files: `src/services/replyMailbox/*`, new `src/services/myWorries/*`, `src/App.tsx`.
+- [x] TODO-5.31 Data model: read `worries` by `authorUid` and `replies` by `worryId`/`replierUid`; do not require feedback summaries before Slice 7.
+- [x] TODO-5.32 UI/read path: my worries list, replies received, and replies written by me; unread reply emphasis waits for Slice 5, disliked filtering waits for Slice 7, and admin hidden filtering waits for Slice 15.
+- [x] TODO-5.33 Legacy fallback removal strategy: read both new `replies` and old `letters` replies behind one adapter, then remove fallback in Slice 16.
+- [x] TODO-5.34 Tests: my worries list, replies received, replies written, and legacy fallback isolation.
 - [ ] TODO-5.35 Manual verification: author sees new replies; replier sees own written reply.
-- [ ] TODO-5.36 Explicit non-goals: bottom tab redesign can wait until Slice 11.
-- [ ] TODO-5.37 Deletion test: removing `letters` fallback leaves new replies visible.
+- [x] TODO-5.36 Explicit non-goals: bottom tab redesign can wait until Slice 11.
+- [x] TODO-5.37 Deletion test: removing `letters` fallback leaves new replies visible.
 
 ### Slice 5: Read state
 
@@ -811,9 +811,9 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-9.43 Passed deliveries are excluded from answer feed.
 - [ ] TODO-9.44 Hidden deliveries are excluded from answer feed.
 - [ ] TODO-9.45 Existing active delivery remains visible and answerable after rematch creates additional deliveries.
-- [ ] TODO-9.46 My worries list includes own worries.
+- [x] TODO-9.46 My worries list includes own worries.
 - [ ] TODO-9.47 My worries list includes unread reply count after read state exists.
-- [ ] TODO-9.48 Replies written by me shown in My Page.
+- [x] TODO-9.48 Replies written by me shown in My Page.
 - [ ] TODO-9.49 Disliked reply hidden from publisher but not deleted.
 - [ ] TODO-9.50 Read state private.
 
