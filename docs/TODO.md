@@ -6,15 +6,15 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 
 ## 0. Current Architecture Summary
 
-- [ ] TODO-0.1 Current data model: `letters` is overloaded for both delivered worries (`type: 'worry'`) and replies (`type: 'reply'`). A worry publication creates multiple `letters` documents, one per receiver, instead of one canonical worry plus delivery documents.
-- [ ] TODO-0.2 Current client-side Firestore writes exist in `src/App.tsx`, `src/services/worryPublication/adapters/firestore.ts`, `src/services/replyPublication/adapters.ts`, `src/services/replyFeedback/firestoreAdapters.ts`, `src/services/replyMailbox/production.ts`, and push token code. The browser can create/update/delete user-visible source-of-truth data.
-- [ ] TODO-0.3 Current worry publication path: `src/App.tsx#publishWorry` calls `publishWorryWithProductionAdapters`, which uses `src/services/worryPublication/publishWorry.ts`. That runs client-side moderation via `/api/process-worry`, fetches active users from client Firestore, selects 3 recipients in `policy/recipientSelection.ts`, writes `letters` in `adapters/firestore.ts`, then calls notification/bot follow-ups.
-- [ ] TODO-0.4 Current reply publication path: `src/App.tsx#sendReply` calls `publishReplyWithProductionAdapters`, which moderates through `/api/process-reply`, creates a `letters` reply document, then calls `/api/notify-new-reply`.
-- [ ] TODO-0.5 Current feedback path: `src/App.tsx#giveFeedback` calls `submitReplyFeedbackWithProductionAdapters`, which updates `letters/{replyId}.feedback` and increments `users/{replierId}.helpedCount` from the client. Publisher comments are updated on the same `letters` reply through `publishPublisherComment`.
-- [ ] TODO-0.6 Current home/answer feed path: `useHomeWorryFeed` queries all `letters` where `type == 'worry'`, then `selectVisibleHomeWorryFeed` includes `receiverId == profile.uid` and also legacy `receiverId == 'public'`.
-- [ ] TODO-0.7 Current bot reply scheduling path: `server.ts` exposes `/api/schedule-bot-reply`, uses `setTimeout`, generates an AI-like reply after 4-8 minutes, writes a `letters` reply, and sends a push. This is not the PRD 24-hour AI fallback.
-- [ ] TODO-0.8 Current Firestore rules weakness: `firestore.rules` allows every authenticated user to read/write/delete all `users` and all `letters`. There are no rules for `worries`, `deliveries`, `replies`, `feedbacks`, `moderationLogs`, or `pushLogs`.
-- [ ] TODO-0.9 Current UI navigation mismatch with PRD: `App.tsx` uses views such as `home`, `write_worry`, `write_reply`, `inbox`, `my_replies`, `read_reply`, `read_my_reply`, and `settings`, with header inbox/settings affordances. PRD requires first screen `답변하기`, bottom tabs `답변하기 / 나의 고민 / 마이페이지`, worry writing from `나의 고민`, and More inside `마이페이지`.
+- [x] TODO-0.1 Current data model: `letters` is overloaded for both delivered worries (`type: 'worry'`) and replies (`type: 'reply'`). A worry publication creates multiple `letters` documents, one per receiver, instead of one canonical worry plus delivery documents.
+- [x] TODO-0.2 Current client-side Firestore writes exist in `src/App.tsx`, `src/services/worryPublication/adapters/firestore.ts`, `src/services/replyPublication/adapters.ts`, `src/services/replyFeedback/firestoreAdapters.ts`, `src/services/replyMailbox/production.ts`, and push token code. The browser can create/update/delete user-visible source-of-truth data.
+- [x] TODO-0.3 Current worry publication path: `src/App.tsx#publishWorry` calls `publishWorryWithProductionAdapters`, which uses `src/services/worryPublication/publishWorry.ts`. That runs client-side moderation via `/api/process-worry`, fetches active users from client Firestore, selects 3 recipients in `policy/recipientSelection.ts`, writes `letters` in `adapters/firestore.ts`, then calls notification/bot follow-ups.
+- [x] TODO-0.4 Current reply publication path: `src/App.tsx#sendReply` calls `publishReplyWithProductionAdapters`, which moderates through `/api/process-reply`, creates a `letters` reply document, then calls `/api/notify-new-reply`.
+- [x] TODO-0.5 Current feedback path: `src/App.tsx#giveFeedback` calls `submitReplyFeedbackWithProductionAdapters`, which updates `letters/{replyId}.feedback` and increments `users/{replierId}.helpedCount` from the client. Publisher comments are updated on the same `letters` reply through `publishPublisherComment`.
+- [x] TODO-0.6 Current home/answer feed path: `useHomeWorryFeed` queries all `letters` where `type == 'worry'`, then `selectVisibleHomeWorryFeed` includes `receiverId == profile.uid` and also legacy `receiverId == 'public'`.
+- [x] TODO-0.7 Current bot reply scheduling path: `server.ts` exposes `/api/schedule-bot-reply`, uses `setTimeout`, generates an AI-like reply after 4-8 minutes, writes a `letters` reply, and sends a push. This is not the PRD 24-hour AI fallback.
+- [x] TODO-0.8 Current Firestore rules weakness: `firestore.rules` allows every authenticated user to read/write/delete all `users` and all `letters`. There are no rules for `worries`, `deliveries`, `replies`, `feedbacks`, `moderationLogs`, or `pushLogs`.
+- [x] TODO-0.9 Current UI navigation mismatch with PRD: `App.tsx` uses views such as `home`, `write_worry`, `write_reply`, `inbox`, `my_replies`, `read_reply`, `read_my_reply`, and `settings`, with header inbox/settings affordances. PRD requires first screen `답변하기`, bottom tabs `답변하기 / 나의 고민 / 마이페이지`, worry writing from `나의 고민`, and More inside `마이페이지`.
 
 ## 1. Target PRD Architecture
 
@@ -740,7 +740,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ## 8. Migration / Data Reset Strategy
 
-- [ ] TODO-8.1 Recommended plan: temporary read fallback then reset test data.
+- [x] TODO-8.1 Recommended plan: temporary read fallback then reset test data.
   - Why: current `letters` documents are duplicated per recipient and mix worries, replies, bot replies, feedback, and public worries; a perfect migration is more expensive than MVP data warrants.
   - Tradeoff: historical test data may be discarded or archived.
   - Affected files: `homeWorryFeed`, `replyMailbox`, migration/ops docs.
@@ -930,10 +930,10 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ## 12. Output Requirements
 
-- [ ] TODO-12.1 This TODO is a single Markdown document at `docs/TODO.md`.
-- [ ] TODO-12.2 It is concrete and actionable.
-- [ ] TODO-12.3 It uses checkboxes and success criteria.
-- [ ] TODO-12.4 It does not implement code and does not claim tests pass.
-- [ ] TODO-12.5 It includes all deferred PRD slices.
-- [ ] TODO-12.6 It avoids unresolved `TBD`; where a decision is required, it recommends a default, explains why, states tradeoff, and lists affected files.
-- [ ] TODO-12.7 It uses deletion-test framing: new modules hide complexity behind small public interfaces, `App.tsx` does not own server policy, and tests focus on observable PRD invariants.
+- [x] TODO-12.1 This TODO is a single Markdown document at `docs/TODO.md`.
+- [x] TODO-12.2 It is concrete and actionable.
+- [x] TODO-12.3 It uses checkboxes and success criteria.
+- [x] TODO-12.4 It does not implement code and does not claim tests pass.
+- [x] TODO-12.5 It includes all deferred PRD slices.
+- [x] TODO-12.6 It avoids unresolved `TBD`; where a decision is required, it recommends a default, explains why, states tradeoff, and lists affected files.
+- [x] TODO-12.7 It uses deletion-test framing: new modules hide complexity behind small public interfaces, `App.tsx` does not own server policy, and tests focus on observable PRD invariants.
