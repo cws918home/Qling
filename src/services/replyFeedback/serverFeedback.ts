@@ -1,5 +1,7 @@
 import { FieldValue, type Firestore } from 'firebase-admin/firestore';
+import type { Messaging } from 'firebase-admin/messaging';
 import { processSimpleModerationResponse, type SimpleProvider } from '../../server/moderationResponses';
+import { createReplyFeedbackPushService } from './feedbackPush';
 import { createReplyFeedbackRepository } from './serverFirestore';
 import type { ReplyFeedbackType, ServerReplyFeedbackResult } from './types';
 
@@ -19,15 +21,46 @@ export interface ReplyFeedbackRepository {
     comment: string | null;
     commentModerationLogId: string | null;
     moderationLog?: Record<string, unknown>;
-  }): Promise<{ feedbackId: string; helpedCountApplied: boolean }>;
+  }): Promise<ReplyFeedbackCommitResult>;
+}
+
+export interface ReplyFeedbackCommitResult {
+  feedbackId: string;
+  helpedCountApplied: boolean;
+  replyLikedPush: null | {
+    feedbackId: string;
+    replyId: string;
+    replierUid: string;
+  };
+}
+
+export interface ReplyFeedbackPushService {
+  sendReplyLiked(params: {
+    feedbackId: string;
+    replyId: string;
+    replierUid: string;
+  }): Promise<void>;
+}
+
+export interface ReplyFeedbackPushLogger {
+  warn(message: string, details?: unknown): void;
 }
 
 export async function submitReplyFeedbackOnServer(params: SubmitReplyFeedbackOnServerParams & {
   db: Firestore;
+  messaging?: Messaging | null;
   moderationProvider: SimpleProvider;
   repository?: ReplyFeedbackRepository;
+  pushService?: ReplyFeedbackPushService;
+  pushLogger?: ReplyFeedbackPushLogger;
 }): Promise<ServerReplyFeedbackResult> {
   const repository = params.repository ?? createReplyFeedbackRepository({ db: params.db });
+  const pushLogger = params.pushLogger ?? console;
+  const pushService = params.pushService ?? createReplyFeedbackPushService({
+    db: params.db,
+    messaging: params.messaging ?? null,
+    logger: pushLogger,
+  });
   const typeResult = parseFeedbackType(params.type);
   if (!typeResult) {
     return { status: 'validation_error', code: 'invalid_type', message: '피드백 형식이 올바르지 않습니다.' };
@@ -85,7 +118,23 @@ export async function submitReplyFeedbackOnServer(params: SubmitReplyFeedbackOnS
       moderationLog,
     });
 
-    return { status: 'saved', ...saved };
+    if (saved.replyLikedPush) {
+      try {
+        await pushService.sendReplyLiked(saved.replyLikedPush);
+      } catch (pushError) {
+        pushLogger.warn('[FeedbackPush] Reply-liked push failed after feedback commit.', {
+          feedbackId: saved.feedbackId,
+          replyId: params.replyId,
+          error: pushError instanceof Error ? pushError.message : pushError,
+        });
+      }
+    }
+
+    return {
+      status: 'saved',
+      feedbackId: saved.feedbackId,
+      helpedCountApplied: saved.helpedCountApplied,
+    };
   } catch (error) {
     if (error instanceof Error) {
       const mapped = mapRepositoryError(error.message);

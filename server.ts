@@ -302,6 +302,7 @@ async function startServer() {
     });
     registerFeedbackRoutes(app, {
       db,
+      messaging,
       auth: getAuth(),
       moderationProvider: commentContent => processSimpleModerationResponse(
         commentContent,

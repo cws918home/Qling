@@ -62,7 +62,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.42 Server invariant for example job idempotency is enforced by per-user example state, deterministic jobs, and status preconditions.
 - [x] TODO-1.43 Server invariant for worry publication push failure is enforced: push failure never rolls back core worry publication.
 - [x] TODO-1.44 Server invariant for reply publication push failure is enforced: push failure never rolls back core reply publication.
-- [ ] TODO-1.45 Server invariant for feedback push failure is enforced: push failure never rolls back core feedback mutation.
+- [x] TODO-1.45 Server invariant for feedback push failure is enforced: push failure never rolls back core feedback mutation.
 - [x] TODO-1.71 Server invariant for pass replacement push failure is enforced: push failure to the immediate replacement recipient never rolls back the pass transition or replacement delivery creation.
 - [x] TODO-1.46 Firestore rules invariant for initial PRD collections is enforced: clients cannot create/update/delete `worries`, `deliveries`, `moderationLogs`, `pushLogs`, or initial `deliveryBatches`.
 - [x] TODO-1.47 Firestore rules invariant for profile/token surfaces is enforced: users can read/write only narrow own profile fields and own push token docs during transition.
@@ -314,7 +314,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-3.42 Transaction: create `feedbacks/{replyId}`, set reply feedback summary, increment `users/{replierUid}.helpedCount` exactly once for eligible human likes, hide disliked reply from publisher read model.
 - [ ] TODO-3.43 Response: `200 { status: 'saved', feedbackId, helpedCountApplied }`.
 - [ ] TODO-3.44 Idempotency: same feedback repeat returns existing; different type returns `409`; delayed like comment update allowed once if no prior comment.
-- [ ] TODO-3.45 Tests: one feedback, AI like excluded from helpedCount, dislike hidden, comments visibility, like push only.
+- [x] TODO-3.45 Tests: one feedback, AI like excluded from helpedCount, dislike hidden, comments visibility, like push only.
 
 ### Account Deletion: `POST /api/users/me/delete`
 
@@ -374,7 +374,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-4.22 Purpose: one immutable feedback per reply and helpedCount transaction.
 - [ ] TODO-4.23 Public interface: `submitReplyFeedbackOnServer({ publisherUid, replyId, type, comment? })`.
 - [ ] TODO-4.24 Files: `src/services/replyFeedback/serverFeedback.ts`, `serverFirestore.ts`, `submitReplyFeedback.ts`, `types.ts`, `production.ts`, `firestoreAdapters.ts`.
-- [ ] TODO-4.25 Tests: deterministic ID, like/dislike behavior, comments visibility, push policy.
+- [x] TODO-4.25 Tests: deterministic ID, like/dislike behavior, comments visibility, push policy.
 - [ ] TODO-4.26 Deletion test: deleting server feedback module removes feedback mutation; helpedCount cannot be changed from client.
 
 ### `replyMailbox` / `myWorries`
@@ -509,7 +509,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-5.60 API: `POST /api/replies/:replyId/feedback`.
 - [ ] TODO-5.61 Data: deterministic feedback doc, reply summary fields, helpedCount transaction.
 - [ ] TODO-5.62 Rules: deny direct feedback/helpedCount writes.
-- [ ] TODO-5.63 Tests: one-time immutable feedback, deterministic ID, AI reply like excluded, example like included, dislike hides reply, comment visibility, no comment push, like push only.
+- [x] TODO-5.63 Tests: one-time immutable feedback, deterministic ID, AI reply like excluded, example like included, dislike hides reply, comment visibility, no comment push, like push only.
 - [ ] TODO-5.64 Manual verification: like increments count once; dislike hides; comments visibility correct.
 - [ ] TODO-5.65 Explicit non-goals: feedback cancellation/change.
 - [ ] TODO-5.66 Deletion test: deleting feedback module removes all ways to mutate feedback/helpedCount.
@@ -770,7 +770,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.9 Publish approved worry creates one worry, one Round 0 `deliveryBatches/{batchId}` with no source batch, and five Round 0 deliveries; fewer-than-5 eligible recipients fails with no partial state.
 - [x] TODO-9.10 Worry publication push failure creates push log and does not roll back.
 - [x] TODO-9.11 Reply publication push failure creates push log and does not roll back.
-- [ ] TODO-9.12 Feedback push failure creates push log and does not roll back.
+- [x] TODO-9.12 Feedback push failure creates push log and does not roll back.
 - [x] TODO-9.13 Reply publication creates one reply and sets delivery answered.
 - [x] TODO-9.14 Publish increments each selected recipient's `activeDeliveryCount` exactly once.
 - [x] TODO-9.15 Reply transitions active delivery to answered and decrements recipient `activeDeliveryCount` exactly once.

@@ -57,6 +57,7 @@ export function createReplyFeedbackRepository(params: { db: Firestore }): ReplyF
             return {
               feedbackId: input.replyId,
               helpedCountApplied: existingFeedback.helpedCountApplied === true,
+              replyLikedPush: null,
             };
           }
         }
@@ -79,6 +80,7 @@ export function createReplyFeedbackRepository(params: { db: Firestore }): ReplyF
           return {
             feedbackId: input.replyId,
             helpedCountApplied: existingFeedback?.helpedCountApplied === true,
+            replyLikedPush: null,
           };
         }
 
@@ -115,7 +117,17 @@ export function createReplyFeedbackRepository(params: { db: Firestore }): ReplyF
           }, { merge: true });
         }
 
-        return { feedbackId: input.replyId, helpedCountApplied };
+        return {
+          feedbackId: input.replyId,
+          helpedCountApplied,
+          replyLikedPush: input.type === 'like'
+            ? {
+              feedbackId: input.replyId,
+              replyId: input.replyId,
+              replierUid,
+            }
+            : null,
+        };
       });
     },
   };

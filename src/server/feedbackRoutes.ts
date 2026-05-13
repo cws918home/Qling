@@ -1,6 +1,7 @@
 import type express from 'express';
 import type { Auth } from 'firebase-admin/auth';
 import type { Firestore } from 'firebase-admin/firestore';
+import type { Messaging } from 'firebase-admin/messaging';
 import { createRequireActiveFirebaseAuth, type ActiveAuthenticatedRequest } from './auth';
 import { submitReplyFeedbackOnServer } from '../services/replyFeedback/serverFeedback';
 import type { ServerReplyFeedbackResult } from '../services/replyFeedback/types';
@@ -42,6 +43,7 @@ function sendFeedbackResult(res: express.Response, result: ServerReplyFeedbackRe
 
 export function registerFeedbackRoutes(app: express.Express, deps: {
   db: Firestore | null;
+  messaging?: Messaging | null;
   auth: Auth;
   moderationProvider: SimpleProvider;
   submit?: typeof submitReplyFeedbackOnServer;
@@ -67,6 +69,7 @@ export function registerFeedbackRoutes(app: express.Express, deps: {
         const authReq = req as ActiveAuthenticatedRequest;
         const result = await submit({
           db: deps.db as Firestore,
+          messaging: deps.messaging ?? null,
           moderationProvider: deps.moderationProvider,
           publisherUid: authReq.auth.uid,
           replyId: req.params.replyId,

@@ -70,7 +70,15 @@ async function save(store: Store, input: {
 test('initial like without comment stores exact feedback document shape', async () => {
   const { result, store } = await save(baseStore, { type: 'like' });
 
-  assert.deepEqual(result, { feedbackId: 'reply1', helpedCountApplied: true });
+  assert.deepEqual(result, {
+    feedbackId: 'reply1',
+    helpedCountApplied: true,
+    replyLikedPush: {
+      feedbackId: 'reply1',
+      replyId: 'reply1',
+      replierUid: 'replier',
+    },
+  });
   assert.equal(store['feedbacks/reply1'].replyId, 'reply1');
   assert.equal(store['feedbacks/reply1'].worryId, 'worry1');
   assert.equal(store['feedbacks/reply1'].deliveryId, 'delivery1');
@@ -117,7 +125,7 @@ test('delayed like comment updates once without another helpedCount increment', 
 test('initial dislike without comment stores admin-only state only in feedbacks', async () => {
   const { result, store } = await save(baseStore, { type: 'dislike' });
 
-  assert.deepEqual(result, { feedbackId: 'reply1', helpedCountApplied: false });
+  assert.deepEqual(result, { feedbackId: 'reply1', helpedCountApplied: false, replyLikedPush: null });
   assert.equal(store['feedbacks/reply1'].type, 'dislike');
   assert.equal(store['feedbacks/reply1'].comment, null);
   assert.equal(store['feedbacks/reply1'].commentVisibility, 'none');
@@ -142,7 +150,7 @@ test('initial dislike with comment stores admin-only comment fields', async () =
 test('exact idempotency accepts repeated same like and rejects overwrite', async () => {
   const first = await save(baseStore, { type: 'like', comment: 'same', commentModerationLogId: 'mod1' });
   const same = await save(first.store, { type: 'like', comment: 'same', commentModerationLogId: 'mod2' });
-  assert.deepEqual(same.result, { feedbackId: 'reply1', helpedCountApplied: true });
+  assert.deepEqual(same.result, { feedbackId: 'reply1', helpedCountApplied: true, replyLikedPush: null });
 
   await assert.rejects(
     save(first.store, { type: 'like', comment: 'different', commentModerationLogId: 'mod3' }),

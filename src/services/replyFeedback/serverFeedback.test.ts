@@ -15,12 +15,31 @@ function createRepository() {
         if (existing.type === 'like' && existing.comment && params.comment && existing.comment !== params.comment) {
           throw new Error('feedback_conflict');
         }
+        existing = {
+          type: params.type,
+          comment: existing.comment ?? params.comment,
+        };
+        return {
+          feedbackId: params.replyId,
+          helpedCountApplied: params.type === 'like',
+          replyLikedPush: null,
+        };
       }
       existing = {
         type: params.type,
         comment: params.comment,
       };
-      return { feedbackId: params.replyId, helpedCountApplied: params.type === 'like' };
+      return {
+        feedbackId: params.replyId,
+        helpedCountApplied: params.type === 'like',
+        replyLikedPush: params.type === 'like'
+          ? {
+            feedbackId: params.replyId,
+            replyId: params.replyId,
+            replierUid: 'replier',
+          }
+          : null,
+      };
     },
   };
   return { repository, calls };
@@ -32,6 +51,7 @@ test('initial like without comment stores exact absent-comment shape inputs', as
     db: {} as never,
     repository,
     moderationProvider: async () => ({ status: 'approved' }),
+    pushService: { async sendReplyLiked() {} },
     publisherUid: 'publisher',
     replyId: 'reply-1',
     type: 'like',
@@ -54,6 +74,7 @@ test('initial like with comment trims and creates replier-visible moderation log
     db: {} as never,
     repository,
     moderationProvider: async () => ({ status: 'approved' }),
+    pushService: { async sendReplyLiked() {} },
     publisherUid: 'publisher',
     replyId: 'reply-1',
     type: 'like',
@@ -72,6 +93,7 @@ test('whitespace-only comment is rejected before state lookup', async () => {
     db: {} as never,
     repository,
     moderationProvider: async () => ({ status: 'approved' }),
+    pushService: { async sendReplyLiked() {} },
     publisherUid: 'publisher',
     replyId: 'reply-1',
     type: 'dislike',
@@ -108,6 +130,7 @@ test('different later like comment conflicts', async () => {
     db: {} as never,
     repository,
     moderationProvider: async () => ({ status: 'approved' }),
+    pushService: { async sendReplyLiked() {} },
     publisherUid: 'publisher',
     replyId: 'reply-1',
     type: 'like',
@@ -125,4 +148,151 @@ test('different later like comment conflicts', async () => {
   });
 
   assert.equal(result.status, 'conflict');
+});
+
+test('newly created like triggers reply-liked push after feedback commit', async () => {
+  const { repository } = createRepository();
+  const pushCalls: unknown[] = [];
+
+  const result = await submitReplyFeedbackOnServer({
+    db: {} as never,
+    repository,
+    moderationProvider: async () => ({ status: 'approved' }),
+    pushService: {
+      async sendReplyLiked(params) {
+        pushCalls.push(params);
+      },
+    },
+    publisherUid: 'publisher',
+    replyId: 'reply-1',
+    type: 'like',
+  });
+
+  assert.deepEqual(result, { status: 'saved', feedbackId: 'reply-1', helpedCountApplied: true });
+  assert.deepEqual(pushCalls, [{
+    feedbackId: 'reply-1',
+    replyId: 'reply-1',
+    replierUid: 'replier',
+  }]);
+});
+
+test('comment-only like update does not push', async () => {
+  const { repository } = createRepository();
+  const pushCalls: unknown[] = [];
+  const pushService = {
+    async sendReplyLiked(params: unknown) {
+      pushCalls.push(params);
+    },
+  };
+
+  await submitReplyFeedbackOnServer({
+    db: {} as never,
+    repository,
+    moderationProvider: async () => ({ status: 'approved' }),
+    pushService,
+    publisherUid: 'publisher',
+    replyId: 'reply-1',
+    type: 'like',
+  });
+  pushCalls.length = 0;
+
+  await submitReplyFeedbackOnServer({
+    db: {} as never,
+    repository,
+    moderationProvider: async () => ({ status: 'approved' }),
+    pushService,
+    publisherUid: 'publisher',
+    replyId: 'reply-1',
+    type: 'like',
+    comment: '나중에 고마워요',
+  });
+
+  assert.deepEqual(pushCalls, []);
+});
+
+test('dislike does not push', async () => {
+  const { repository } = createRepository();
+  const pushCalls: unknown[] = [];
+
+  await submitReplyFeedbackOnServer({
+    db: {} as never,
+    repository,
+    moderationProvider: async () => ({ status: 'approved' }),
+    pushService: {
+      async sendReplyLiked(params) {
+        pushCalls.push(params);
+      },
+    },
+    publisherUid: 'publisher',
+    replyId: 'reply-1',
+    type: 'dislike',
+  });
+
+  assert.deepEqual(pushCalls, []);
+});
+
+test('repeated like does not push again', async () => {
+  const { repository } = createRepository();
+  const pushCalls: unknown[] = [];
+  const pushService = {
+    async sendReplyLiked(params: unknown) {
+      pushCalls.push(params);
+    },
+  };
+
+  await submitReplyFeedbackOnServer({
+    db: {} as never,
+    repository,
+    moderationProvider: async () => ({ status: 'approved' }),
+    pushService,
+    publisherUid: 'publisher',
+    replyId: 'reply-1',
+    type: 'like',
+  });
+  await submitReplyFeedbackOnServer({
+    db: {} as never,
+    repository,
+    moderationProvider: async () => ({ status: 'approved' }),
+    pushService,
+    publisherUid: 'publisher',
+    replyId: 'reply-1',
+    type: 'like',
+  });
+
+  assert.equal(pushCalls.length, 1);
+});
+
+test('push failure returns feedback success and logs warning after commit', async () => {
+  const { repository, calls } = createRepository();
+  const warnings: unknown[] = [];
+
+  const result = await submitReplyFeedbackOnServer({
+    db: {} as never,
+    repository,
+    moderationProvider: async () => ({ status: 'approved' }),
+    pushService: {
+      async sendReplyLiked() {
+        throw new Error('push down');
+      },
+    },
+    pushLogger: {
+      warn(message, details) {
+        warnings.push({ message, details });
+      },
+    },
+    publisherUid: 'publisher',
+    replyId: 'reply-1',
+    type: 'like',
+  });
+
+  assert.deepEqual(result, { status: 'saved', feedbackId: 'reply-1', helpedCountApplied: true });
+  assert.equal(calls.length, 1);
+  assert.deepEqual(warnings, [{
+    message: '[FeedbackPush] Reply-liked push failed after feedback commit.',
+    details: {
+      feedbackId: 'reply-1',
+      replyId: 'reply-1',
+      error: 'push down',
+    },
+  }]);
 });
