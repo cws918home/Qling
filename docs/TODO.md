@@ -472,7 +472,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-5.32 UI/read path: my worries list, replies received, and replies written by me; unread reply emphasis waits for Slice 5, disliked filtering waits for Slice 7, and admin hidden filtering waits for Slice 15.
 - [x] TODO-5.33 Legacy fallback removal strategy: read both new `replies` and old `letters` replies behind one adapter, then remove fallback in Slice 16.
 - [x] TODO-5.34 Tests: my worries list, replies received, replies written, and legacy fallback isolation.
-- [ ] TODO-5.35 Manual verification: author sees new replies; replier sees own written reply.
+- [x] TODO-5.35 Manual verification: author sees new replies; replier sees own written reply.
 - [x] TODO-5.36 Explicit non-goals: bottom tab redesign can wait until Slice 11.
 - [x] TODO-5.37 Deletion test: removing `letters` fallback leaves new replies visible.
 

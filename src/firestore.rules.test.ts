@@ -1,4 +1,5 @@
 import test, { after, before, beforeEach, describe } from 'node:test';
+import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {
   assertFails,
@@ -377,6 +378,72 @@ describe('server-owned replies rules', () => {
     await assertFails(dbFor('recipient').doc('replies/worry1_recipient').update({ content: 'edited' }));
     await assertFails(dbFor('recipient').doc('replies/worry1_recipient').delete());
     await assertFails(dbFor('author').doc('replies/worry1_recipient').update({ status: 'hidden' }));
+  });
+});
+
+describe('Phase 4 mailbox manual-equivalent read paths', () => {
+  beforeEach(async () => {
+    await seedBaseUsers();
+    await seed('worries/manual_worry', {
+      authorUid: 'author',
+      content: 'manual-equivalent worry',
+      matchingCategories: ['career'],
+      createdAt: new Date(),
+      status: 'active',
+      humanReplyCount: 1,
+    });
+    await seed('deliveries/manual_delivery', {
+      worryId: 'manual_worry',
+      recipientUid: 'recipient',
+      authorUid: 'author',
+      status: 'answered',
+    });
+    await seed('replies/manual_delivery', {
+      deliveryId: 'manual_delivery',
+      worryId: 'manual_worry',
+      authorUid: 'author',
+      replierUid: 'recipient',
+      content: 'manual-equivalent reply',
+      status: 'active',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isAiGenerated: false,
+      isExampleReply: false,
+    });
+  });
+
+  test('author query sees newly published PRD worry in my-worries path', async () => {
+    const snapshot = await assertSucceeds(
+      dbFor('author')
+        .collection('worries')
+        .where('authorUid', '==', 'author')
+        .get()
+    );
+
+    assert.deepEqual(snapshot.docs.map(doc => doc.id), ['manual_worry']);
+  });
+
+  test('author query sees PRD reply under selected authored worry', async () => {
+    const snapshot = await assertSucceeds(
+      dbFor('author')
+        .collection('replies')
+        .where('worryId', '==', 'manual_worry')
+        .where('authorUid', '==', 'author')
+        .get()
+    );
+
+    assert.deepEqual(snapshot.docs.map(doc => doc.id), ['manual_delivery']);
+  });
+
+  test('replier query sees own PRD written reply in given-replies path', async () => {
+    const snapshot = await assertSucceeds(
+      dbFor('recipient')
+        .collection('replies')
+        .where('replierUid', '==', 'recipient')
+        .get()
+    );
+
+    assert.deepEqual(snapshot.docs.map(doc => doc.id), ['manual_delivery']);
   });
 });
 
