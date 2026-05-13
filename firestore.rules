@@ -195,6 +195,10 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    match /passReplacementAttempts/{attemptId} {
+      allow read, create, update, delete: if false;
+    }
+
     match /replies/{replyId} {
       allow read: if isNotDeletedSelf()
         && (

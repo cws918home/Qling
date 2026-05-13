@@ -37,6 +37,68 @@ test('PRD active deliveries appear with worry content and delivery id', () => {
   assert.equal(items[0].hasUnread, true);
 });
 
+test('pass replacement delivery appears through joined worry without content snapshots', () => {
+  const items = selectActivePrdAnswerFeedItems({
+    profileUid: 'replacementRecipient',
+    deliveries: [{
+      id: 'worry1_replacementRecipient',
+      worryId: 'worry1',
+      authorUid: 'author',
+      recipientUid: 'replacementRecipient',
+      status: 'active',
+      createdByPassDeliveryId: 'worry1_passer',
+      replacementForDeliveryId: 'worry1_passer',
+      replacementReason: 'pass',
+      createdAt: { toMillis: () => 2 },
+      updatedAt: { toMillis: () => 2 },
+    } as never],
+    worriesById: new Map([[
+      'worry1',
+      {
+        id: 'worry1',
+        content: 'joined worry content',
+        matchingCategories: ['진로', '관계'],
+        createdAt: { toMillis: () => 1 },
+      },
+    ]]),
+  });
+
+  assert.equal(items.length, 1);
+  assert.equal(items[0].deliveryId, 'worry1_replacementRecipient');
+  assert.equal(items[0].originalContent, 'joined worry content');
+  assert.deepEqual(items[0].categories, ['진로', '관계']);
+});
+
+test('replacement display categories fall back to joined worry validCategories', () => {
+  const items = selectActivePrdAnswerFeedItems({
+    profileUid: 'replacementRecipient',
+    deliveries: [{
+      id: 'worry1_replacementRecipient',
+      worryId: 'worry1',
+      authorUid: 'author',
+      recipientUid: 'replacementRecipient',
+      status: 'active',
+      createdByPassDeliveryId: 'worry1_passer',
+      replacementForDeliveryId: 'worry1_passer',
+      replacementReason: 'pass',
+      createdAt: { toMillis: () => 2 },
+      updatedAt: { toMillis: () => 2 },
+    } as never],
+    worriesById: new Map([[
+      'worry1',
+      {
+        id: 'worry1',
+        content: 'joined worry content',
+        matchingCategories: [],
+        validCategories: ['학업'],
+        createdAt: { toMillis: () => 1 },
+      },
+    ]]),
+  });
+
+  assert.deepEqual(items.map(item => item.categories), [['학업']]);
+});
+
 test('private delivery read-state clears unread emphasis', () => {
   const items = selectActivePrdAnswerFeedItems({
     profileUid: 'recipient',

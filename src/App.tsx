@@ -57,6 +57,11 @@ import {
   markRepliesForWorryReadWithServer,
 } from './services/readState/apiClient';
 import { publishWorryViaApi } from './services/worryPublication/apiClient';
+import { passDeliveryViaApi } from './services/deliveries/apiClient';
+import {
+  applyPassResultToSuppressedDeliveryIds,
+  filterSuppressedFeedWorries,
+} from './services/deliveries/uiPolicy';
 import { submitReplyFeedbackWithProductionAdapters } from './services/replyFeedback/production';
 import type { ReplyFeedback } from './services/replyFeedback/types';
 import {
@@ -159,6 +164,8 @@ export default function App() {
     resetPushRegistrationOnSignOut,
   } = usePushRegistration({ user, loading });
   const { feedWorries } = useHomeWorryFeed({ profile });
+  const [suppressedDeliveryIds, setSuppressedDeliveryIds] = useState<Set<string>>(() => new Set());
+  const [passingDeliveryIds, setPassingDeliveryIds] = useState<Set<string>>(() => new Set());
   const { myWorries } = useMyWorries({ user });
   const { repliesForWorry } = useRepliesForWorry({
     user,
@@ -396,6 +403,45 @@ export default function App() {
     });
   };
 
+  const passWorry = async (event: ReactMouseEvent, worry: HomeWorryFeedLetter) => {
+    event.stopPropagation();
+    if (!user || !worry.deliveryId || worry.source !== 'prd_delivery') {
+      setFilterAlert("이전 형식의 사연은 패스할 수 없습니다.");
+      return;
+    }
+
+    setPassingDeliveryIds(prev => new Set(prev).add(worry.deliveryId as string));
+    try {
+      const result = await passDeliveryViaApi({
+        user,
+        deliveryId: worry.deliveryId,
+      });
+
+      if (result.status === 'failed') {
+        setFilterAlert(result.reason || "패스 처리 실패");
+        return;
+      }
+
+      setSuppressedDeliveryIds(prev => applyPassResultToSuppressedDeliveryIds({
+        result,
+        deliveryId: worry.deliveryId as string,
+        suppressedDeliveryIds: prev,
+      }));
+      if (selectedWorry?.deliveryId === worry.deliveryId) {
+        setSelectedWorry(null);
+      }
+    } catch (e) {
+      console.error(e);
+      setFilterAlert("패스 처리 실패");
+    } finally {
+      setPassingDeliveryIds(prev => {
+        const next = new Set(prev);
+        next.delete(worry.deliveryId as string);
+        return next;
+      });
+    }
+  };
+
   const giveFeedback = async (_replyId: string, feedbackType: ReplyFeedback) => {
     if (!selectedReply) return;
 
@@ -431,6 +477,7 @@ export default function App() {
   const homeInterestBadgeText = profileInterests.length === 0
     ? '관심 주제'
     : `${visibleHomeInterestBadgeText}${profileInterests.length > 5 ? '...' : ''}`;
+  const visibleFeedWorries = filterSuppressedFeedWorries({ feedWorries, suppressedDeliveryIds });
 
   if (loading) {
     return <div className="min-h-screen bg-[#FDFCF8] flex items-center justify-center"><Loader2 className="w-8 h-8 text-[#D4A373] animate-spin" /></div>;
@@ -710,14 +757,14 @@ export default function App() {
                 <span className="text-xs bg-[#E9EDC9] text-[#5A5A40] px-3 py-1 rounded-full">{homeInterestBadgeText}</span>
               </div>
 
-              {feedWorries.length === 0 ? (
+              {visibleFeedWorries.length === 0 ? (
                 <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
                   <RadioReceiver className="w-12 h-12 text-[#E9EDC9] mx-auto mb-3" />
                   <p className="text-[#8B8B6B]">아직 도착한 사연이 없네요.<br/>첫 번째 사연을 남겨보시겠어요?</p>
                 </div>
               ) : (
                 <div className="grid gap-6">
-                  {feedWorries.map(worry => (
+                  {visibleFeedWorries.map(worry => (
                     <div
                       key={worry.id}
                       className={cn(
@@ -743,12 +790,25 @@ export default function App() {
                           <CheckCircle2 className="w-4 h-4" /> 답장 완료!
                         </div>
                       ) : (
-                        <button 
-                          onClick={() => openWorryForReply(worry)}
-                          className="w-full py-3 bg-[#FDFCF8] text-[#8B8B6B] font-medium border border-[#E9EDC9] rounded-xl hover:bg-[#FAEDCD] hover:text-[#5A5A40] transition-colors flex items-center justify-center gap-2"
-                        >
-                          <MessageSquare className="w-4 h-4" /> 다정하게 답장해주기
-                        </button>
+                        <div className="grid grid-cols-[1fr_auto] gap-2">
+                          <button
+                            onClick={() => openWorryForReply(worry)}
+                            className="min-w-0 py-3 bg-[#FDFCF8] text-[#8B8B6B] font-medium border border-[#E9EDC9] rounded-xl hover:bg-[#FAEDCD] hover:text-[#5A5A40] transition-colors flex items-center justify-center gap-2"
+                          >
+                            <MessageSquare className="w-4 h-4" /> 다정하게 답장해주기
+                          </button>
+                          <button
+                            onClick={(event) => passWorry(event, worry)}
+                            disabled={!worry.deliveryId || passingDeliveryIds.has(worry.deliveryId)}
+                            className="px-4 py-3 bg-white text-[#8B8B6B] font-bold border border-[#E9EDC9] rounded-xl hover:bg-[#FDFCF8] hover:text-[#5A5A40] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                            title="패스"
+                          >
+                            {worry.deliveryId && passingDeliveryIds.has(worry.deliveryId)
+                              ? <Loader2 className="w-4 h-4 animate-spin" />
+                              : <XCircle className="w-4 h-4" />}
+                            <span className="hidden sm:inline">패스</span>
+                          </button>
+                        </div>
                       )}
                     </div>
                   ))}

@@ -17,9 +17,14 @@ export async function markRepliesForWorryRead(params: {
   worryId: string;
   body: unknown;
 }): Promise<ServerMarkRepliesForWorryReadResult> {
-  const body = params.body && typeof params.body === 'object'
-    ? params.body as { replyIds?: unknown }
-    : {};
+  if (params.body !== undefined && (!params.body || typeof params.body !== 'object' || Array.isArray(params.body))) {
+    return {
+      status: 'validation_error',
+      code: 'invalid_body',
+      message: '요청 본문은 객체여야 합니다.',
+    };
+  }
+  const body = (params.body ?? {}) as { replyIds?: unknown };
   const replyIds = parseReplyIds(body.replyIds);
 
   if (replyIds === 'invalid') {

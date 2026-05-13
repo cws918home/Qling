@@ -289,6 +289,8 @@ describe('PRD source-of-truth rules', () => {
     });
     await assertFails(dbFor('author').doc('deliveries/new').set({ recipientUid: 'recipient' }));
     await assertFails(dbFor('recipient').doc('deliveries/worry1_recipient').update({ status: 'answered' }));
+    await assertFails(dbFor('recipient').doc('deliveries/worry1_recipient').update({ status: 'passed' }));
+    await assertFails(dbFor('recipient').doc('deliveries/worry1_recipient').update({ passedAt: new Date() }));
     await assertFails(dbFor('recipient').doc('deliveries/worry1_recipient').update({ readAt: new Date() }));
     await assertFails(dbFor('recipient').doc('deliveries/worry1_recipient').delete());
   });
@@ -318,6 +320,15 @@ describe('PRD source-of-truth rules', () => {
     await assertFails(dbFor('author').doc('pushLogs/log2').set({ kind: 'new_worry' }));
     await assertFails(dbFor('author').doc('pushLogs/log1').update({ status: 'sent' }));
     await assertFails(dbFor('author').doc('pushLogs/log1').delete());
+  });
+
+  test('passReplacementAttempts are denied for reads and writes', async () => {
+    await seed('passReplacementAttempts/worry1_recipient', { passedDeliveryId: 'worry1_recipient' });
+    await assertFails(dbFor('recipient').doc('passReplacementAttempts/worry1_recipient').get());
+    await assertFails(dbFor().doc('passReplacementAttempts/worry1_recipient').get());
+    await assertFails(dbFor('recipient').doc('passReplacementAttempts/new').set({ passedDeliveryId: 'new' }));
+    await assertFails(dbFor('recipient').doc('passReplacementAttempts/worry1_recipient').update({ status: 'created' }));
+    await assertFails(dbFor('recipient').doc('passReplacementAttempts/worry1_recipient').delete());
   });
 });
 

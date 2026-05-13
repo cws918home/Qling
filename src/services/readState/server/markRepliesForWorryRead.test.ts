@@ -46,3 +46,22 @@ test('reply read use case rejects malformed replyIds before repository writes', 
   });
   assert.deepEqual(captured, []);
 });
+
+test('reply read use case rejects null arrays and primitives before repository writes', async () => {
+  for (const body of [null, [], 'x', 1, false]) {
+    const captured: Array<unknown> = [];
+    const result = await markRepliesForWorryRead({
+      repository: repository(captured),
+      authorUid: 'author',
+      worryId: 'w1',
+      body,
+    });
+
+    assert.deepEqual(result, {
+      status: 'validation_error',
+      code: 'invalid_body',
+      message: '요청 본문은 객체여야 합니다.',
+    });
+    assert.deepEqual(captured, []);
+  }
+});

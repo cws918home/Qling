@@ -21,7 +21,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.1 Worry publication mutation boundary is server-owned: browser submits to an authenticated endpoint, never supplies trusted `uid`, and no runtime PRD worry publication path writes `letters` or PRD source-of-truth collections directly from the client.
 - [x] TODO-1.2 Reply publication mutation boundary is server-owned: browser submits by delivery ID to an authenticated endpoint, stored reply ID is deterministic from delivery ID, and no runtime reply publication path creates `letters` replies.
 - [x] TODO-1.3 Read-state mutation boundary is server-owned: delivery and reply read markers are set only through authenticated endpoints and are not public read receipts.
-- [ ] TODO-1.4 Pass mutation boundary is server-owned: pass status changes, same-worry exclusion, immediate replacement attempt, and `activeDeliveryCount` decrement/increment behavior happen only in an authenticated server transaction or transaction-plus-best-effort-push flow.
+- [x] TODO-1.4 Pass mutation boundary is server-owned: pass status changes, same-worry exclusion, immediate replacement attempt, and `activeDeliveryCount` decrement/increment behavior happen only in an authenticated server transaction or transaction-plus-best-effort-push flow.
 - [ ] TODO-1.5 Feedback mutation boundary is server-owned: like/dislike/comment writes and helpedCount changes happen only through an authenticated server transaction.
 - [ ] TODO-1.6 Rematch job mutation boundary is server-owned: rematch runs are performed only by authenticated internal endpoints or server jobs.
 - [ ] TODO-1.7 AI fallback job mutation boundary is server-owned: AI fallback runs are performed only by authenticated internal endpoints or server jobs.
@@ -56,14 +56,14 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.36 Server invariant for one reply per delivery is enforced with deterministic reply IDs and idempotency/duplicate-content behavior.
 - [ ] TODO-1.37 Server invariant for one immutable feedback per reply is enforced with deterministic feedback IDs and delayed like-comment rules.
 - [ ] TODO-1.38 Server invariant for helpedCount is enforced: increments happen exactly once only for eligible human/example likes, and AI likes are excluded.
-- [ ] TODO-1.39 Server invariant for pass idempotency is enforced by status preconditions.
+- [x] TODO-1.39 Server invariant for pass idempotency is enforced by status preconditions.
 - [ ] TODO-1.40 Server invariant for rematch job idempotency is enforced by deterministic IDs, job locks, and status preconditions.
 - [ ] TODO-1.41 Server invariant for AI fallback idempotency is enforced by deterministic AI reply state and status preconditions.
 - [ ] TODO-1.42 Server invariant for example job idempotency is enforced by per-user example state, deterministic jobs, and status preconditions.
 - [x] TODO-1.43 Server invariant for worry publication push failure is enforced: push failure never rolls back core worry publication.
 - [x] TODO-1.44 Server invariant for reply publication push failure is enforced: push failure never rolls back core reply publication.
 - [ ] TODO-1.45 Server invariant for feedback push failure is enforced: push failure never rolls back core feedback mutation.
-- [ ] TODO-1.71 Server invariant for pass replacement push failure is enforced: push failure to the immediate replacement recipient never rolls back the pass transition or replacement delivery creation.
+- [x] TODO-1.71 Server invariant for pass replacement push failure is enforced: push failure to the immediate replacement recipient never rolls back the pass transition or replacement delivery creation.
 - [x] TODO-1.46 Firestore rules invariant for initial PRD collections is enforced: clients cannot create/update/delete `worries`, `deliveries`, `moderationLogs`, `pushLogs`, or initial `deliveryBatches`.
 - [x] TODO-1.47 Firestore rules invariant for profile/token surfaces is enforced: users can read/write only narrow own profile fields and own push token docs during transition.
 - [x] TODO-1.48 Firestore rules invariant for replies is enforced: users can read only permitted reply surfaces and cannot write replies directly.
@@ -98,7 +98,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.62 Apply deep-module guardrails to `replyPublication`.
 - [x] TODO-1.63 Apply deep-module guardrails to `replyMailbox` / `myWorries`.
 - [ ] TODO-1.64 Apply deep-module guardrails to `replyFeedback`.
-- [ ] TODO-1.65 Apply deep-module guardrails to `pass` / `rematch`.
+- [x] TODO-1.65 Apply deep-module guardrails to `pass` / `rematch`.
 - [ ] TODO-1.66 Apply deep-module guardrails to `aiFallback`.
 - [ ] TODO-1.67 Apply deep-module guardrails to `exampleWorries`.
 - [ ] TODO-1.68 Apply deep-module guardrails to `userAccount`.
@@ -163,7 +163,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
   - Do not include `rematched` as a normal terminal status. If a future admin/manual flow needs that concept, name and document it separately; normal 8-hour rematch is additive.
 - [x] TODO-2.27 Core delivery fields: `worryId`, `recipientUid`, `authorUid`, `status: 'active' | 'answered'`, `answeredAt`, `batchId`, `batchRound: 0`, `slotIndex`, `selectionType: 'matched' | 'random'`, `matchOverlapCount`, `matchCategoriesSnapshot`, `recipientInterestsSnapshot`, `recipientGenderSnapshot`, `recipientHelpedCountSnapshot`, `authorGenderSnapshot`, `isAiRecipient: false`, `createdAt`, `updatedAt`, `answerableUntil?: null`.
 - [x] TODO-2.28 Delivery read-state field: `readAt` lives under `users/{recipientUid}/deliveryReadStates/{deliveryId}`, not on `deliveries/{deliveryId}`.
-- [ ] TODO-2.29 Pass fields: `status: 'passed'`, `passedAt`.
+- [x] TODO-2.29 Pass fields: `status: 'passed'`, `passedAt`.
 - [ ] TODO-2.30 Rematch delivery fields: `batchRound: 1 | 2`, `rematchEligibleAfter`, `createdByRematchRunId`.
 - [ ] TODO-2.31 Example delivery fields: `isExample`, `exampleSeedId`.
 - [ ] TODO-2.32 Hidden delivery fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`.
@@ -241,7 +241,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 - [ ] TODO-2.77 `aiFallbackRuns/{runId}`: `startedAt`, `completedAt`, `status`, `checkedCount`, `createdReplyCount`, `error`; server/admin only.
 - [ ] TODO-2.78 `exampleWorrySeeds/{seedId}`: `content`, `categories`, `status`, `createdAt`, `updatedAt`; server/admin write, server read.
 - [ ] TODO-2.79 `scheduledJobs/{jobId}` or `exampleFeedbackJobs/{jobId}`: `kind`, `runAfter`, `status`, `replyId`, `targetUid`, `attempts`, `createdAt`, `updatedAt`; server only.
-- [ ] TODO-2.80 Immediate pass replacement metadata:
+- [x] TODO-2.80 Immediate pass replacement metadata:
   - Replacement delivery fields: same `worryId`, enough denormalized worry display context for the answer feed, `selectionType`, matching snapshots, `createdByPassDeliveryId`, `replacementForDeliveryId`, `replacementReason: 'pass'`, `createdAt`, `updatedAt`.
   - Recommended delivery ID remains `worryId_recipientUid`; use a deterministic `passReplacementAttempts/{passedDeliveryId}` or equivalent operation record for idempotency, shortfall logging, selected recipient, created delivery ID, push status pointer, and debugging.
   - Do not encode pass replacement as Round 1 or Round 2 additive rematch unless a separate replacement batch type is explicitly added; it must be distinguishable from the 8-hour rematch job.
@@ -278,13 +278,13 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Pass: `POST /api/deliveries/:deliveryId/pass`
 
-- [ ] TODO-3.18 Request body: `{}`.
-- [ ] TODO-3.19 Auth: signed-in delivery recipient, not deleted.
-- [ ] TODO-3.20 Validation: delivery exists, belongs to the authenticated user, status is `active`, and the delivery is passable.
-- [ ] TODO-3.21 Transaction: if delivery is still `active`, set `status: 'passed'`, `passedAt`, decrement passer `activeDeliveryCount` exactly once, write same-worry exclusion metadata, synchronously attempt to select one replacement recipient, and if a recipient exists create one active replacement delivery and increment that recipient's `activeDeliveryCount` exactly once. If no eligible replacement exists, pass still succeeds and writes an operational shortfall log.
-- [ ] TODO-3.22 Response: `200 { status: 'passed', deliveryId, replacementDeliveryId?: string, replacementStatus: 'created' | 'shortfall' | 'not_applicable' }`.
-- [ ] TODO-3.23 Idempotency: already passed returns `200` with the recorded replacement result; it must not double-decrement, double-increment, or create a duplicate replacement. Answered or hidden deliveries return `409`.
-- [ ] TODO-3.24 Tests: active own delivery only, other user's delivery rejected, answered/hidden conflict, immediate feed removal, same user not redelivered, author not notified, immediate replacement created when eligible, no replacement on shortfall, replacement push failure does not roll back pass or replacement.
+- [x] TODO-3.18 Request body: `{}`.
+- [x] TODO-3.19 Auth: signed-in delivery recipient, not deleted.
+- [x] TODO-3.20 Validation: delivery exists, belongs to the authenticated user, status is `active`, and the delivery is passable.
+- [x] TODO-3.21 Transaction: if delivery is still `active`, set `status: 'passed'`, `passedAt`, decrement passer `activeDeliveryCount` exactly once, write same-worry exclusion metadata, synchronously attempt to select one replacement recipient, and if a recipient exists create one active replacement delivery and increment that recipient's `activeDeliveryCount` exactly once. If no eligible replacement exists, pass still succeeds and writes an operational shortfall log.
+- [x] TODO-3.22 Response: `200 { status: 'passed', deliveryId, replacementDeliveryId?: string, replacementStatus: 'created' | 'shortfall' | 'not_applicable' }`.
+- [x] TODO-3.23 Idempotency: already passed returns `200` with the recorded replacement result; it must not double-decrement, double-increment, or create a duplicate replacement. Answered or hidden deliveries return `409`.
+- [x] TODO-3.24 Tests: active own delivery only, other user's delivery rejected, answered/hidden conflict, immediate feed removal, same user not redelivered, author not notified, immediate replacement created when eligible, no replacement on shortfall, replacement push failure does not roll back pass or replacement.
 
 ### Reply Publication: `POST /api/deliveries/:deliveryId/replies`
 
@@ -390,15 +390,15 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### `pass` / `rematch`
 
-- [ ] TODO-4.35 Purpose: user pass changes delivery status, redelivery eligibility, and immediate replacement attempt.
+- [x] TODO-4.35 Purpose: user pass changes delivery status, redelivery eligibility, and immediate replacement attempt.
 - [ ] TODO-4.36 Purpose: internal rematch creates additive delivery batches.
-- [ ] TODO-4.37 Public interface: `passDelivery({ uid, deliveryId })`.
+- [x] TODO-4.37 Public interface: `passDelivery({ uid, deliveryId })`.
 - [ ] TODO-4.38 Public interface: `rematchDueDeliveries({ now, limit })`.
-- [ ] TODO-4.39 Files for pass: `src/services/deliveries/passDelivery.ts`, answer feed UI, `server.ts`.
+- [x] TODO-4.39 Files for pass: `src/services/deliveries/passDelivery.ts`, answer feed UI, `server.ts`.
 - [ ] TODO-4.40 Files for rematch: `src/services/rematch/rematchDueDeliveries.ts`, `src/services/rematch/policy.ts`, `src/services/worryPublication/policy/recipientSelection.ts`, `server.ts`.
-- [ ] TODO-4.41 Tests for pass: delivery transition, immediate replacement success and shortfall, redelivery exclusion metadata, counter decrement/increment behavior, replacement push failure, and idempotency.
+- [x] TODO-4.41 Tests for pass: delivery transition, immediate replacement success and shortfall, redelivery exclusion metadata, counter decrement/increment behavior, replacement push failure, and idempotency.
 - [ ] TODO-4.42 Tests for rematch: no redelivery, job idempotency, additive delivery batches, and counters.
-- [ ] TODO-4.43 Deletion test for pass: deleting pass module removes pass action without affecting reply publication.
+- [x] TODO-4.43 Deletion test for pass: deleting pass module removes pass action without affecting reply publication.
 - [ ] TODO-4.44 Deletion test for rematch: deleting rematch module stops additive delivery batches without affecting reply publication or existing recipients' ability to answer.
 
 ### `aiFallback`
@@ -491,16 +491,16 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 6: Pass
 
-- [ ] TODO-5.48 Goal: users can pass active deliveries and never receive the same worry again.
-- [ ] TODO-5.49 Files: new `src/services/deliveries/passDelivery.ts`, answer feed UI, `server.ts`.
-- [ ] TODO-5.50 API: `POST /api/deliveries/:deliveryId/pass`.
-- [ ] TODO-5.51 Data: delivery status `passed`, `passedAt`, pass included in same-worry redelivery exclusion metadata and human delivery accounting; immediate replacement delivery metadata/attempt log distinguishes pass replacement from Round 1/Round 2 additive rematch.
-- [ ] TODO-5.52 UI: left swipe or clear button in answer feed; immediate local removal after success.
-- [ ] TODO-5.53 Rules: server-only status update.
-- [ ] TODO-5.54 Tests: active only, ownership, feed removal, author receives no pass signal, immediate replacement success, replacement shortfall, replacement exclusion policy, replacement push failure no rollback, counter correctness, and idempotency.
-- [ ] TODO-5.55 Manual verification: pass disappears; author sees no pass signal.
-- [ ] TODO-5.56 Explicit non-goals: Phase 6 does not create Round 1/Round 2 additive rematch batches, does not branch the rematch lineage, does not expose pass state to the author, and does not own invalid token cleanup/durable push-log hardening beyond the pass replacement push no-rollback invariant.
-- [ ] TODO-5.57 Deletion test: deleting pass module removes pass action and immediate replacement creation; matching exclusion tests fail if pass history is ignored.
+- [x] TODO-5.48 Goal: users can pass active deliveries and never receive the same worry again.
+- [x] TODO-5.49 Files: new `src/services/deliveries/passDelivery.ts`, answer feed UI, `server.ts`.
+- [x] TODO-5.50 API: `POST /api/deliveries/:deliveryId/pass`.
+- [x] TODO-5.51 Data: delivery status `passed`, `passedAt`, pass included in same-worry redelivery exclusion metadata and human delivery accounting; immediate replacement delivery metadata/attempt log distinguishes pass replacement from Round 1/Round 2 additive rematch.
+- [x] TODO-5.52 UI: left swipe or clear button in answer feed; immediate local removal after success.
+- [x] TODO-5.53 Rules: server-only status update.
+- [x] TODO-5.54 Tests: active only, ownership, feed removal, author receives no pass signal, immediate replacement success, replacement shortfall, replacement exclusion policy, replacement push failure no rollback, counter correctness, and idempotency.
+- [x] TODO-5.55 Manual verification: pass disappears; author sees no pass signal.
+- [x] TODO-5.56 Explicit non-goals: Phase 6 does not create Round 1/Round 2 additive rematch batches, does not branch the rematch lineage, does not expose pass state to the author, and does not own invalid token cleanup/durable push-log hardening beyond the pass replacement push no-rollback invariant.
+- [x] TODO-5.57 Deletion test: deleting pass module removes pass action and immediate replacement creation; matching exclusion tests fail if pass history is ignored.
 
 ### Slice 7: Feedback migration
 
@@ -693,7 +693,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-6.9 ActiveDeliveryCount source decision: `users/{uid}.activeDeliveryCount` is a transactionally maintained server-owned counter; query-based active delivery counting is not allowed as the production eligibility source.
 - [x] TODO-6.10 ActiveDeliveryCount publication increment: initial publication checks selected recipients have `activeDeliveryCount < 10` inside the creation transaction and increments selected recipients exactly once.
 - [x] TODO-6.11 ActiveDeliveryCount reply decrement: replying transitions an active delivery to `answered` and decrements the recipient's `activeDeliveryCount` exactly once.
-- [ ] TODO-6.12 ActiveDeliveryCount pass decrement: passing transitions an active delivery to `passed` and decrements the passer's `activeDeliveryCount` exactly once.
+- [x] TODO-6.12 ActiveDeliveryCount pass decrement: passing transitions an active delivery to `passed` and decrements the passer's `activeDeliveryCount` exactly once.
 - [ ] TODO-6.13 ActiveDeliveryCount rematch semantics: old active deliveries remain counted after additive rematch, rematch checks new recipients have `activeDeliveryCount < 10` inside the creation transaction, and rematch increments only newly created delivery recipients.
 - [ ] TODO-6.14 ActiveDeliveryCount hidden decrement: hiding an active delivery decrements the recipient's `activeDeliveryCount` exactly once.
 - [x] TODO-6.15 ActiveDeliveryCount non-decrement events: read marking, push failure, and additive rematch creation elsewhere do not decrement `activeDeliveryCount`.
@@ -704,11 +704,11 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-6.20 Counter tests for publication: publish increments selected recipients, rejects recipients with `activeDeliveryCount >= 10`, and does not change counters when fewer than 5 eligible recipients exist.
 - [ ] TODO-6.21 Counter tests for reply/pass/hidden: answered, passed, and hidden active deliveries decrement exactly once.
 - [ ] TODO-6.22 Counter tests for rematch/idempotency: rematch increments only new recipients, read marking/push failure/additive rematch elsewhere do not decrement, and retries never double-increment or double-decrement.
-- [ ] TODO-6.23 Immediate pass replacement eligibility:
+- [x] TODO-6.23 Immediate pass replacement eligibility:
   - Replacement recipient must not be the passing user, worry author, any previous recipient of the same worry, any previous passer, any user who already replied, a deleted/inactive user, a user at `activeDeliveryCount >= 10`, a user who would exceed `worries.humanDeliveryLimit`, or any user excluded by normal matching policy.
   - Missing `deleted` is treated as not deleted until Phase 14 introduces the final deletion lifecycle.
   - If no eligible replacement exists, pass still succeeds, original delivery remains `passed`, no duplicate/self-redelivery is created, shortfall is logged, and the author receives no pass signal.
-- [ ] TODO-6.24 ActiveDeliveryCount immediate pass replacement semantics:
+- [x] TODO-6.24 ActiveDeliveryCount immediate pass replacement semantics:
   - Replacement active delivery creation increments the replacement recipient's `activeDeliveryCount` exactly once.
   - Replacement delivery creation increments the worry's human delivery accounting exactly once when that accounting is stored separately from delivery docs.
   - If replacement succeeds, global net active count may remain unchanged: passer decremented once, replacement recipient incremented once.
@@ -736,7 +736,7 @@ All error responses should use `{ error: { code: string, message: string, detail
   - Recipient reading worry via delivery existence is easiest with deterministic delivery IDs.
   - Do not store broad `recipientUids` on worry solely for rules unless needed; it risks leaking delivery audience and complicating updates.
   - Prefer delivery snapshots/read model for answer feed to reduce cross-document rules complexity.
-- [ ] TODO-7.17 Pass replacement operational collection rules: if `passReplacementAttempts` or an equivalent operation record is introduced, client reads/writes are denied when introduced.
+- [x] TODO-7.17 Pass replacement operational collection rules: if `passReplacementAttempts` or an equivalent operation record is introduced, client reads/writes are denied when introduced.
 
 ## 8. Migration / Data Reset Strategy
 
@@ -772,7 +772,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.13 Reply publication creates one reply and sets delivery answered.
 - [x] TODO-9.14 Publish increments each selected recipient's `activeDeliveryCount` exactly once.
 - [x] TODO-9.15 Reply transitions active delivery to answered and decrements recipient `activeDeliveryCount` exactly once.
-- [ ] TODO-9.16 Pass transitions own active delivery to passed, removes it from the passer's feed, decrements passer `activeDeliveryCount` exactly once, and exposes no pass signal to the author.
+- [x] TODO-9.16 Pass transitions own active delivery to passed, removes it from the passer's feed, decrements passer `activeDeliveryCount` exactly once, and exposes no pass signal to the author.
 - [ ] TODO-9.17 Admin/system hide of an active delivery decrements recipient `activeDeliveryCount` exactly once.
 - [ ] TODO-9.18 Feedback creates deterministic doc and increments helpedCount once.
 - [ ] TODO-9.19 Account deletion soft deletes and removes tokens.
@@ -782,7 +782,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.20 Worry publication API rejects missing/invalid auth and ignores body-supplied uid.
 - [x] TODO-9.21 Reply publication API rejects missing/invalid auth and ignores body-supplied uid.
 - [x] TODO-9.22 Read-state APIs reject missing/invalid auth and ignore body-supplied uid.
-- [ ] TODO-9.23 Pass API rejects missing/invalid auth, ignores body-supplied uid, rejects passing someone else's delivery, and rejects answered/hidden non-passable deliveries.
+- [x] TODO-9.23 Pass API rejects missing/invalid auth, ignores body-supplied uid, rejects passing someone else's delivery, and rejects answered/hidden non-passable deliveries.
 - [ ] TODO-9.24 Feedback API rejects missing/invalid auth and ignores body-supplied uid.
 - [ ] TODO-9.25 Account deletion API rejects missing/invalid auth and ignores body-supplied uid.
 - [ ] TODO-9.26 Deleted users are blocked from all user endpoints; users with a missing `deleted` field are not blocked before Phase 14.
@@ -808,7 +808,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 - [x] TODO-9.41 Active delivery appears in answer feed.
 - [x] TODO-9.42 Answered deliveries are excluded from answer feed.
-- [ ] TODO-9.43 Passed deliveries are excluded from answer feed.
+- [x] TODO-9.43 Passed deliveries are excluded from answer feed.
 - [ ] TODO-9.44 Hidden deliveries are excluded from answer feed.
 - [ ] TODO-9.45 Existing active delivery remains visible and answerable after rematch creates additional deliveries.
 - [x] TODO-9.46 My worries list includes own worries.
@@ -850,11 +850,11 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-9.79 AI fallback does not require all original deliveries to expire, because they do not expire.
 - [ ] TODO-9.80 Example worries created once/max 5.
 - [ ] TODO-9.81 Example feedback delayed, no comment, helpedCount increments.
-- [ ] TODO-9.97 Pass replacement creates one immediate active delivery when an eligible user exists, with pass-replacement metadata and no Round 1/Round 2 rematch batch.
-- [ ] TODO-9.98 Pass replacement shortfall creates no replacement delivery, creates no duplicate/self-redelivery, logs the shortfall, and still leaves the original delivery passed.
-- [ ] TODO-9.99 Pass replacement excludes previous recipients, previous passers, repliers, deleted/inactive users, the author, the passer, and users excluded by normal matching policy.
-- [ ] TODO-9.100 Pass replacement counter behavior is correct for success and shortfall, and repeated pass calls do not double-decrement, double-increment, or create duplicate replacements.
-- [ ] TODO-9.101 Replacement-recipient push failure creates/logs a warning path and does not roll back the pass transition or replacement delivery creation.
+- [x] TODO-9.97 Pass replacement creates one immediate active delivery when an eligible user exists, with pass-replacement metadata and no Round 1/Round 2 rematch batch.
+- [x] TODO-9.98 Pass replacement shortfall creates no replacement delivery, creates no duplicate/self-redelivery, logs the shortfall, and still leaves the original delivery passed.
+- [x] TODO-9.99 Pass replacement excludes previous recipients, previous passers, repliers, deleted/inactive users, the author, the passer, and users excluded by normal matching policy.
+- [x] TODO-9.100 Pass replacement counter behavior is correct for success and shortfall, and repeated pass calls do not double-decrement, double-increment, or create duplicate replacements.
+- [x] TODO-9.101 Replacement-recipient push failure creates/logs a warning path and does not roll back the pass transition or replacement delivery creation.
 
 ### UI Integration / Manual Tests
 
@@ -868,7 +868,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-9.89 Rejection path: unsafe worry not saved.
 - [ ] TODO-9.90 Rejection path: unsafe reply not saved.
 - [ ] TODO-9.91 Rejection path: unsafe feedback comment not saved.
-- [ ] TODO-9.92 Pass manual simulation, including immediate replacement success and no-eligible-recipient shortfall.
+- [x] TODO-9.92 Pass manual simulation, including immediate replacement success and no-eligible-recipient shortfall.
 - [ ] TODO-9.93 Additive rematch manual simulation, including old active deliveries remaining answerable.
 - [ ] TODO-9.94 AI fallback manual simulation, including old active deliveries remaining answerable.
 - [ ] TODO-9.95 Notification permission granted/denied behavior.
@@ -894,7 +894,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-11.2 Race conditions around active delivery counts:
   - Risk: stale transaction reads or non-idempotent retry paths can exceed 10 or corrupt counters; additive rematch makes the counter more important because old active deliveries remain answerable.
   - Mitigation: transactionally maintained `activeDeliveryCount` from Slice 1, deterministic delivery IDs, status preconditions, and concurrency/idempotency tests. Query-based counts are not allowed as the production eligibility source.
-- [ ] TODO-11.3 Additive rematch can accumulate old active deliveries for inactive users:
+- [x] TODO-11.3 Additive rematch can accumulate old active deliveries for inactive users:
   - Risk: answer feeds may grow toward the 10-active limit if users ignore worries.
   - Mitigation: enforce `activeDeliveryCount < 10`, provide pass UX, use optional ordering/aging UI for readability, but do not expire answerability unless the PRD changes.
 - [ ] TODO-11.4 Rematch scheduled job idempotency:
