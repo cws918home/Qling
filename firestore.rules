@@ -157,6 +157,16 @@ service cloud.firestore {
       match /fcmTokens/{tokenId} {
         allow read, create, update, delete: if isSelf(uid) && isNotDeletedSelf();
       }
+
+      match /deliveryReadStates/{deliveryId} {
+        allow read: if isSelf(uid) && isNotDeletedSelf();
+        allow create, update, delete: if false;
+      }
+
+      match /replyReadStates/{replyId} {
+        allow read: if isSelf(uid) && isNotDeletedSelf();
+        allow create, update, delete: if false;
+      }
     }
 
     match /worries/{worryId} {

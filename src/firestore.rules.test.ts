@@ -59,6 +59,24 @@ const prdReply = {
   isExampleReply: false,
 };
 
+const deliveryReadState = {
+  deliveryId: 'worry1_recipient',
+  worryId: 'worry1',
+  recipientUid: 'recipient',
+  readAt: new Date(),
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
+const replyReadState = {
+  replyId: 'worry1_recipient',
+  worryId: 'worry1',
+  authorUid: 'author',
+  readByAuthorAt: new Date(),
+  createdAt: new Date(),
+  updatedAt: new Date(),
+};
+
 const rulesTestsEnabled = Boolean(process.env.FIRESTORE_EMULATOR_HOST);
 
 function dbFor(uid?: string) {
@@ -271,6 +289,7 @@ describe('PRD source-of-truth rules', () => {
     });
     await assertFails(dbFor('author').doc('deliveries/new').set({ recipientUid: 'recipient' }));
     await assertFails(dbFor('recipient').doc('deliveries/worry1_recipient').update({ status: 'answered' }));
+    await assertFails(dbFor('recipient').doc('deliveries/worry1_recipient').update({ readAt: new Date() }));
     await assertFails(dbFor('recipient').doc('deliveries/worry1_recipient').delete());
   });
 
@@ -376,8 +395,51 @@ describe('server-owned replies rules', () => {
   test('direct PRD reply create update and delete are denied', async () => {
     await assertFails(dbFor('recipient').doc('replies/new').set(prdReply));
     await assertFails(dbFor('recipient').doc('replies/worry1_recipient').update({ content: 'edited' }));
+    await assertFails(dbFor('author').doc('replies/worry1_recipient').update({ readByAuthorAt: new Date() }));
     await assertFails(dbFor('recipient').doc('replies/worry1_recipient').delete());
     await assertFails(dbFor('author').doc('replies/worry1_recipient').update({ status: 'hidden' }));
+  });
+});
+
+describe('private read-state rules', () => {
+  beforeEach(async () => {
+    await seedBaseUsers();
+    await seed('users/recipient/deliveryReadStates/worry1_recipient', deliveryReadState);
+    await seed('users/author/replyReadStates/worry1_recipient', replyReadState);
+    await seed('deliveries/worry1_recipient', {
+      worryId: 'worry1',
+      recipientUid: 'recipient',
+      authorUid: 'author',
+      status: 'active',
+    });
+    await seed('replies/worry1_recipient', prdReply);
+  });
+
+  test('owner can read own private read-state docs', async () => {
+    await assertSucceeds(dbFor('recipient').doc('users/recipient/deliveryReadStates/worry1_recipient').get());
+    await assertSucceeds(dbFor('author').doc('users/author/replyReadStates/worry1_recipient').get());
+  });
+
+  test('opposite party and unauthenticated users cannot read private read-state docs', async () => {
+    await assertFails(dbFor('author').doc('users/recipient/deliveryReadStates/worry1_recipient').get());
+    await assertFails(dbFor('recipient').doc('users/author/replyReadStates/worry1_recipient').get());
+    await assertFails(dbFor().doc('users/recipient/deliveryReadStates/worry1_recipient').get());
+    await assertFails(dbFor().doc('users/author/replyReadStates/worry1_recipient').get());
+  });
+
+  test('owners cannot create update or delete private read-state docs from clients', async () => {
+    await assertFails(dbFor('recipient').doc('users/recipient/deliveryReadStates/new').set(deliveryReadState));
+    await assertFails(dbFor('recipient').doc('users/recipient/deliveryReadStates/worry1_recipient').update({ updatedAt: new Date() }));
+    await assertFails(dbFor('recipient').doc('users/recipient/deliveryReadStates/worry1_recipient').delete());
+    await assertFails(dbFor('author').doc('users/author/replyReadStates/new').set(replyReadState));
+    await assertFails(dbFor('author').doc('users/author/replyReadStates/worry1_recipient').update({ updatedAt: new Date() }));
+    await assertFails(dbFor('author').doc('users/author/replyReadStates/worry1_recipient').delete());
+  });
+
+  test('existing permitted delivery and reply reads still work', async () => {
+    await assertSucceeds(dbFor('recipient').doc('deliveries/worry1_recipient').get());
+    await assertSucceeds(dbFor('recipient').doc('replies/worry1_recipient').get());
+    await assertSucceeds(dbFor('author').doc('replies/worry1_recipient').get());
   });
 });
 

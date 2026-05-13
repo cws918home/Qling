@@ -21,6 +21,7 @@ export interface HomeWorryFeedLetter {
   authorUid?: string;
   recipientUid?: string;
   status?: 'active';
+  hasUnread?: boolean;
 }
 
 export interface PrdAnswerFeedItem {
@@ -35,4 +36,5 @@ export interface PrdAnswerFeedItem {
   createdAt: HomeWorryFeedTimestamp | null;
   status: 'active';
   source: 'prd_delivery';
+  hasUnread: boolean;
 }

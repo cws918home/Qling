@@ -34,6 +34,24 @@ test('PRD active deliveries appear with worry content and delivery id', () => {
   assert.equal(items[0].authorUid, 'author');
   assert.equal(items[0].recipientUid, 'recipient');
   assert.equal(items[0].originalContent, 'content');
+  assert.equal(items[0].hasUnread, true);
+});
+
+test('private delivery read-state clears unread emphasis', () => {
+  const items = selectActivePrdAnswerFeedItems({
+    profileUid: 'recipient',
+    deliveries: [{
+      id: 'delivery1',
+      worryId: 'worry1',
+      authorUid: 'author',
+      recipientUid: 'recipient',
+      status: 'active',
+    }],
+    worriesById: new Map([['worry1', { id: 'worry1', content: 'content' }]]),
+    readStatesByDeliveryId: new Map([['delivery1', { deliveryId: 'delivery1', readAt: {} }]]),
+  });
+
+  assert.equal(items[0].hasUnread, false);
 });
 
 test('non-recipient, answered, passed, and hidden deliveries do not appear', () => {
@@ -96,6 +114,7 @@ test('adapter preserves PRD identity fields for reply form compatibility', () =>
     createdAt: null,
     status: 'active',
     source: 'prd_delivery',
+    hasUnread: true,
   });
 
   assert.equal(letter.id, 'delivery1');
@@ -104,6 +123,7 @@ test('adapter preserves PRD identity fields for reply form compatibility', () =>
   assert.equal(letter.authorUid, 'author');
   assert.equal(letter.recipientUid, 'recipient');
   assert.equal(letter.source, 'prd_delivery');
+  assert.equal(letter.hasUnread, true);
 });
 
 test('PRD items suppress legacy fallback items', () => {

@@ -6,11 +6,14 @@ import {
   onSnapshot,
   query,
   where,
+  type DocumentData,
+  type QuerySnapshot,
 } from 'firebase/firestore';
 import { db } from '../../firebase';
 import {
   adaptPrdAnswerFeedItemToHomeWorryFeedLetter,
   selectActivePrdAnswerFeedItems,
+  type DeliveryReadStateDoc,
   type PrdDeliveryDoc,
   type PrdWorryDoc,
 } from './prdPolicy';
@@ -18,6 +21,13 @@ import type {
   HomeWorryFeedLetter,
   HomeWorryFeedProfile,
 } from './types';
+
+function toDeliveryReadStateDocs(snapshot: QuerySnapshot<DocumentData>): DeliveryReadStateDoc[] {
+  return snapshot.docs.map(readStateDoc => ({
+    deliveryId: readStateDoc.id,
+    ...readStateDoc.data(),
+  } as DeliveryReadStateDoc));
+}
 
 export function usePrdAnswerFeed(params: {
   profile: HomeWorryFeedProfile | null;
@@ -36,14 +46,13 @@ export function usePrdAnswerFeed(params: {
       where('recipientUid', '==', profile.uid),
       where('status', '==', 'active')
     );
+    const readStatesQuery = collection(db, 'users', profile.uid, 'deliveryReadStates');
+    let latestDeliveries: PrdDeliveryDoc[] = [];
+    let latestReadStates = new Map<string, DeliveryReadStateDoc>();
 
-    const unsubscribe = onSnapshot(q, async (snapshot) => {
+    async function recompute() {
       try {
-        const deliveries = snapshot.docs.map(deliveryDoc => ({
-          id: deliveryDoc.id,
-          ...deliveryDoc.data(),
-        } as PrdDeliveryDoc));
-        const worryIds = [...new Set(deliveries.map(delivery => delivery.worryId).filter(Boolean))] as string[];
+        const worryIds = [...new Set(latestDeliveries.map(delivery => delivery.worryId).filter(Boolean))] as string[];
         const worryDocs = await Promise.all(
           worryIds.map(async worryId => {
             const worrySnap = await getDoc(doc(db, 'worries', worryId));
@@ -60,19 +69,39 @@ export function usePrdAnswerFeed(params: {
 
         setPrdFeedWorries(
           selectActivePrdAnswerFeedItems({
-            deliveries,
+            deliveries: latestDeliveries,
             worriesById,
+            readStatesByDeliveryId: latestReadStates,
             profileUid: profile.uid,
           }).map(adaptPrdAnswerFeedItemToHomeWorryFeedLetter)
         );
       } catch (err) {
         console.error('Error processing PRD answer feed:', err);
       }
+    }
+
+    const unsubscribeDeliveries = onSnapshot(q, snapshot => {
+      latestDeliveries = snapshot.docs.map(deliveryDoc => ({
+        id: deliveryDoc.id,
+        ...deliveryDoc.data(),
+      } as PrdDeliveryDoc));
+      void recompute();
     }, (err) => {
       console.error('PRD answer feed listener error:', err);
     });
+    const unsubscribeReadStates = onSnapshot(readStatesQuery, snapshot => {
+      latestReadStates = new Map(
+        toDeliveryReadStateDocs(snapshot).map(readState => [readState.deliveryId ?? '', readState])
+      );
+      void recompute();
+    }, (err) => {
+      console.error('PRD delivery read-state listener error:', err);
+    });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeDeliveries();
+      unsubscribeReadStates();
+    };
   }, [profile]);
 
   return { prdFeedWorries };

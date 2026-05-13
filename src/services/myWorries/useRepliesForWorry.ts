@@ -15,9 +15,14 @@ import {
 } from './prdPolicy';
 import { useLegacyLettersReplyFallback } from './useLegacyLettersReplyFallback';
 import type { PrdReplyDoc, ReplyReadModelItem } from './types';
+import type { ReplyReadStateDoc } from './types';
 
 function toPrdReplyDocs(snapshot: QuerySnapshot<DocumentData>): PrdReplyDoc[] {
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PrdReplyDoc));
+}
+
+function toReplyReadStateDocs(snapshot: QuerySnapshot<DocumentData>): ReplyReadStateDoc[] {
+  return snapshot.docs.map(doc => ({ replyId: doc.id, ...doc.data() } as ReplyReadStateDoc));
 }
 
 export function useRepliesForWorry(params: {
@@ -27,6 +32,7 @@ export function useRepliesForWorry(params: {
 }) {
   const { user, worryId, firestore = db } = params;
   const [prdReplies, setPrdReplies] = useState<ReplyReadModelItem[]>([]);
+  const [readStatesByReplyId, setReadStatesByReplyId] = useState(new Map<string, ReplyReadStateDoc>());
   const { legacyLettersReplies } = useLegacyLettersReplyFallback({
     user,
     worryId,
@@ -51,6 +57,7 @@ export function useRepliesForWorry(params: {
           replies: toPrdReplyDocs(snapshot),
           userUid: user.uid,
           worryId,
+          readStatesByReplyId,
         }));
       },
       error => {
@@ -60,7 +67,28 @@ export function useRepliesForWorry(params: {
     );
 
     return () => unsubscribe();
-  }, [firestore, user, worryId]);
+  }, [firestore, readStatesByReplyId, user, worryId]);
+
+  useEffect(() => {
+    if (!user) {
+      setReadStatesByReplyId(new Map());
+      return;
+    }
+
+    const unsubscribe = onSnapshot(
+      collection(firestore, 'users', user.uid, 'replyReadStates'),
+      snapshot => {
+        setReadStatesByReplyId(new Map(
+          toReplyReadStateDocs(snapshot).map(readState => [readState.replyId ?? '', readState])
+        ));
+      },
+      error => {
+        console.error('Replies read-state listener error:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [firestore, user]);
 
   const repliesForWorry = useMemo(
     () => composeReplyReadModel({

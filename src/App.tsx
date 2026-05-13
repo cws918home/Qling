@@ -52,6 +52,10 @@ import {
   publishPublisherCommentWithProductionAdapters,
 } from './services/replyPublication/production';
 import { publishReplyViaApi } from './services/replyPublication/apiClient';
+import {
+  markDeliveryReadWithServer,
+  markRepliesForWorryReadWithServer,
+} from './services/readState/apiClient';
 import { publishWorryViaApi } from './services/worryPublication/apiClient';
 import { submitReplyFeedbackWithProductionAdapters } from './services/replyFeedback/production';
 import type { ReplyFeedback } from './services/replyFeedback/types';
@@ -161,6 +165,19 @@ export default function App() {
     worryId: selectedMyWorry?.id ?? null,
   });
   const { myGivenReplies } = useMyGivenReplies({ user });
+
+  useEffect(() => {
+    if (!user || !selectedMyWorry) return;
+
+    void markRepliesForWorryReadWithServer({
+      user,
+      worryId: selectedMyWorry.id,
+    }).then(result => {
+      if (result.status === 'failed') {
+        console.error('Failed to mark replies read:', result.reason);
+      }
+    });
+  }, [selectedMyWorry, user]);
 
   // Auth & Profile Listener
   useEffect(() => {
@@ -362,6 +379,21 @@ export default function App() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const openWorryForReply = (worry: HomeWorryFeedLetter) => {
+    setSelectedWorry(worry);
+    setView('write_reply');
+
+    if (!user || !worry.deliveryId || worry.source !== 'prd_delivery') return;
+    void markDeliveryReadWithServer({
+      user,
+      deliveryId: worry.deliveryId,
+    }).then(result => {
+      if (result.status === 'failed') {
+        console.error('Failed to mark delivery read:', result.reason);
+      }
+    });
   };
 
   const giveFeedback = async (_replyId: string, feedbackType: ReplyFeedback) => {
@@ -686,7 +718,13 @@ export default function App() {
               ) : (
                 <div className="grid gap-6">
                   {feedWorries.map(worry => (
-                    <div key={worry.id} className="bg-white p-6 rounded-2xl shadow-sm border border-[#FAEDCD] relative group">
+                    <div
+                      key={worry.id}
+                      className={cn(
+                        "bg-white p-6 rounded-2xl shadow-sm border relative group",
+                        worry.hasUnread ? "border-[#E07A5F] bg-[#FFF8F1]" : "border-[#FAEDCD]"
+                      )}
+                    >
                       <div className="flex items-center gap-2 mb-4">
                         <span className="px-2.5 py-1 bg-[#FAEDCD] text-[#D4A373] text-[10px] font-bold rounded-lg border border-[#E9EDC9]">
                           {worry.category || '기타'}
@@ -706,7 +744,7 @@ export default function App() {
                         </div>
                       ) : (
                         <button 
-                          onClick={() => { setSelectedWorry(worry); setView('write_reply'); }}
+                          onClick={() => openWorryForReply(worry)}
                           className="w-full py-3 bg-[#FDFCF8] text-[#8B8B6B] font-medium border border-[#E9EDC9] rounded-xl hover:bg-[#FAEDCD] hover:text-[#5A5A40] transition-colors flex items-center justify-center gap-2"
                         >
                           <MessageSquare className="w-4 h-4" /> 다정하게 답장해주기
@@ -796,7 +834,10 @@ export default function App() {
                                 setSelectedReply(reply); 
                                 setView('read_reply'); 
                               }}
-                              className="w-full text-left p-6 bg-white rounded-2xl border border-[#E9EDC9] transition-all hover:bg-[#FAEDCD] relative group"
+                              className={cn(
+                                "w-full text-left p-6 rounded-2xl border transition-all hover:bg-[#FAEDCD] relative group",
+                                reply.hasUnread ? "bg-[#FFF8F1] border-[#E07A5F]" : "bg-white border-[#E9EDC9]"
+                              )}
                             >
                               <div className="flex items-center gap-2 mb-3">
                                 <Headphones className="w-4 h-4 text-[#A3B18A]" />
@@ -870,7 +911,9 @@ export default function App() {
                                 "w-full text-left p-6 rounded-2xl border relative group transition-all",
                                 selectedMyWorry?.id === worry.id
                                   ? "bg-[#FAEDCD] border-[#D4A373]"
-                                  : "bg-white border-[#E9EDC9] hover:bg-[#FAEDCD]"
+                                  : worry.hasUnreadReplies
+                                    ? "bg-[#FFF8F1] border-[#E07A5F] hover:bg-[#FAEDCD]"
+                                    : "bg-white border-[#E9EDC9] hover:bg-[#FAEDCD]"
                               )}
                             >
                               <div className="flex items-center gap-2 mb-3">
@@ -883,7 +926,7 @@ export default function App() {
                                 "{worry.content}"
                               </p>
                               <div className="mt-3 text-xs text-[#A3B18A] font-bold">
-                                {selectedMyWorry?.id === worry.id ? '받은 답장 탭에서 확인 중' : '답장 확인하기'}
+                                {selectedMyWorry?.id === worry.id ? '받은 답장 탭에서 확인 중' : `답장 확인하기 (${worry.humanReplyCount ?? 0})`}
                               </div>
                             </button>
                           ))}
@@ -901,7 +944,10 @@ export default function App() {
                                     setSelectedReply(reply);
                                     setView('read_reply');
                                   }}
-                                  className="w-full text-left p-6 bg-white rounded-2xl border border-[#E9EDC9] transition-all hover:bg-[#FAEDCD]"
+                                  className={cn(
+                                    "w-full text-left p-6 rounded-2xl border transition-all hover:bg-[#FAEDCD]",
+                                    reply.hasUnread ? "bg-[#FFF8F1] border-[#E07A5F]" : "bg-white border-[#E9EDC9]"
+                                  )}
                                 >
                                   <div className="flex items-center gap-2 mb-3">
                                     <Headphones className="w-4 h-4 text-[#A3B18A]" />

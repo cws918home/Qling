@@ -23,6 +23,11 @@ export interface PrdWorryDoc {
   createdAt?: HomeWorryFeedTimestamp | null;
 }
 
+export interface DeliveryReadStateDoc {
+  deliveryId?: string;
+  readAt?: unknown;
+}
+
 function stringArray(value: unknown): string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string')
@@ -32,6 +37,7 @@ function stringArray(value: unknown): string[] {
 export function selectActivePrdAnswerFeedItems(params: {
   deliveries: PrdDeliveryDoc[];
   worriesById: Map<string, PrdWorryDoc>;
+  readStatesByDeliveryId?: Map<string, DeliveryReadStateDoc>;
   profileUid: string;
 }): PrdAnswerFeedItem[] {
   return params.deliveries.flatMap(delivery => {
@@ -58,6 +64,7 @@ export function selectActivePrdAnswerFeedItems(params: {
       createdAt: worry.createdAt ?? null,
       status: 'active' as const,
       source: 'prd_delivery' as const,
+      hasUnread: !params.readStatesByDeliveryId?.has(delivery.id),
     }];
   }).sort((a, b) => {
     const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
@@ -84,6 +91,7 @@ export function adaptPrdAnswerFeedItemToHomeWorryFeedLetter(
     authorUid: item.authorUid,
     recipientUid: item.recipientUid,
     status: item.status,
+    hasUnread: item.hasUnread,
   };
 }
 

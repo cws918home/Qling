@@ -3,6 +3,7 @@ import type {
   MyWorryListItem,
   PrdReplyDoc,
   PrdWorryDoc,
+  ReplyReadStateDoc,
   ReplyReadModelItem,
   ReplyReadModelMode,
   TimestampLike,
@@ -25,7 +26,17 @@ function sortNewestFirst<T extends { createdAt?: TimestampLike | null }>(items: 
 export function selectMyWorries(params: {
   worries: PrdWorryDoc[];
   userUid: string;
+  replies?: PrdReplyDoc[];
+  readStatesByReplyId?: Map<string, ReplyReadStateDoc>;
 }): MyWorryListItem[] {
+  const unreadCounts = new Map<string, number>();
+  for (const reply of params.replies ?? []) {
+    if (!reply.id || reply.authorUid !== params.userUid || !reply.worryId) continue;
+    if (reply.status === 'hidden') continue;
+    if (params.readStatesByReplyId?.has(reply.id)) continue;
+    unreadCounts.set(reply.worryId, (unreadCounts.get(reply.worryId) ?? 0) + 1);
+  }
+
   const selected = params.worries.flatMap(worry => {
     if (worry.authorUid !== params.userUid) return [];
     if (typeof worry.content !== 'string') return [];
@@ -49,6 +60,8 @@ export function selectMyWorries(params: {
           : rawCategories,
       createdAt: worry.createdAt ?? null,
       humanReplyCount,
+      unreadReplyCount: unreadCounts.get(worry.id) ?? 0,
+      hasUnreadReplies: (unreadCounts.get(worry.id) ?? 0) > 0,
       source: 'prd_worries' as const,
     }];
   });
@@ -60,11 +73,12 @@ export function selectRepliesForWorry(params: {
   replies: PrdReplyDoc[];
   userUid: string;
   worryId: string;
+  readStatesByReplyId?: Map<string, ReplyReadStateDoc>;
 }): ReplyReadModelItem[] {
   return adaptPrdReplies(params.replies.filter(reply => (
     reply.worryId === params.worryId
     && reply.authorUid === params.userUid
-  )));
+  )), params.readStatesByReplyId);
 }
 
 export function selectMyGivenReplies(params: {
@@ -74,7 +88,10 @@ export function selectMyGivenReplies(params: {
   return adaptPrdReplies(params.replies.filter(reply => reply.replierUid === params.userUid));
 }
 
-export function adaptPrdReplies(replies: PrdReplyDoc[]): ReplyReadModelItem[] {
+export function adaptPrdReplies(
+  replies: PrdReplyDoc[],
+  readStatesByReplyId?: Map<string, ReplyReadStateDoc>
+): ReplyReadModelItem[] {
   return sortNewestFirst(replies.flatMap(reply => {
     if (!reply.worryId || !reply.authorUid || !reply.replierUid) return [];
     if (typeof reply.content !== 'string') return [];
@@ -94,7 +111,8 @@ export function adaptPrdReplies(replies: PrdReplyDoc[]): ReplyReadModelItem[] {
       originalContent: reply.content,
       refinedContent: reply.content,
       replyTo: reply.worryId,
-      isRead: true,
+      isRead: readStatesByReplyId ? readStatesByReplyId.has(reply.id) : true,
+      hasUnread: readStatesByReplyId ? !readStatesByReplyId.has(reply.id) : false,
       isAiGenerated: reply.isAiGenerated,
       isExampleReply: reply.isExampleReply,
     }];

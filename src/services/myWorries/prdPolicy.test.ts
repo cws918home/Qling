@@ -48,6 +48,34 @@ test('own worries are included by authorUid and other users worries are excluded
   assert.deepEqual(selected.map(worry => worry.source), ['prd_worries', 'prd_worries']);
   assert.deepEqual(selected[1].categories, ['family']);
   assert.equal(selected[1].humanReplyCount, 1);
+  assert.equal(selected[1].unreadReplyCount, 0);
+  assert.equal(selected[1].hasUnreadReplies, false);
+});
+
+test('my worries computes unread reply count from private read-state docs', () => {
+  const worries: PrdWorryDoc[] = [
+    { id: 'w1', authorUid: 'me', content: 'worry one' },
+    { id: 'w2', authorUid: 'me', content: 'worry two' },
+  ];
+  const replies: PrdReplyDoc[] = [
+    prdReply({ id: 'r1', worryId: 'w1', authorUid: 'me' }),
+    prdReply({ id: 'r2', worryId: 'w1', authorUid: 'me' }),
+    prdReply({ id: 'r3', worryId: 'w2', authorUid: 'me' }),
+  ];
+
+  const selected = selectMyWorries({
+    worries,
+    userUid: 'me',
+    replies,
+    readStatesByReplyId: new Map([['r2', { replyId: 'r2', readByAuthorAt: {} }]]),
+  });
+
+  const w1 = selected.find(worry => worry.id === 'w1');
+  const w2 = selected.find(worry => worry.id === 'w2');
+  assert.equal(w1?.unreadReplyCount, 1);
+  assert.equal(w1?.hasUnreadReplies, true);
+  assert.equal(w2?.unreadReplyCount, 1);
+  assert.equal(w2?.hasUnreadReplies, true);
 });
 
 test('received replies are selected by worryId and authorUid', () => {
@@ -63,6 +91,26 @@ test('received replies are selected by worryId and authorUid', () => {
   assert.equal(selected[0].source, 'prd_replies');
   assert.equal(selected[0].worryId, 'w1');
   assert.equal(selected[0].authorUid, 'author');
+  assert.equal(selected[0].hasUnread, false);
+});
+
+test('received replies use private author read-state for unread emphasis', () => {
+  const replies: PrdReplyDoc[] = [
+    prdReply({ id: 'unread', worryId: 'w1', authorUid: 'author', replierUid: 'r1' }),
+    prdReply({ id: 'read', worryId: 'w1', authorUid: 'author', replierUid: 'r2' }),
+  ];
+
+  const selected = selectRepliesForWorry({
+    replies,
+    userUid: 'author',
+    worryId: 'w1',
+    readStatesByReplyId: new Map([['read', { replyId: 'read', readByAuthorAt: {} }]]),
+  });
+
+  assert.equal(selected.find(reply => reply.id === 'unread')?.hasUnread, true);
+  assert.equal(selected.find(reply => reply.id === 'unread')?.isRead, false);
+  assert.equal(selected.find(reply => reply.id === 'read')?.hasUnread, false);
+  assert.equal(selected.find(reply => reply.id === 'read')?.isRead, true);
 });
 
 test('written replies are selected by replierUid', () => {
@@ -76,6 +124,7 @@ test('written replies are selected by replierUid', () => {
   assert.deepEqual(selected.map(reply => reply.id), ['mine']);
   assert.equal(selected[0].source, 'prd_replies');
   assert.equal(selected[0].replierUid, 'me');
+  assert.equal(selected[0].hasUnread, false);
 });
 
 test('composed read model works without legacy fallback output', () => {

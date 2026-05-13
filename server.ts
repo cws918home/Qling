@@ -16,6 +16,7 @@ import {
 import { moderateAndInferWorryCategories } from "./src/server/moderationProvider";
 import { registerWorryRoutes } from "./src/server/worryRoutes";
 import { registerReplyRoutes } from "./src/server/replyRoutes";
+import { registerReadStateRoutes } from "./src/server/readStateRoutes";
 
 // Read client config to get database ID
 const clientConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
@@ -288,6 +289,10 @@ async function startServer() {
    - If good: { "status": "approved" }`, content)
       ).then(result => result.body),
     });
+    registerReadStateRoutes(app, {
+      db,
+      auth: getAuth(),
+    });
   } else {
     app.post('/api/worries/publish', (_req, res) => {
       res.status(500).json({
@@ -298,6 +303,22 @@ async function startServer() {
       });
     });
     app.post('/api/deliveries/:deliveryId/replies', (_req, res) => {
+      res.status(500).json({
+        error: {
+          code: 'firebase_unavailable',
+          message: 'Firebase Admin is not initialized.',
+        },
+      });
+    });
+    app.post('/api/deliveries/:deliveryId/read', (_req, res) => {
+      res.status(500).json({
+        error: {
+          code: 'firebase_unavailable',
+          message: 'Firebase Admin is not initialized.',
+        },
+      });
+    });
+    app.post('/api/worries/:worryId/replies/read', (_req, res) => {
       res.status(500).json({
         error: {
           code: 'firebase_unavailable',

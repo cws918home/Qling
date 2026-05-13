@@ -20,7 +20,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 
 - [x] TODO-1.1 Worry publication mutation boundary is server-owned: browser submits to an authenticated endpoint, never supplies trusted `uid`, and no runtime PRD worry publication path writes `letters` or PRD source-of-truth collections directly from the client.
 - [x] TODO-1.2 Reply publication mutation boundary is server-owned: browser submits by delivery ID to an authenticated endpoint, stored reply ID is deterministic from delivery ID, and no runtime reply publication path creates `letters` replies.
-- [ ] TODO-1.3 Read-state mutation boundary is server-owned: delivery and reply read markers are set only through authenticated endpoints and are not public read receipts.
+- [x] TODO-1.3 Read-state mutation boundary is server-owned: delivery and reply read markers are set only through authenticated endpoints and are not public read receipts.
 - [ ] TODO-1.4 Pass mutation boundary is server-owned: pass status changes, same-worry exclusion, immediate replacement attempt, and `activeDeliveryCount` decrement/increment behavior happen only in an authenticated server transaction or transaction-plus-best-effort-push flow.
 - [ ] TODO-1.5 Feedback mutation boundary is server-owned: like/dislike/comment writes and helpedCount changes happen only through an authenticated server transaction.
 - [ ] TODO-1.6 Rematch job mutation boundary is server-owned: rematch runs are performed only by authenticated internal endpoints or server jobs.
@@ -162,7 +162,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
   - Push failure does not affect answerability.
   - Do not include `rematched` as a normal terminal status. If a future admin/manual flow needs that concept, name and document it separately; normal 8-hour rematch is additive.
 - [x] TODO-2.27 Core delivery fields: `worryId`, `recipientUid`, `authorUid`, `status: 'active' | 'answered'`, `answeredAt`, `batchId`, `batchRound: 0`, `slotIndex`, `selectionType: 'matched' | 'random'`, `matchOverlapCount`, `matchCategoriesSnapshot`, `recipientInterestsSnapshot`, `recipientGenderSnapshot`, `recipientHelpedCountSnapshot`, `authorGenderSnapshot`, `isAiRecipient: false`, `createdAt`, `updatedAt`, `answerableUntil?: null`.
-- [ ] TODO-2.28 Read-state field: `readAt`.
+- [x] TODO-2.28 Delivery read-state field: `readAt` lives under `users/{recipientUid}/deliveryReadStates/{deliveryId}`, not on `deliveries/{deliveryId}`.
 - [ ] TODO-2.29 Pass fields: `status: 'passed'`, `passedAt`.
 - [ ] TODO-2.30 Rematch delivery fields: `batchRound: 1 | 2`, `rematchEligibleAfter`, `createdByRematchRunId`.
 - [ ] TODO-2.31 Example delivery fields: `isExample`, `exampleSeedId`.
@@ -177,7 +177,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 - [x] TODO-2.38 Deterministic ID recommendation: `deliveryId`, so one reply per delivery is enforced by create-if-absent.
 - [x] TODO-2.39 Core human reply fields: `deliveryId`, `worryId`, `authorUid`, `replierUid`, `content`, `status: 'active'`, `moderationLogId`, `createdAt`, `updatedAt`.
-- [ ] TODO-2.40 Reply read-state field: `readByAuthorAt`.
+- [x] TODO-2.40 Reply read-state field: `readByAuthorAt` lives under `users/{authorUid}/replyReadStates/{replyId}`, not on `replies/{replyId}`.
 - [ ] TODO-2.41 Feedback summary fields: `feedbackType`, `likedAt`, `dislikedAt`.
 - [ ] TODO-2.42 AI reply fields: `isAiGenerated`.
 - [ ] TODO-2.43 Example reply fields: `isExampleReply`.
@@ -268,13 +268,13 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Answer Feed Read State: `POST /api/deliveries/:deliveryId/read`
 
-- [ ] TODO-3.11 Request body: `{}`.
-- [ ] TODO-3.12 Auth: signed-in delivery recipient, not deleted.
-- [ ] TODO-3.13 Validation: delivery exists, `recipientUid == auth.uid`, not hidden.
-- [ ] TODO-3.14 Transaction: if `readAt` absent, set `readAt` and `updatedAt`; no-op if already read.
-- [ ] TODO-3.15 Response: `200 { status: 'read', deliveryId, readAt }`.
-- [ ] TODO-3.16 Idempotency: repeat calls return current read state.
-- [ ] TODO-3.17 Tests: recipient only, no author read receipt surface, idempotent.
+- [x] TODO-3.11 Request body: `{}`.
+- [x] TODO-3.12 Auth: signed-in delivery recipient, not deleted.
+- [x] TODO-3.13 Validation: delivery exists, `recipientUid == auth.uid`, not hidden.
+- [x] TODO-3.14 Transaction: if the private delivery read-state doc is absent, set `readAt` and `updatedAt` under `users/{recipientUid}/deliveryReadStates/{deliveryId}`; no-op if already read; do not write `deliveries/{deliveryId}`.
+- [x] TODO-3.15 Response: `200 { status: 'read', deliveryId, readAt }`, where `readAt` is the private read-state timestamp.
+- [x] TODO-3.16 Idempotency: repeat calls return current read state.
+- [x] TODO-3.17 Tests: recipient only, no author read receipt surface, idempotent.
 
 ### Pass: `POST /api/deliveries/:deliveryId/pass`
 
@@ -298,13 +298,13 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### My Worries Replies Read State: `POST /api/worries/:worryId/replies/read`
 
-- [ ] TODO-3.32 Request body: `{ replyIds?: string[] }`; default marks all currently active replies to that worry.
-- [ ] TODO-3.33 Auth: signed-in worry author, not deleted.
-- [ ] TODO-3.34 Validation: worry exists and `authorUid == auth.uid`.
-- [ ] TODO-3.35 Transaction/batch: set `readByAuthorAt` on unread visible replies existing at request time.
-- [ ] TODO-3.36 Response: `200 { status: 'read', worryId, markedCount }`.
-- [ ] TODO-3.37 Idempotency: repeat calls no-op.
-- [ ] TODO-3.38 Tests: author only, later new replies remain unread, read state not visible to repliers.
+- [x] TODO-3.32 Request body: `{ replyIds?: string[] }`; default marks all current PRD replies to that worry matching the worry author and minimal existing status rules only.
+- [x] TODO-3.33 Auth: signed-in worry author, not deleted.
+- [x] TODO-3.34 Validation: worry exists and `authorUid == auth.uid`.
+- [x] TODO-3.35 Transaction/batch: create private reply read-state docs with `readByAuthorAt` for unread current replies existing at request time; do not write `replies/{replyId}`.
+- [x] TODO-3.36 Response: `200 { status: 'read', worryId, markedCount }`.
+- [x] TODO-3.37 Idempotency: repeat calls no-op.
+- [x] TODO-3.38 Tests: author only, later new replies remain unread, read state not visible to repliers.
 
 ### Feedback: `POST /api/replies/:replyId/feedback`
 
@@ -383,7 +383,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-4.28 Public interface: `useMyWorries`, `useRepliesForWorry`, `useMyGivenReplies`.
 - [x] TODO-4.29 Files: `src/services/replyMailbox/*`, new `src/services/myWorries/*`, `src/App.tsx` decomposition.
 - [x] TODO-4.30 Tests: authored worries, received replies, own written replies, and isolated legacy fallback behavior.
-- [ ] TODO-4.31 Read-state extension: unread counts and unread emphasis are added by Slice 5 after read APIs exist.
+- [x] TODO-4.31 Read-state extension: unread counts and unread emphasis are added by Slice 5 after read APIs exist.
 - [ ] TODO-4.32 Feedback extension: disliked filtering is completed by Slice 7 after feedback exists.
 - [ ] TODO-4.33 Admin hiding extension: hidden filtering is completed by Slice 15 after admin hiding exists.
 - [x] TODO-4.34 Deletion test: legacy mailbox deletion does not remove PRD mailbox behavior.
@@ -478,16 +478,16 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 5: Read state
 
-- [ ] TODO-5.38 Goal: private read emphasis for deliveries and replies.
-- [ ] TODO-5.39 Files: `src/services/deliveries/readDelivery.ts`, `src/services/myWorries/markRepliesRead.ts`, feed/mailbox hooks, `server.ts`.
-- [ ] TODO-5.40 API: `POST /api/deliveries/:deliveryId/read`, `POST /api/worries/:worryId/replies/read`.
-- [ ] TODO-5.41 Data: `deliveries.readAt`, `replies.readByAuthorAt`.
-- [ ] TODO-5.42 UI: answer tab emphasizes unread deliveries; my worries emphasizes unread replies; no "read by other party" copy.
-- [ ] TODO-5.43 Rules: clients cannot set read fields directly.
-- [ ] TODO-5.44 Tests: idempotency, ownership, later replies remain unread, read state private.
-- [ ] TODO-5.45 Manual verification: opening detail removes own emphasis only.
-- [ ] TODO-5.46 Explicit non-goals: public read receipts.
-- [ ] TODO-5.47 Deletion test: removing read-state modules removes emphasis updates but not core publish/reply.
+- [x] TODO-5.38 Goal: private read emphasis for deliveries and replies.
+- [x] TODO-5.39 Files: deep read-state module under `src/services/readState/server/*`, `src/server/readStateRoutes.ts`, client read-state API wrapper, feed/mailbox hooks, `server.ts`.
+- [x] TODO-5.40 API: `POST /api/deliveries/:deliveryId/read`, `POST /api/worries/:worryId/replies/read`.
+- [x] TODO-5.41 Data: actor-private read-state docs under `users/{recipientUid}/deliveryReadStates/{deliveryId}` and `users/{authorUid}/replyReadStates/{replyId}`; no shared `deliveries.readAt` or `replies.readByAuthorAt`.
+- [x] TODO-5.42 UI: answer tab emphasizes unread deliveries; my worries emphasizes unread replies; no "read by other party" copy.
+- [x] TODO-5.43 Rules: clients cannot write private read-state docs directly and cannot write shared read receipt fields on deliveries or replies.
+- [x] TODO-5.44 Tests: idempotency, ownership, later replies remain unread, read state private.
+- [x] TODO-5.45 Manual verification: opening detail removes own emphasis only.
+- [x] TODO-5.46 Explicit non-goals: public read receipts.
+- [x] TODO-5.47 Deletion test: removing read-state modules removes emphasis updates but not core publish/reply.
 
 ### Slice 6: Pass
 
@@ -696,7 +696,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-6.12 ActiveDeliveryCount pass decrement: passing transitions an active delivery to `passed` and decrements the passer's `activeDeliveryCount` exactly once.
 - [ ] TODO-6.13 ActiveDeliveryCount rematch semantics: old active deliveries remain counted after additive rematch, rematch checks new recipients have `activeDeliveryCount < 10` inside the creation transaction, and rematch increments only newly created delivery recipients.
 - [ ] TODO-6.14 ActiveDeliveryCount hidden decrement: hiding an active delivery decrements the recipient's `activeDeliveryCount` exactly once.
-- [ ] TODO-6.15 ActiveDeliveryCount non-decrement events: read marking, push failure, and additive rematch creation elsewhere do not decrement `activeDeliveryCount`.
+- [x] TODO-6.15 ActiveDeliveryCount non-decrement events: read marking, push failure, and additive rematch creation elsewhere do not decrement `activeDeliveryCount`.
 - [ ] TODO-6.16 ActiveDeliveryCount idempotency: deterministic delivery IDs, status preconditions, and transaction reads prevent double-increment and double-decrement on retry paths.
 - [x] TODO-6.17 ActiveDeliveryCount rules protection: Firestore rules forbid all client writes to `activeDeliveryCount`.
 - [x] TODO-6.18 Initial matching tests: exactly 5 initial deliveries, 4 matched + 1 random, fewer-than-5 failure with no partial writes, tie-breaks, active delivery limit, and initial redelivery prevention.
@@ -781,7 +781,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 - [x] TODO-9.20 Worry publication API rejects missing/invalid auth and ignores body-supplied uid.
 - [x] TODO-9.21 Reply publication API rejects missing/invalid auth and ignores body-supplied uid.
-- [ ] TODO-9.22 Read-state APIs reject missing/invalid auth and ignore body-supplied uid.
+- [x] TODO-9.22 Read-state APIs reject missing/invalid auth and ignore body-supplied uid.
 - [ ] TODO-9.23 Pass API rejects missing/invalid auth, ignores body-supplied uid, rejects passing someone else's delivery, and rejects answered/hidden non-passable deliveries.
 - [ ] TODO-9.24 Feedback API rejects missing/invalid auth and ignores body-supplied uid.
 - [ ] TODO-9.25 Account deletion API rejects missing/invalid auth and ignores body-supplied uid.
@@ -812,10 +812,10 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-9.44 Hidden deliveries are excluded from answer feed.
 - [ ] TODO-9.45 Existing active delivery remains visible and answerable after rematch creates additional deliveries.
 - [x] TODO-9.46 My worries list includes own worries.
-- [ ] TODO-9.47 My worries list includes unread reply count after read state exists.
+- [x] TODO-9.47 My worries list includes unread reply count after read state exists.
 - [x] TODO-9.48 Replies written by me shown in My Page.
 - [ ] TODO-9.49 Disliked reply hidden from publisher but not deleted.
-- [ ] TODO-9.50 Read state private.
+- [x] TODO-9.50 Read state private.
 
 ### Job / Idempotency Tests
 
@@ -839,7 +839,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-9.68 Existing active deliveries from previous rounds remain answerable after later rounds are created.
 - [ ] TODO-9.69 `activeDeliveryCount` is not decremented merely because rematch occurred.
 - [ ] TODO-9.70 `activeDeliveryCount` is decremented only on answered/passed/hidden.
-- [ ] TODO-9.71 Read marking and push failure do not decrement `activeDeliveryCount`.
+- [x] TODO-9.71 Read marking and push failure do not decrement `activeDeliveryCount`.
 - [ ] TODO-9.72 Rematch increments `activeDeliveryCount` for newly created delivery recipients.
 - [ ] TODO-9.73 Publication/rematch reject recipients with `activeDeliveryCount >= 10` inside the creation transaction.
 - [x] TODO-9.74 Publication retry paths do not double-increment `activeDeliveryCount`.

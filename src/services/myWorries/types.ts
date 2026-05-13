@@ -10,6 +10,8 @@ export interface MyWorryListItem {
   categories: string[];
   createdAt: TimestampLike | null;
   humanReplyCount?: number;
+  unreadReplyCount: number;
+  hasUnreadReplies: boolean;
   source: 'prd_worries';
 }
 
@@ -37,6 +39,11 @@ export interface PrdReplyDoc {
   createdAt?: TimestampLike | null;
   isAiGenerated?: boolean;
   isExampleReply?: boolean;
+}
+
+export interface ReplyReadStateDoc {
+  replyId?: string;
+  readByAuthorAt?: unknown;
 }
 
 export interface LegacyLettersReplyDoc {
@@ -74,6 +81,7 @@ export interface ReplyReadModelItem {
   replyTo?: string;
   replyToContent?: string;
   isRead: boolean;
+  hasUnread?: boolean;
   feedback?: 'helpful' | 'not_helpful' | null;
   publisherComment?: string;
   isAiGenerated?: boolean;

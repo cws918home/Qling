@@ -205,7 +205,8 @@ Add private read markers and unread emphasis for deliveries and received replies
 
 - Implement `POST /api/deliveries/:deliveryId/read`.
 - Implement `POST /api/worries/:worryId/replies/read`.
-- Store `deliveries.readAt` and `replies.readByAuthorAt` only through server endpoints.
+- Store equivalent actor-private read-state timestamps under `users/{recipientUid}/deliveryReadStates/{deliveryId}` and `users/{authorUid}/replyReadStates/{replyId}` only through server endpoints.
+- Do not store read timestamps on shared readable source documents such as `deliveries/{deliveryId}` or `replies/{replyId}`, and do not expose read state as public read receipts.
 - Update answer feed and my-worries UI/read hooks to emphasize unread items for the current user only.
 
 ### TODO IDs Completed In This Phase
@@ -222,8 +223,8 @@ Add private read markers and unread emphasis for deliveries and received replies
 
 - Opening a delivered worry clears only the recipient's unread emphasis.
 - Opening replies clears only the worry author's unread reply emphasis.
-- Read fields are not exposed as public read receipts to the other party.
-- Clients cannot set read fields directly.
+- Read timestamps are stored only in actor-private user subcollections and are not exposed as public read receipts to the other party.
+- Clients cannot set read state directly.
 
 ### Explicit Non-Goals / Deferred Work
 
