@@ -34,6 +34,7 @@ function sourceBatchForRound(scan: RematchScan, round: RematchRound): RematchSou
     }
     const batch = scan.batches.find(item => item.id === scan.initialDeliveryBatchId);
     if (!batch || batch.worryId !== scan.worryId || batch.batchRound !== 0) return null;
+    if (batch.reason !== undefined && batch.reason !== 'initial') return null;
     return batch;
   }
 
@@ -46,12 +47,17 @@ export function chooseNextRematchSource(params: {
   scan: RematchScan;
   now: Date;
 }): { status: 'due'; sourceBatch: RematchSourceBatch; nextRound: RematchRound } | { status: 'skip'; reason: 'not_due' | 'no_source_batch' | 'round_complete' } {
+  const initialSourceBatch = sourceBatchForRound(params.scan, 1);
+  if (!initialSourceBatch) {
+    return { status: 'skip', reason: 'no_source_batch' };
+  }
+
   const hasRoundTwo = params.scan.batches.some(batch => batch.batchRound === 2);
   if (hasRoundTwo) return { status: 'skip', reason: 'round_complete' };
 
   const hasRoundOne = params.scan.batches.some(batch => batch.batchRound === 1);
   const nextRound: RematchRound = hasRoundOne ? 2 : 1;
-  const sourceBatch = sourceBatchForRound(params.scan, nextRound);
+  const sourceBatch = nextRound === 1 ? initialSourceBatch : sourceBatchForRound(params.scan, nextRound);
   if (!sourceBatch || !validSourceRound(sourceBatch.batchRound)) {
     return { status: 'skip', reason: 'no_source_batch' };
   }
@@ -81,7 +87,7 @@ export function calculateTargetCount(params: {
     && delivery.isAiRecipient !== true
   ));
   const answeredInSource = sourceDeliveries.filter(delivery => Boolean(delivery.answeredAt)).length;
-  const unansweredSlots = Math.max(0, sourceDeliveries.length - answeredInSource);
+  const unansweredSlots = Math.max(0, 5 - answeredInSource);
   const limit = Number.isFinite(params.scan.humanDeliveryLimit)
     ? Math.min(params.scan.humanDeliveryLimit, HUMAN_DELIVERY_LIMIT)
     : HUMAN_DELIVERY_LIMIT;

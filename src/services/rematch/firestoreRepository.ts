@@ -81,6 +81,7 @@ function validBatch(doc: FirebaseFirestore.QueryDocumentSnapshot): RematchSource
     worryId: data.worryId,
     batchRound: data.batchRound,
     createdAt,
+    reason: data.reason,
   } as RematchSourceBatch;
 }
 

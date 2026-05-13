@@ -20,6 +20,7 @@ export interface RematchSourceBatch {
   worryId: string;
   batchRound: 0 | 1 | 2;
   createdAt: Date;
+  reason?: unknown;
 }
 
 export interface RematchSourceDelivery {

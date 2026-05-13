@@ -88,6 +88,9 @@ test('malformed or missing Round 0 source returns no_source_batch and performs n
   for (const badScan of [
     scan({ initialDeliveryBatchId: 'missing' }),
     scan({ initialDeliveryBatchId: 'batch0', batches: [{ id: 'batch0', worryId: 'other', batchRound: 0, createdAt: nineHoursAgo }] }),
+    scan({ initialDeliveryBatchId: 'batch0', batches: [{ id: 'batch0', worryId: 'worry1', batchRound: 0, createdAt: nineHoursAgo, reason: 'rematch_timeout' }] }),
+    scan({ initialDeliveryBatchId: 'batch0', batches: [{ id: 'batch0', worryId: 'worry1', batchRound: 1, createdAt: nineHoursAgo, reason: 'rematch_timeout' }] }),
+    scan({ initialDeliveryBatchId: 'batch0', batches: [{ id: 'batch0', worryId: 'worry1', batchRound: 2, createdAt: nineHoursAgo, reason: 'rematch_timeout' }] }),
   ]) {
     repo = repository([badScan]);
     const result = await rematchDueDeliveries({
@@ -105,18 +108,22 @@ test('malformed or missing Round 0 source returns no_source_batch and performs n
 });
 
 test('valid Round 0 creates Round 1 and existing Round 1 blocks another Round 1', async () => {
-  repo = repository([scan()]);
-  const roundOne = await rematchDueDeliveries({
-    db: {} as never,
-    messaging: null,
+  for (const reason of ['initial', undefined]) {
+    repo = repository([scan({
+      batches: [{ id: 'batch0', worryId: 'worry1', batchRound: 0, createdAt: nineHoursAgo, reason }],
+    })]);
+    const roundOne = await rematchDueDeliveries({
+      db: {} as never,
+      messaging: null,
       now,
       repository: repo,
       random: () => 0,
       pushAdapter: async () => undefined,
     });
-  assert.equal(roundOne.status, 'completed');
-  assert.equal(roundOne.createdDeliveryCount, 5);
-  assert.equal(repo.commits, 1);
+    assert.equal(roundOne.status, 'completed');
+    assert.equal(roundOne.createdDeliveryCount, 5);
+    assert.equal(repo.commits, 1);
+  }
 
   repo = repository([scan({
     batches: [
@@ -149,7 +156,7 @@ test('Round 1 source creates Round 2 and Round 2 blocks Round 3', async () => {
     pushAdapter: async () => undefined,
   });
   assert.equal(roundTwo.status, 'completed');
-  assert.equal(roundTwo.createdDeliveryCount, 2);
+  assert.equal(roundTwo.createdDeliveryCount, 5);
 
   repo = repository([scan({
     batches: [
