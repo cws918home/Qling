@@ -23,7 +23,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.3 Read-state mutation boundary is server-owned: delivery and reply read markers are set only through authenticated endpoints and are not public read receipts.
 - [x] TODO-1.4 Pass mutation boundary is server-owned: pass status changes, same-worry exclusion, immediate replacement attempt, and `activeDeliveryCount` decrement/increment behavior happen only in an authenticated server transaction or transaction-plus-best-effort-push flow.
 - [x] TODO-1.5 Feedback mutation boundary is server-owned: like/dislike/comment writes and helpedCount changes happen only through an authenticated server transaction.
-- [ ] TODO-1.6 Rematch job mutation boundary is server-owned: rematch runs are performed only by authenticated internal endpoints or server jobs.
+- [x] TODO-1.6 Rematch job mutation boundary is server-owned: rematch runs are performed only by authenticated internal endpoints or server jobs.
 - [ ] TODO-1.7 AI fallback job mutation boundary is server-owned: AI fallback runs are performed only by authenticated internal endpoints or server jobs.
 - [ ] TODO-1.8 Example feedback job mutation boundary is server-owned: example creation and delayed example feedback are performed only by authenticated server endpoints or internal jobs.
 - [ ] TODO-1.9 Account deletion mutation boundary is server-owned: delete requests use authenticated user identity, soft-delete the user, remove tokens, and block future user actions.
@@ -35,7 +35,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.15 Firestore ownership for initial PRD collections is enforced: `worries`, `deliveries`, `moderationLogs`, `pushLogs`, and initial `deliveryBatches` are server-owned; clients keep only narrow profile/token writes and temporary legacy reads.
 - [x] TODO-1.16 Firestore ownership for replies is enforced: `replies` are server-owned and legacy reply write paths are not needed for PRD replies.
 - [x] TODO-1.17 Firestore ownership for feedback is enforced: `feedbacks` and helpedCount changes are server-owned.
-- [ ] TODO-1.18 Firestore ownership for rematch operational collections is enforced.
+- [x] TODO-1.18 Firestore ownership for rematch operational collections is enforced.
 - [ ] TODO-1.19 Firestore ownership for AI fallback operational collections is enforced.
 - [ ] TODO-1.20 Firestore ownership for example operational collections is enforced.
 - [ ] TODO-1.21 Final Firestore ownership is enforced: legacy `letters` runtime access is removed or fully denied.
@@ -52,12 +52,12 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.32 Server invariant for initial matching is enforced: exactly 5 initial human deliveries, 4 matched plus 1 random. If fewer than 5 eligible human recipients exist, publication fails without partial worry, batch, delivery, counter, or push state.
 - [x] TODO-1.33 Server invariant for initial delivery active limit is enforced: selected initial recipients have `activeDeliveryCount < 10`.
 - [x] TODO-1.34 Server invariant for same-worry redelivery exclusion metadata is enforced when users pass or answer.
-- [ ] TODO-1.35 Server invariant for rematch delivery limits is enforced: total human delivery cap `15`, active delivery limit `< 10`, and no redelivery of the same worry to the same user.
+- [x] TODO-1.35 Server invariant for rematch delivery limits is enforced: total human delivery cap `15`, active delivery limit `< 10`, and no redelivery of the same worry to the same user.
 - [x] TODO-1.36 Server invariant for one reply per delivery is enforced with deterministic reply IDs and idempotency/duplicate-content behavior.
 - [x] TODO-1.37 Server invariant for one immutable feedback per reply is enforced with deterministic feedback IDs and delayed like-comment rules.
 - [x] TODO-1.38 Server invariant for helpedCount is enforced: increments happen exactly once only for eligible human/example likes, and AI likes are excluded.
 - [x] TODO-1.39 Server invariant for pass idempotency is enforced by status preconditions.
-- [ ] TODO-1.40 Server invariant for rematch job idempotency is enforced by deterministic IDs, job locks, and status preconditions.
+- [x] TODO-1.40 Server invariant for rematch job idempotency is enforced by deterministic IDs, job locks, and status preconditions.
 - [ ] TODO-1.41 Server invariant for AI fallback idempotency is enforced by deterministic AI reply state and status preconditions.
 - [ ] TODO-1.42 Server invariant for example job idempotency is enforced by per-user example state, deterministic jobs, and status preconditions.
 - [x] TODO-1.43 Server invariant for worry publication push failure is enforced: push failure never rolls back core worry publication.
@@ -134,7 +134,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 ### `worries/{worryId}`
 
 - [x] TODO-2.15 Core publication fields: `authorUid`, `content`, `status: 'active'`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `moderationLogId`, `initialDeliveryBatchId`, `initialDeliveryTargetCount: 5`, `humanDeliveryLimit: 15`, `humanDeliveryCount`, `humanReplyCount`, `hasHumanReply`, `createdAt`, `updatedAt`, `lastDeliveryCreatedAt`.
-- [ ] TODO-2.16 Rematch metadata fields: `lastRematchRunId`, `lastRematchBatchId`, `lastRematchCreatedAt`.
+- [x] TODO-2.16 Rematch metadata fields: `lastRematchRunId`, `lastRematchBatchId`, `lastRematchCreatedAt`.
 - [ ] TODO-2.17 AI fallback fields: `hasAiReply`, `aiReplyId`, `aiFallbackCheckedAt`.
 - [ ] TODO-2.18 Example fields: `isExample`, `exampleSeedId`, `exampleOwnerUid`.
 - [ ] TODO-2.19 Hidden/deleted-author fields: `status: 'hidden' | 'deleted_author'`, `hiddenAt`, `hiddenReason`, `hiddenBy`.
@@ -164,7 +164,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 - [x] TODO-2.27 Core delivery fields: `worryId`, `recipientUid`, `authorUid`, `status: 'active' | 'answered'`, `answeredAt`, `batchId`, `batchRound: 0`, `slotIndex`, `selectionType: 'matched' | 'random'`, `matchOverlapCount`, `matchCategoriesSnapshot`, `recipientInterestsSnapshot`, `recipientGenderSnapshot`, `recipientHelpedCountSnapshot`, `authorGenderSnapshot`, `isAiRecipient: false`, `createdAt`, `updatedAt`, `answerableUntil?: null`.
 - [x] TODO-2.28 Delivery read-state field: `readAt` lives under `users/{recipientUid}/deliveryReadStates/{deliveryId}`, not on `deliveries/{deliveryId}`.
 - [x] TODO-2.29 Pass fields: `status: 'passed'`, `passedAt`.
-- [ ] TODO-2.30 Rematch delivery fields: `batchRound: 1 | 2`, `rematchEligibleAfter`, `createdByRematchRunId`.
+- [x] TODO-2.30 Rematch delivery fields: `batchRound: 1 | 2`, `rematchEligibleAfter`, `createdByRematchRunId`.
 - [ ] TODO-2.31 Example delivery fields: `isExample`, `exampleSeedId`.
 - [ ] TODO-2.32 Hidden delivery fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`.
 - [x] TODO-2.33 Source of truth: who may answer a worry and answer feed state.
@@ -226,12 +226,12 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 ### Optional Operational Collections
 
-- [ ] TODO-2.73 `jobLocks/{jobName}`: `ownerId`, `lockedUntil`, `lastStartedAt`, `lastCompletedAt`, `updatedAt`; server only; prevents overlapping jobs.
-- [ ] TODO-2.74 `rematchRuns/{runId}`: `startedAt`, `completedAt`, `status`, `dueCount`, `processedCount`, `createdDeliveryCount`, `error`; server/admin only.
+- [x] TODO-2.73 `jobLocks/{jobName}`: `ownerId`, `lockedUntil`, `lastStartedAt`, `lastCompletedAt`, `updatedAt`; server only; prevents overlapping jobs.
+- [x] TODO-2.74 `rematchRuns/{runId}`: `startedAt`, `completedAt`, `status`, `dueCount`, `processedCount`, `createdDeliveryCount`, `error`; server/admin only.
 - [x] TODO-2.75 `deliveryBatches/{batchId}` Round 0 fields:
   - Fields: `worryId`, `batchRound: 0`, `createdAt`, `targetCount`, `createdCount`, `matchedCount`, `randomCount`, `reason: 'initial'`.
   - Round 0 batch is the initial 5-delivery batch and has no source batch.
-- [ ] TODO-2.76 `deliveryBatches/{batchId}` rematch lineage fields:
+- [x] TODO-2.76 `deliveryBatches/{batchId}` rematch lineage fields:
   - Required for rematch correctness once Slice 8 is implemented.
   - Fields: `worryId`, `batchRound: 1 | 2`, `sourceBatchId`, `sourceBatchRound: 0 | 1`, `createdByRunId`, `createdAt`, `targetCount`, `createdCount`, `matchedCount`, `randomCount`, `reason: 'rematch_timeout'`.
   - Round 1 batch references Round 0 as `sourceBatchId`/`sourceBatchRound`.
@@ -328,7 +328,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Internal Jobs
 
-- [ ] TODO-3.53 `POST /api/internal/rematch-due-deliveries`: internal auth; body `{ now?: string, dryRun?: boolean, limit?: number }`; scan worries/deliveries that still need 8-hour additive exposure according to PRD; create linear Round 1/Round 2 additive delivery batches for new recipients; never change old active deliveries merely because 8 hours passed; do not own immediate pass replacement delivery creation; cap total human deliveries at 15; use job lock and deterministic IDs.
+- [x] TODO-3.53 `POST /api/internal/rematch-due-deliveries`: internal auth; body `{ now?: string, dryRun?: boolean, limit?: number }`; scan worries/deliveries that still need 8-hour additive exposure according to PRD; create linear Round 1/Round 2 additive delivery batches for new recipients; never change old active deliveries merely because 8 hours passed; do not own immediate pass replacement delivery creation; cap total human deliveries at 15; use job lock and deterministic IDs.
 - [ ] TODO-3.54 `POST /api/internal/create-ai-fallbacks`: internal auth; body `{ now?: string, dryRun?: boolean, limit?: number }`; create one moderated AI reply only after 24h, human delivery limit exhausted, zero human replies, and no existing AI reply.
 - [ ] TODO-3.55 `POST /api/internal/create-example-feedbacks`: internal auth; body `{ now?: string, limit?: number }`; processes delayed example likes after 5-15 minutes.
 - [ ] TODO-3.56 Seed/admin utility endpoint: avoid unless strictly necessary. Recommended default is seed `exampleWorrySeeds` by script/manual Firebase import, not public API.
@@ -391,15 +391,15 @@ All error responses should use `{ error: { code: string, message: string, detail
 ### `pass` / `rematch`
 
 - [x] TODO-4.35 Purpose: user pass changes delivery status, redelivery eligibility, and immediate replacement attempt.
-- [ ] TODO-4.36 Purpose: internal rematch creates additive delivery batches.
+- [x] TODO-4.36 Purpose: internal rematch creates additive delivery batches.
 - [x] TODO-4.37 Public interface: `passDelivery({ uid, deliveryId })`.
-- [ ] TODO-4.38 Public interface: `rematchDueDeliveries({ now, limit })`.
+- [x] TODO-4.38 Public interface: `rematchDueDeliveries({ now, limit })`.
 - [x] TODO-4.39 Files for pass: `src/services/deliveries/passDelivery.ts`, answer feed UI, `server.ts`.
-- [ ] TODO-4.40 Files for rematch: `src/services/rematch/rematchDueDeliveries.ts`, `src/services/rematch/policy.ts`, `src/services/worryPublication/policy/recipientSelection.ts`, `server.ts`.
+- [x] TODO-4.40 Files for rematch: `src/services/rematch/rematchDueDeliveries.ts`, `src/services/rematch/policy.ts`, `src/services/worryPublication/policy/recipientSelection.ts`, `server.ts`.
 - [x] TODO-4.41 Tests for pass: delivery transition, immediate replacement success and shortfall, redelivery exclusion metadata, counter decrement/increment behavior, replacement push failure, and idempotency.
-- [ ] TODO-4.42 Tests for rematch: no redelivery, job idempotency, additive delivery batches, and counters.
+- [x] TODO-4.42 Tests for rematch: no redelivery, job idempotency, additive delivery batches, and counters.
 - [x] TODO-4.43 Deletion test for pass: deleting pass module removes pass action without affecting reply publication.
-- [ ] TODO-4.44 Deletion test for rematch: deleting rematch module stops additive delivery batches without affecting reply publication or existing recipients' ability to answer.
+- [x] TODO-4.44 Deletion test for rematch: deleting rematch module stops additive delivery batches without affecting reply publication or existing recipients' ability to answer.
 
 ### `aiFallback`
 
@@ -516,11 +516,11 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 8: Rematch job
 
-- [ ] TODO-5.67 Goal: additive 8-hour rematch creates more delivery opportunities without expiring existing active deliveries.
-- [ ] TODO-5.68 Files: `src/services/rematch/*`, `src/services/worryPublication/policy/recipientSelection.ts`, `server.ts`.
-- [ ] TODO-5.69 API/job: `POST /api/internal/rematch-due-deliveries`.
-- [ ] TODO-5.70 Data: `rematchRuns`, `jobLocks`, required `deliveryBatches/{batchId}` lineage, new delivery batch IDs/rounds, and worry metadata such as `lastRematchRunId`, `lastRematchBatchId`, `lastRematchCreatedAt`.
-- [ ] TODO-5.71 Semantics:
+- [x] TODO-5.67 Goal: additive 8-hour rematch creates more delivery opportunities without expiring existing active deliveries.
+- [x] TODO-5.68 Files: `src/services/rematch/*`, `src/services/worryPublication/policy/recipientSelection.ts`, `server.ts`.
+- [x] TODO-5.69 API/job: `POST /api/internal/rematch-due-deliveries`.
+- [x] TODO-5.70 Data: `rematchRuns`, `jobLocks`, required `deliveryBatches/{batchId}` lineage, new delivery batch IDs/rounds, and worry metadata such as `lastRematchRunId`, `lastRematchBatchId`, `lastRematchCreatedAt`.
+- [x] TODO-5.71 Semantics:
   - Rematch is evaluated per worry and per round, not independently for every historical batch.
   - Rematch rounds are linear per worry: Round 0 -> Round 1 -> Round 2. There is no branching rematch tree.
   - Round 0 is the initial 5-delivery batch.
@@ -540,7 +540,7 @@ All error responses should use `{ error: { code: string, message: string, detail
   - Passed users are excluded from future delivery batches for the same worry.
   - Answered users are already associated with the worry and must not receive duplicate delivery.
   - Never exceed `worries.humanDeliveryLimit == 15` total human deliveries across all batches.
-- [ ] TODO-5.72 Rematch batch sizing:
+- [x] TODO-5.72 Rematch batch sizing:
   - Initial publication always creates exactly 5 deliveries: 4 matched + 1 random.
   - A rematch run attempts to create another batch of up to 5 deliveries when PRD conditions are met.
   - Replacement random-slot policy must follow PRD 8.5 exactly for the source batch.
@@ -554,11 +554,11 @@ All error responses should use `{ error: { code: string, message: string, detail
   - Partial-batch random policy is still governed by PRD 8.5: include one random replacement only when the source batch random-slot recipient has not answered and `targetSize >= 1`; otherwise all partial replacements are matched.
   - Round 1 batch must reference Round 0 as `sourceBatchId`/`sourceBatchRound`; Round 2 batch must reference Round 1 as `sourceBatchId`/`sourceBatchRound`.
   - Affected files: `src/services/rematch/policy.ts`, recipient selection tests.
-- [ ] TODO-5.73 ActiveDeliveryCount strategy: `users/{uid}.activeDeliveryCount` is a required transactionally maintained server-owned counter from Slice 1. Rematch must check each selected new recipient still has `activeDeliveryCount < 10` inside the same transaction that creates deliveries, increment new recipients exactly once, and never decrement old recipients merely because additive rematch created deliveries elsewhere.
-- [ ] TODO-5.74 Tests: due selection, additive old-delivery behavior, partial/full batch random rules, exclusions, cap, idempotency, job lock, counter correctness, and no dependency on Phase 8 to create immediate pass replacements.
-- [ ] TODO-5.75 Manual verification: simulate timestamps and run job twice; old recipients can still answer after new deliveries are created.
-- [ ] TODO-5.76 Explicit non-goals: AI fallback creation.
-- [ ] TODO-5.77 Deletion test: deleting rematch job leaves pass/reply working but no additive delivery batches.
+- [x] TODO-5.73 ActiveDeliveryCount strategy: `users/{uid}.activeDeliveryCount` is a required transactionally maintained server-owned counter from Slice 1. Rematch must check each selected new recipient still has `activeDeliveryCount < 10` inside the same transaction that creates deliveries, increment new recipients exactly once, and never decrement old recipients merely because additive rematch created deliveries elsewhere.
+- [x] TODO-5.74 Tests: due selection, additive old-delivery behavior, partial/full batch random rules, exclusions, cap, idempotency, job lock, counter correctness, and no dependency on Phase 8 to create immediate pass replacements.
+- [x] TODO-5.75 Manual verification: simulate timestamps and run job twice; old recipients can still answer after new deliveries are created.
+- [x] TODO-5.76 Explicit non-goals: AI fallback creation.
+- [x] TODO-5.77 Deletion test: deleting rematch job leaves pass/reply working but no additive delivery batches.
 
 ### Slice 9: AI fallback
 
@@ -661,7 +661,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 ## 6. Matching Policy Detail
 
 - [x] TODO-6.1 Initial publication candidate eligibility: user exists, not author, not deleted, not inactive if `lastActive` remains a product signal, valid `gender`, valid `interests`, active delivery count `< 10`, has not already received this worry, push token not required. Missing `deleted` is not deleted; exclude only when `deleted === true` or the final explicit inactive/deleted marker is present.
-- [ ] TODO-6.2 Rematch candidate eligibility: user exists, not author, not deleted or inactive, valid `gender`, valid `interests`, active delivery count `< 10`, has not previously received this worry, and is not passed or answered for this worry. Missing `deleted` is not deleted; exclude only when `deleted === true` or the final explicit inactive/deleted marker is present.
+- [x] TODO-6.2 Rematch candidate eligibility: user exists, not author, not deleted or inactive, valid `gender`, valid `interests`, active delivery count `< 10`, has not previously received this worry, and is not passed or answered for this worry. Missing `deleted` is not deleted; exclude only when `deleted === true` or the final explicit inactive/deleted marker is present.
 - [x] TODO-6.3 Ranking for matched slots: category overlap desc, `helpedCount` desc, same gender as author first, random tie-break after those.
 - [x] TODO-6.4 Random slot: same eligibility constraints, ignores overlap/helpedCount/gender ranking, no duplicate with matched slots.
 - [x] TODO-6.5 Fallback if fewer than 5 eligible users:
@@ -670,8 +670,8 @@ All error responses should use `{ error: { code: string, message: string, detail
   - Tradeoff: small test/user pools may be unable to publish until enough users exist.
   - Consequence: no partial worry, batch, delivery, counter, or push state is written.
   - Affected files: recipient selection tests, server publication error handling, API tests, and local seed/test-user setup.
-- [ ] TODO-6.6 Rematch exclusions: author, deleted/inactive users, users with `activeDeliveryCount >= 10`, all previous recipients for same worry, passed users, answered users; respect total 15 human delivery cap.
-- [ ] TODO-6.7 Rematch batch sizing:
+- [x] TODO-6.6 Rematch exclusions: author, deleted/inactive users, users with `activeDeliveryCount >= 10`, all previous recipients for same worry, passed users, answered users; respect total 15 human delivery cap.
+- [x] TODO-6.7 Rematch batch sizing:
   - Initial publication is fixed at exactly 5 deliveries: 4 matched + 1 random.
   - Later rematch batches are additive and may be partial.
   - Rematch rounds are linear per worry: Round 0 -> Round 1 -> Round 2.
@@ -694,16 +694,16 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-6.10 ActiveDeliveryCount publication increment: initial publication checks selected recipients have `activeDeliveryCount < 10` inside the creation transaction and increments selected recipients exactly once.
 - [x] TODO-6.11 ActiveDeliveryCount reply decrement: replying transitions an active delivery to `answered` and decrements the recipient's `activeDeliveryCount` exactly once.
 - [x] TODO-6.12 ActiveDeliveryCount pass decrement: passing transitions an active delivery to `passed` and decrements the passer's `activeDeliveryCount` exactly once.
-- [ ] TODO-6.13 ActiveDeliveryCount rematch semantics: old active deliveries remain counted after additive rematch, rematch checks new recipients have `activeDeliveryCount < 10` inside the creation transaction, and rematch increments only newly created delivery recipients.
+- [x] TODO-6.13 ActiveDeliveryCount rematch semantics: old active deliveries remain counted after additive rematch, rematch checks new recipients have `activeDeliveryCount < 10` inside the creation transaction, and rematch increments only newly created delivery recipients.
 - [ ] TODO-6.14 ActiveDeliveryCount hidden decrement: hiding an active delivery decrements the recipient's `activeDeliveryCount` exactly once.
 - [x] TODO-6.15 ActiveDeliveryCount non-decrement events: read marking, push failure, and additive rematch creation elsewhere do not decrement `activeDeliveryCount`.
-- [ ] TODO-6.16 ActiveDeliveryCount idempotency: deterministic delivery IDs, status preconditions, and transaction reads prevent double-increment and double-decrement on retry paths.
+- [x] TODO-6.16 ActiveDeliveryCount idempotency: deterministic delivery IDs, status preconditions, and transaction reads prevent double-increment and double-decrement on retry paths.
 - [x] TODO-6.17 ActiveDeliveryCount rules protection: Firestore rules forbid all client writes to `activeDeliveryCount`.
 - [x] TODO-6.18 Initial matching tests: exactly 5 initial deliveries, 4 matched + 1 random, fewer-than-5 failure with no partial writes, tie-breaks, active delivery limit, and initial redelivery prevention.
-- [ ] TODO-6.19 Rematch matching tests: duplicate-recipient exclusion, additive rematch cap 15, passed/answered exclusion, and PRD 8.5 random-slot behavior.
+- [x] TODO-6.19 Rematch matching tests: duplicate-recipient exclusion, additive rematch cap 15, passed/answered exclusion, and PRD 8.5 random-slot behavior.
 - [x] TODO-6.20 Counter tests for publication: publish increments selected recipients, rejects recipients with `activeDeliveryCount >= 10`, and does not change counters when fewer than 5 eligible recipients exist.
 - [ ] TODO-6.21 Counter tests for reply/pass/hidden: answered, passed, and hidden active deliveries decrement exactly once.
-- [ ] TODO-6.22 Counter tests for rematch/idempotency: rematch increments only new recipients, read marking/push failure/additive rematch elsewhere do not decrement, and retries never double-increment or double-decrement.
+- [x] TODO-6.22 Counter tests for rematch/idempotency: rematch increments only new recipients, read marking/push failure/additive rematch elsewhere do not decrement, and retries never double-increment or double-decrement.
 - [x] TODO-6.23 Immediate pass replacement eligibility:
   - Replacement recipient must not be the passing user, worry author, any previous recipient of the same worry, any previous passer, any user who already replied, a deleted/inactive user, a user at `activeDeliveryCount >= 10`, a user who would exceed `worries.humanDeliveryLimit`, or any user excluded by normal matching policy.
   - Missing `deleted` is treated as not deleted until Phase 14 introduces the final deletion lifecycle.
@@ -729,7 +729,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-7.8 Feedback `feedbacks/{feedbackId}` rules: publisher reads own feedback, replier reads only likes and like comments, and writes are server only.
 - [ ] TODO-7.9 Admin/hidden rules: hidden/admin-only state is filtered in read models and denied by rules where possible.
 - [x] TODO-7.10 Initial log rules: `moderationLogs` and `pushLogs` client reads/writes denied.
-- [ ] TODO-7.11 Rematch operational collection rules: `jobLocks` and `rematchRuns` client reads/writes denied when introduced.
+- [x] TODO-7.11 Rematch operational collection rules: `jobLocks` and `rematchRuns` client reads/writes denied when introduced.
 - [ ] TODO-7.12 AI fallback operational collection rules: `aiFallbackRuns` client reads/writes denied when introduced.
 - [ ] TODO-7.13 Example operational collection rules: `exampleWorrySeeds` and scheduled/example feedback jobs client reads/writes denied when introduced.
 - [x] TODO-7.14 Legacy `letters` transition rules: deny worry create and delete while preserving only minimum legacy read/reply paths needed during migration.
@@ -761,7 +761,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-9.3 Input validator trims, rejects empty, rejects >1000, allows short content.
 - [x] TODO-9.4 Recipient selection exactly 5, 4 matched + 1 random, and returns a publish-blocking shortfall when fewer than 5 eligible recipients exist.
 - [x] TODO-9.5 Active delivery `< 10`, author/deleted/existing-recipient exclusion, and missing `deleted` treated as not deleted.
-- [ ] TODO-9.6 Rematch additive batch sizing, PRD 8.5 random-slot replacement semantics, duplicate-recipient exclusion, and 15 cap.
+- [x] TODO-9.6 Rematch additive batch sizing, PRD 8.5 random-slot replacement semantics, duplicate-recipient exclusion, and 15 cap.
 - [x] TODO-9.7 Feedback visibility and helpedCount eligibility.
 
 ### Server Use-Case Tests
@@ -789,7 +789,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-9.25 Account deletion API rejects missing/invalid auth and ignores body-supplied uid.
 - [ ] TODO-9.26 Deleted users are blocked from all user endpoints; users with a missing `deleted` field are not blocked before Phase 14.
 - [ ] TODO-9.27 API responses use correct status/error shape for validation, ownership, conflicts, and provider failures.
-- [ ] TODO-9.28 Rematch internal job requires internal auth.
+- [x] TODO-9.28 Rematch internal job requires internal auth.
 - [ ] TODO-9.29 AI fallback internal job requires internal auth.
 - [ ] TODO-9.30 Example feedback internal job requires internal auth.
 
@@ -798,7 +798,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.31 No client direct source-of-truth writes to worries/deliveries/initial batches/logs.
 - [x] TODO-9.32 No client direct source-of-truth writes to replies.
 - [x] TODO-9.33 No client direct source-of-truth writes to feedbacks.
-- [ ] TODO-9.34 No client direct source-of-truth writes to operational collections.
+- [x] TODO-9.34 No client direct source-of-truth writes to operational collections.
 - [x] TODO-9.35 Own profile safe fields allowed; server-owned fields denied.
 - [x] TODO-9.36 Client writes to `users/{uid}.activeDeliveryCount` are denied.
 - [x] TODO-9.37 Recipient can read own delivery and allowed worry surface.
@@ -812,7 +812,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.42 Answered deliveries are excluded from answer feed.
 - [x] TODO-9.43 Passed deliveries are excluded from answer feed.
 - [ ] TODO-9.44 Hidden deliveries are excluded from answer feed.
-- [ ] TODO-9.45 Existing active delivery remains visible and answerable after rematch creates additional deliveries.
+- [x] TODO-9.45 Existing active delivery remains visible and answerable after rematch creates additional deliveries.
 - [x] TODO-9.46 My worries list includes own worries.
 - [x] TODO-9.47 My worries list includes unread reply count after read state exists.
 - [x] TODO-9.48 Replies written by me shown in My Page.
@@ -821,32 +821,32 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Job / Idempotency Tests
 
-- [ ] TODO-9.51 Rematch job repeat does not duplicate deliveries.
-- [ ] TODO-9.52 Job lock prevents overlapping runs.
-- [ ] TODO-9.53 No same user redelivery for same worry.
-- [ ] TODO-9.54 Round 1 is created from Round 0 after 8 hours.
-- [ ] TODO-9.55 Round 2 is created from Round 1 after another 8 hours.
-- [ ] TODO-9.56 No Round 3 human rematch is created.
-- [ ] TODO-9.57 Historical earlier batches do not independently spawn extra branches.
-- [ ] TODO-9.58 Round 1 references Round 0 as source batch.
-- [ ] TODO-9.59 Round 2 references Round 1 as source batch.
-- [ ] TODO-9.60 Rematch creates additional deliveries without changing old delivery status.
-- [ ] TODO-9.61 PRD 8.5 random-slot policy is evaluated against the source batch, not the whole worry and not every historical batch.
-- [ ] TODO-9.62 Rematch creates matched-only replacements when the source batch's random-slot recipient has already answered.
-- [ ] TODO-9.63 Rematch creates exactly one random replacement when `targetSize >= 1` and the source batch's random-slot recipient has not answered.
-- [ ] TODO-9.64 A user who already received the worry is excluded from later batches.
-- [ ] TODO-9.65 Passed user is excluded from later batches.
-- [ ] TODO-9.66 Answered user is excluded from later batches.
-- [ ] TODO-9.67 Total human delivery count never exceeds 15.
-- [ ] TODO-9.68 Existing active deliveries from previous rounds remain answerable after later rounds are created.
-- [ ] TODO-9.69 `activeDeliveryCount` is not decremented merely because rematch occurred.
+- [x] TODO-9.51 Rematch job repeat does not duplicate deliveries.
+- [x] TODO-9.52 Job lock prevents overlapping runs.
+- [x] TODO-9.53 No same user redelivery for same worry.
+- [x] TODO-9.54 Round 1 is created from Round 0 after 8 hours.
+- [x] TODO-9.55 Round 2 is created from Round 1 after another 8 hours.
+- [x] TODO-9.56 No Round 3 human rematch is created.
+- [x] TODO-9.57 Historical earlier batches do not independently spawn extra branches.
+- [x] TODO-9.58 Round 1 references Round 0 as source batch.
+- [x] TODO-9.59 Round 2 references Round 1 as source batch.
+- [x] TODO-9.60 Rematch creates additional deliveries without changing old delivery status.
+- [x] TODO-9.61 PRD 8.5 random-slot policy is evaluated against the source batch, not the whole worry and not every historical batch.
+- [x] TODO-9.62 Rematch creates matched-only replacements when the source batch's random-slot recipient has already answered.
+- [x] TODO-9.63 Rematch creates exactly one random replacement when `targetSize >= 1` and the source batch's random-slot recipient has not answered.
+- [x] TODO-9.64 A user who already received the worry is excluded from later batches.
+- [x] TODO-9.65 Passed user is excluded from later batches.
+- [x] TODO-9.66 Answered user is excluded from later batches.
+- [x] TODO-9.67 Total human delivery count never exceeds 15.
+- [x] TODO-9.68 Existing active deliveries from previous rounds remain answerable after later rounds are created.
+- [x] TODO-9.69 `activeDeliveryCount` is not decremented merely because rematch occurred.
 - [ ] TODO-9.70 `activeDeliveryCount` is decremented only on answered/passed/hidden.
 - [x] TODO-9.71 Read marking and push failure do not decrement `activeDeliveryCount`.
-- [ ] TODO-9.72 Rematch increments `activeDeliveryCount` for newly created delivery recipients.
-- [ ] TODO-9.73 Publication/rematch reject recipients with `activeDeliveryCount >= 10` inside the creation transaction.
+- [x] TODO-9.72 Rematch increments `activeDeliveryCount` for newly created delivery recipients.
+- [x] TODO-9.73 Publication/rematch reject recipients with `activeDeliveryCount >= 10` inside the creation transaction.
 - [x] TODO-9.74 Publication retry paths do not double-increment `activeDeliveryCount`.
 - [ ] TODO-9.75 Reply/pass/hide retry paths do not double-decrement `activeDeliveryCount`.
-- [ ] TODO-9.76 Rematch retry paths do not double-increment or double-decrement `activeDeliveryCount`.
+- [x] TODO-9.76 Rematch retry paths do not double-increment or double-decrement `activeDeliveryCount`.
 - [ ] TODO-9.77 AI fallback only when 24h, delivery cap exhausted, zero human replies, no existing AI.
 - [ ] TODO-9.78 AI fallback does not trigger if any human reply exists, including a reply submitted after 8 hours by an original recipient.
 - [ ] TODO-9.79 AI fallback does not require all original deliveries to expire, because they do not expire.
@@ -871,7 +871,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-9.90 Rejection path: unsafe reply not saved.
 - [ ] TODO-9.91 Rejection path: unsafe feedback comment not saved.
 - [x] TODO-9.92 Pass manual simulation, including immediate replacement success and no-eligible-recipient shortfall.
-- [ ] TODO-9.93 Additive rematch manual simulation, including old active deliveries remaining answerable.
+- [x] TODO-9.93 Additive rematch manual simulation, including old active deliveries remaining answerable.
 - [ ] TODO-9.94 AI fallback manual simulation, including old active deliveries remaining answerable.
 - [ ] TODO-9.95 Notification permission granted/denied behavior.
 - [ ] TODO-9.96 Account deletion blocks future activity.
@@ -893,19 +893,19 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-11.1 Firestore rules complexity:
   - Risk: cross-document read checks are hard to reason about.
   - Mitigation: deterministic delivery IDs and delivery snapshots; rules tests for every read/write surface.
-- [ ] TODO-11.2 Race conditions around active delivery counts:
+- [x] TODO-11.2 Race conditions around active delivery counts:
   - Risk: stale transaction reads or non-idempotent retry paths can exceed 10 or corrupt counters; additive rematch makes the counter more important because old active deliveries remain answerable.
   - Mitigation: transactionally maintained `activeDeliveryCount` from Slice 1, deterministic delivery IDs, status preconditions, and concurrency/idempotency tests. Query-based counts are not allowed as the production eligibility source.
 - [x] TODO-11.3 Additive rematch can accumulate old active deliveries for inactive users:
   - Risk: answer feeds may grow toward the 10-active limit if users ignore worries.
   - Mitigation: enforce `activeDeliveryCount < 10`, provide pass UX, use optional ordering/aging UI for readability, but do not expire answerability unless the PRD changes.
-- [ ] TODO-11.4 Rematch scheduled job idempotency:
+- [x] TODO-11.4 Rematch scheduled job idempotency:
   - Risk: retries duplicate additive delivery batches.
   - Mitigation: job locks, deterministic delivery IDs, previous-recipient exclusion, status preconditions, idempotency tests.
 - [ ] TODO-11.5 Example scheduled job idempotency:
   - Risk: retries duplicate example likes.
   - Mitigation: deterministic jobs, per-user example state, status preconditions, and idempotency tests.
-- [ ] TODO-11.6 Rematch branching from historical batches:
+- [x] TODO-11.6 Rematch branching from historical batches:
   - Risk: if historical batches are scanned independently, rematch can over-create deliveries beyond the intended Round 0 -> Round 1 -> Round 2 flow.
   - Mitigation: required `deliveryBatches` with `sourceBatchId`/`sourceBatchRound`, job idempotency, tests for no branching, and max 15 cap.
 - [ ] TODO-11.7 AI fallback with late human replies:

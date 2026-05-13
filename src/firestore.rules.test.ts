@@ -328,6 +328,21 @@ describe('PRD source-of-truth rules', () => {
     await assertFails(dbFor('author').doc('deliveryBatches/batch1').delete());
   });
 
+  test('rematch operational collections are denied for reads and writes', async () => {
+    await seed('jobLocks/rematchDueDeliveries', { ownerId: 'run1' });
+    await seed('rematchRuns/run1', { status: 'completed' });
+    await assertFails(dbFor('author').doc('jobLocks/rematchDueDeliveries').get());
+    await assertFails(dbFor().doc('jobLocks/rematchDueDeliveries').get());
+    await assertFails(dbFor('author').doc('jobLocks/rematchDueDeliveries').set({ ownerId: 'run2' }));
+    await assertFails(dbFor('author').doc('jobLocks/rematchDueDeliveries').update({ ownerId: 'run2' }));
+    await assertFails(dbFor('author').doc('jobLocks/rematchDueDeliveries').delete());
+    await assertFails(dbFor('author').doc('rematchRuns/run1').get());
+    await assertFails(dbFor().doc('rematchRuns/run1').get());
+    await assertFails(dbFor('author').doc('rematchRuns/run2').set({ status: 'running' }));
+    await assertFails(dbFor('author').doc('rematchRuns/run1').update({ status: 'failed' }));
+    await assertFails(dbFor('author').doc('rematchRuns/run1').delete());
+  });
+
   test('moderationLogs are denied for reads and writes', async () => {
     await seed('moderationLogs/log1', { targetType: 'worry' });
     await assertFails(dbFor('author').doc('moderationLogs/log1').get());

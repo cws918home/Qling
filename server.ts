@@ -19,6 +19,7 @@ import { registerReplyRoutes } from "./src/server/replyRoutes";
 import { registerReadStateRoutes } from "./src/server/readStateRoutes";
 import { registerPassRoutes } from "./src/server/passRoutes";
 import { registerFeedbackRoutes } from "./src/server/feedbackRoutes";
+import { registerRematchRoutes } from "./src/server/rematchRoutes";
 
 // Read client config to get database ID
 const clientConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
@@ -313,6 +314,10 @@ async function startServer() {
    - If good: { "status": "approved" }`, content)
       ).then(result => result.body),
     });
+    registerRematchRoutes(app, {
+      db,
+      messaging,
+    });
   } else {
     app.post('/api/worries/publish', (_req, res) => {
       res.status(500).json({
@@ -361,6 +366,10 @@ async function startServer() {
           message: 'Firebase Admin is not initialized.',
         },
       });
+    });
+    registerRematchRoutes(app, {
+      db: null,
+      messaging: null,
     });
   }
 

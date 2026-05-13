@@ -208,6 +208,14 @@ service cloud.firestore {
       allow read, create, update, delete: if false;
     }
 
+    match /jobLocks/{jobName} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /rematchRuns/{runId} {
+      allow read, create, update, delete: if false;
+    }
+
     match /replies/{replyId} {
       allow read: if isNotDeletedSelf()
         && noReplyDislikeLeak()
