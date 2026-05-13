@@ -2,17 +2,19 @@ import dotenv from "dotenv";
 dotenv.config(); // Explicitly call config
 
 import express from "express";
-import { WORRY_CATEGORIES } from "@midnight-radio/domain";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getAuth } from "firebase-admin/auth";
 import { getMessaging } from "firebase-admin/messaging";
 import fs from "fs";
 import {
   processSimpleModerationResponse,
   processWorryModerationResponse,
 } from "./src/server/moderationResponses";
+import { moderateAndInferWorryCategories } from "./src/server/moderationProvider";
+import { registerWorryRoutes } from "./src/server/worryRoutes";
 
 // Read client config to get database ID
 const clientConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
@@ -62,40 +64,6 @@ function isInvalidPushTokenError(err: unknown): err is Error & { code?: string }
   return err instanceof Error
     && typeof (err as { code?: string }).code === 'string'
     && INVALID_PUSH_TOKEN_ERROR_CODES.has((err as { code?: string }).code as string);
-}
-
-async function moderateAndInferWorryCategories(content: string, strictRetry = false) {
-  const systemInstruction = `You are a moderator and category inference engine for a Korean anonymous worry-sharing app.
-Use ONLY this fixed category vocabulary:
-${WORRY_CATEGORIES.join(', ')}
-
-Decision policy:
-1. Reject ONLY when the text itself is inappropriate, abusive, violent, sexually explicit, hateful, or obvious spam.
-   In that case, return exactly:
-   { "status": "rejected", "reason": "부적절한 표현이 감지되었습니다." }
-
-2. Otherwise, the text is considered acceptable and MUST be approved.
-
-3. For approved text, you MUST return at least one category from the fixed vocabulary above.
-   NEVER return zero categories.
-
-4. If the text is acceptable but category inference is uncertain, ambiguous, too broad, too casual, or does not strongly fit any specific category, choose exactly:
-   ["잡담"]
-   as the fallback.
-
-5. Never fabricate labels outside the fixed vocabulary.
-6. Never include explanations, markdown, or extra text.
-7. Return JSON only.
-8. Approved shape must be exactly:
-   { "status": "approved", "categories": ["카테고리1", "카테고리2", "카테고리3"] }
-9. Categories must be exact vocabulary matches, trimmed, and deduplicated.
-${strictRetry ? '10. This is a retry because the previous answer had invalid JSON or invalid/empty categories.\
-    Do not explain.\
-    Do not reject unless the text is clearly unsafe by Rule 1.\
-    If the text is safe and you are uncertain about the best category, return exactly:\
-    { "status": "approved", "categories": ["잡담"] }' : ''}`;
-
-  return await fetchFromOpenRouter(systemInstruction, content);
 }
 
 async function sendPushNotification(uid: string, title: string, body: string) {
@@ -298,6 +266,24 @@ async function startServer() {
   const PORT = 3000;
 
   app.use(express.json());
+
+  if (getApps().length > 0) {
+    registerWorryRoutes(app, {
+      db,
+      messaging,
+      auth: getAuth(),
+      moderationProvider: moderateAndInferWorryCategories,
+    });
+  } else {
+    app.post('/api/worries/publish', (_req, res) => {
+      res.status(500).json({
+        error: {
+          code: 'firebase_unavailable',
+          message: 'Firebase Admin is not initialized.',
+        },
+      });
+    });
+  }
 
   // API Route for Processing Worries (Filtering + Category Inference)
   app.post("/api/process-worry", async (req, res) => {

@@ -18,7 +18,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 
 ## 1. Target PRD Architecture
 
-- [ ] TODO-1.1 Worry publication mutation boundary is server-owned: browser submits to an authenticated endpoint, never supplies trusted `uid`, and no runtime PRD worry publication path writes `letters` or PRD source-of-truth collections directly from the client.
+- [x] TODO-1.1 Worry publication mutation boundary is server-owned: browser submits to an authenticated endpoint, never supplies trusted `uid`, and no runtime PRD worry publication path writes `letters` or PRD source-of-truth collections directly from the client.
 - [ ] TODO-1.2 Reply publication mutation boundary is server-owned: browser submits by delivery ID to an authenticated endpoint, stored reply ID is deterministic from delivery ID, and no runtime reply publication path creates `letters` replies.
 - [ ] TODO-1.3 Read-state mutation boundary is server-owned: delivery and reply read markers are set only through authenticated endpoints and are not public read receipts.
 - [ ] TODO-1.4 Pass mutation boundary is server-owned: pass status changes, same-worry exclusion, immediate replacement attempt, and `activeDeliveryCount` decrement/increment behavior happen only in an authenticated server transaction or transaction-plus-best-effort-push flow.
@@ -28,7 +28,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.8 Example feedback job mutation boundary is server-owned: example creation and delayed example feedback are performed only by authenticated server endpoints or internal jobs.
 - [ ] TODO-1.9 Account deletion mutation boundary is server-owned: delete requests use authenticated user identity, soft-delete the user, remove tokens, and block future user actions.
 - [ ] TODO-1.10 Final source-of-truth mutation boundary is closed: after legacy removal, the browser cannot create or mutate `worries`, `deliveries`, `replies`, `feedbacks`, `moderationLogs`, `pushLogs`, operational job collections, or legacy `letters`.
-- [ ] TODO-1.11 Answer feed read path reads active `deliveries` for the signed-in recipient plus enough worry display data, with any legacy fallback isolated behind an explicitly named adapter.
+- [x] TODO-1.11 Answer feed read path reads active `deliveries` for the signed-in recipient plus enough worry display data, with any legacy fallback isolated behind an explicitly named adapter.
 - [ ] TODO-1.12 My worries and reply mailbox read paths read `worries` authored by the signed-in user, `replies` for those worries, and replies written by the signed-in user, with legacy fallback isolated behind an explicitly named adapter.
 - [ ] TODO-1.13 My page read path reads own profile, own written replies, and like/comment state visible to the replier.
 - [ ] TODO-1.14 Temporary legacy read fallbacks are removed from runtime code.
@@ -40,17 +40,17 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.20 Firestore ownership for example operational collections is enforced.
 - [ ] TODO-1.21 Final Firestore ownership is enforced: legacy `letters` runtime access is removed or fully denied.
 - [ ] TODO-1.22 Server invariant for auth/deleted-user blocking is enforced for all user endpoints. Compatibility rule: until Phase 14 backfills/sets deletion state, a missing `deleted` field means "not deleted"; only `deleted === true` or another final explicit inactive/deleted marker blocks activity and matching.
-- [ ] TODO-1.23 Server invariant for worry content validation is enforced: trim, non-empty, max 1000.
+- [x] TODO-1.23 Server invariant for worry content validation is enforced: trim, non-empty, max 1000.
 - [ ] TODO-1.24 Server invariant for reply content validation is enforced: trim, non-empty, max 1000.
 - [ ] TODO-1.25 Server invariant for feedback comment validation is enforced: trim, non-empty when submitted, max 1000.
-- [ ] TODO-1.26 Server invariant for worry moderation is enforced before saving user-visible worries.
+- [x] TODO-1.26 Server invariant for worry moderation is enforced before saving user-visible worries.
 - [ ] TODO-1.27 Server invariant for reply moderation is enforced before saving user-visible replies.
 - [ ] TODO-1.28 Server invariant for feedback comment moderation is enforced before saving user-visible feedback comments.
 - [ ] TODO-1.29 Server invariant for AI reply moderation is enforced before saving AI replies.
 - [ ] TODO-1.30 Server invariant for example reply moderation is enforced before saving example replies.
-- [ ] TODO-1.31 Server invariant for category preservation is enforced for worry publication: raw, valid, invalid, and matching categories are stored.
-- [ ] TODO-1.32 Server invariant for initial matching is enforced: exactly 5 initial human deliveries, 4 matched plus 1 random. If fewer than 5 eligible human recipients exist, publication fails without partial worry, batch, delivery, counter, or push state.
-- [ ] TODO-1.33 Server invariant for initial delivery active limit is enforced: selected initial recipients have `activeDeliveryCount < 10`.
+- [x] TODO-1.31 Server invariant for category preservation is enforced for worry publication: raw, valid, invalid, and matching categories are stored.
+- [x] TODO-1.32 Server invariant for initial matching is enforced: exactly 5 initial human deliveries, 4 matched plus 1 random. If fewer than 5 eligible human recipients exist, publication fails without partial worry, batch, delivery, counter, or push state.
+- [x] TODO-1.33 Server invariant for initial delivery active limit is enforced: selected initial recipients have `activeDeliveryCount < 10`.
 - [ ] TODO-1.34 Server invariant for same-worry redelivery exclusion metadata is enforced when users pass or answer.
 - [ ] TODO-1.35 Server invariant for rematch delivery limits is enforced: total human delivery cap `15`, active delivery limit `< 10`, and no redelivery of the same worry to the same user.
 - [ ] TODO-1.36 Server invariant for one reply per delivery is enforced with deterministic reply IDs and idempotency/duplicate-content behavior.
@@ -60,7 +60,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.40 Server invariant for rematch job idempotency is enforced by deterministic IDs, job locks, and status preconditions.
 - [ ] TODO-1.41 Server invariant for AI fallback idempotency is enforced by deterministic AI reply state and status preconditions.
 - [ ] TODO-1.42 Server invariant for example job idempotency is enforced by per-user example state, deterministic jobs, and status preconditions.
-- [ ] TODO-1.43 Server invariant for worry publication push failure is enforced: push failure never rolls back core worry publication.
+- [x] TODO-1.43 Server invariant for worry publication push failure is enforced: push failure never rolls back core worry publication.
 - [ ] TODO-1.44 Server invariant for reply publication push failure is enforced: push failure never rolls back core reply publication.
 - [ ] TODO-1.45 Server invariant for feedback push failure is enforced: push failure never rolls back core feedback mutation.
 - [ ] TODO-1.71 Server invariant for pass replacement push failure is enforced: push failure to the immediate replacement recipient never rolls back the pass transition or replacement delivery creation.
@@ -94,7 +94,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.58 Do not create a new adapter/interface merely because a function call crosses a file boundary.
 - [ ] TODO-1.59 Introduce a seam only when it hides an external dependency, enables deterministic tests, or owns a meaningful policy boundary.
 - [ ] TODO-1.60 Prefer one deep module with a small public interface over many shallow wrappers.
-- [ ] TODO-1.61 Apply deep-module guardrails to `worryPublication`, `moderation`, and `answerFeed`.
+- [x] TODO-1.61 Apply deep-module guardrails to `worryPublication`, `moderation`, and `answerFeed`.
 - [ ] TODO-1.62 Apply deep-module guardrails to `replyPublication`.
 - [ ] TODO-1.63 Apply deep-module guardrails to `replyMailbox` / `myWorries`.
 - [ ] TODO-1.64 Apply deep-module guardrails to `replyFeedback`.
@@ -133,25 +133,25 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 ### `worries/{worryId}`
 
-- [ ] TODO-2.15 Core publication fields: `authorUid`, `content`, `status: 'active'`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `moderationLogId`, `initialDeliveryBatchId`, `initialDeliveryTargetCount: 5`, `humanDeliveryLimit: 15`, `humanDeliveryCount`, `humanReplyCount`, `hasHumanReply`, `createdAt`, `updatedAt`, `lastDeliveryCreatedAt`.
+- [x] TODO-2.15 Core publication fields: `authorUid`, `content`, `status: 'active'`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `moderationLogId`, `initialDeliveryBatchId`, `initialDeliveryTargetCount: 5`, `humanDeliveryLimit: 15`, `humanDeliveryCount`, `humanReplyCount`, `hasHumanReply`, `createdAt`, `updatedAt`, `lastDeliveryCreatedAt`.
 - [ ] TODO-2.16 Rematch metadata fields: `lastRematchRunId`, `lastRematchBatchId`, `lastRematchCreatedAt`.
 - [ ] TODO-2.17 AI fallback fields: `hasAiReply`, `aiReplyId`, `aiFallbackCheckedAt`.
 - [ ] TODO-2.18 Example fields: `isExample`, `exampleSeedId`, `exampleOwnerUid`.
 - [ ] TODO-2.19 Hidden/deleted-author fields: `status: 'hidden' | 'deleted_author'`, `hiddenAt`, `hiddenReason`, `hiddenBy`.
-- [ ] TODO-2.20 Source of truth: canonical worry content and moderation/category state.
-- [ ] TODO-2.21 Read access: author can read; recipient reads via delivery/read model; no public board reads.
-- [ ] TODO-2.22 Write access: server only.
-- [ ] TODO-2.23 Lifecycle: immutable by users after publication; admin can hide by DB/manual server utility.
-- [ ] TODO-2.24 Replaces legacy `letters` worry source-of-truth.
+- [x] TODO-2.20 Source of truth: canonical worry content and moderation/category state.
+- [x] TODO-2.21 Read access: author can read; recipient reads via delivery/read model; no public board reads.
+- [x] TODO-2.22 Write access: server only.
+- [x] TODO-2.23 Lifecycle: immutable by users after publication; admin can hide by DB/manual server utility.
+- [x] TODO-2.24 Replaces legacy `letters` worry source-of-truth.
 
 ### `deliveries/{deliveryId}`
 
-- [ ] TODO-2.25 Deterministic ID recommendation: `worryId_recipientUid`.
+- [x] TODO-2.25 Deterministic ID recommendation: `worryId_recipientUid`.
   - Recommended choice: use deterministic IDs.
   - Why: supports idempotency, prevents duplicate delivery to same user, and enables Firestore rules to prove a recipient may read a worry with `exists(/databases/$(database)/documents/deliveries/$(worryId + '_' + request.auth.uid))`.
   - Tradeoff: if Firestore rules string concatenation or ID length becomes awkward, keep deterministic IDs in code and denormalize feed display fields onto delivery docs.
   - Affected files: `src/services/worryPublication/serverPublication.ts`, `src/services/deliveries/*`, `firestore.rules`.
-- [ ] TODO-2.26 Delivery status type:
+- [x] TODO-2.26 Delivery status type:
   - `type DeliveryStatus = 'active' | 'answered' | 'passed' | 'hidden'`.
   - `active` means the recipient can answer.
   - 8-hour rematching does not change existing `active` deliveries.
@@ -161,17 +161,17 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
   - Read state does not affect answerability.
   - Push failure does not affect answerability.
   - Do not include `rematched` as a normal terminal status. If a future admin/manual flow needs that concept, name and document it separately; normal 8-hour rematch is additive.
-- [ ] TODO-2.27 Core delivery fields: `worryId`, `recipientUid`, `authorUid`, `status: 'active' | 'answered'`, `answeredAt`, `batchId`, `batchRound: 0`, `slotIndex`, `selectionType: 'matched' | 'random'`, `matchOverlapCount`, `matchCategoriesSnapshot`, `recipientInterestsSnapshot`, `recipientGenderSnapshot`, `recipientHelpedCountSnapshot`, `authorGenderSnapshot`, `isAiRecipient: false`, `createdAt`, `updatedAt`, `answerableUntil?: null`.
+- [x] TODO-2.27 Core delivery fields: `worryId`, `recipientUid`, `authorUid`, `status: 'active' | 'answered'`, `answeredAt`, `batchId`, `batchRound: 0`, `slotIndex`, `selectionType: 'matched' | 'random'`, `matchOverlapCount`, `matchCategoriesSnapshot`, `recipientInterestsSnapshot`, `recipientGenderSnapshot`, `recipientHelpedCountSnapshot`, `authorGenderSnapshot`, `isAiRecipient: false`, `createdAt`, `updatedAt`, `answerableUntil?: null`.
 - [ ] TODO-2.28 Read-state field: `readAt`.
 - [ ] TODO-2.29 Pass fields: `status: 'passed'`, `passedAt`.
 - [ ] TODO-2.30 Rematch delivery fields: `batchRound: 1 | 2`, `rematchEligibleAfter`, `createdByRematchRunId`.
 - [ ] TODO-2.31 Example delivery fields: `isExample`, `exampleSeedId`.
 - [ ] TODO-2.32 Hidden delivery fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`.
-- [ ] TODO-2.33 Source of truth: who may answer a worry and answer feed state.
-- [ ] TODO-2.34 Read access: recipient can read own delivery; author may read delivery metadata without read receipts exposed in UI.
-- [ ] TODO-2.35 Write access: server only.
-- [ ] TODO-2.36 Lifecycle: statuses are monotonic except admin hide; `active` transitions only to `answered`, `passed`, or `hidden`. Immediate pass replacement and 8-hour additive rematch create additional deliveries to other users; neither revokes answerability for existing active deliveries.
-- [ ] TODO-2.37 Replaces legacy per-recipient worry `letters`.
+- [x] TODO-2.33 Source of truth: who may answer a worry and answer feed state.
+- [x] TODO-2.34 Read access: recipient can read own delivery; author may read delivery metadata without read receipts exposed in UI.
+- [x] TODO-2.35 Write access: server only.
+- [x] TODO-2.36 Lifecycle: statuses are monotonic except admin hide; `active` transitions only to `answered`, `passed`, or `hidden`. Immediate pass replacement and 8-hour additive rematch create additional deliveries to other users; neither revokes answerability for existing active deliveries.
+- [x] TODO-2.37 Replaces legacy per-recipient worry `letters`.
 
 ### `replies/{replyId}`
 
@@ -204,31 +204,31 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 ### `moderationLogs/{logId}`
 
-- [ ] TODO-2.57 Worry moderation log fields: `targetType: 'worry'`, `targetId`, `uid`, `originalContent`, `status: 'approved' | 'rejected' | 'invalid_provider_response' | 'provider_error'`, `reasonCode`, `userMessage`, `helpMessage`, `rawProviderResponse`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `provider`, `model`, `createdAt`, `updatedAt`.
+- [x] TODO-2.57 Worry moderation log fields: `targetType: 'worry'`, `targetId`, `uid`, `originalContent`, `status: 'approved' | 'rejected' | 'invalid_provider_response' | 'provider_error'`, `reasonCode`, `userMessage`, `helpMessage`, `rawProviderResponse`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `provider`, `model`, `createdAt`, `updatedAt`.
 - [ ] TODO-2.58 Reply moderation log fields: `targetType: 'reply'` plus common moderation fields.
 - [ ] TODO-2.59 Feedback comment moderation log fields: `targetType: 'feedback_comment'` plus common moderation fields.
 - [ ] TODO-2.60 AI reply moderation log fields: `targetType: 'ai_reply'` plus common moderation fields.
 - [ ] TODO-2.61 Example reply moderation log fields: `targetType: 'example_reply'` plus common moderation fields.
-- [ ] TODO-2.62 Reason codes: `abuse_hate_profanity`, `sexual`, `self_harm_suicide`, `crime_violence_victim`, `personal_info`, `spam_promotion`, `empty`, `too_long`, `provider_invalid`.
-- [ ] TODO-2.63 Source of truth: filtering and category audit.
-- [ ] TODO-2.64 Read/write access: server/admin only.
-- [ ] TODO-2.65 Lifecycle: permanent operational log.
+- [x] TODO-2.62 Reason codes: `abuse_hate_profanity`, `sexual`, `self_harm_suicide`, `crime_violence_victim`, `personal_info`, `spam_promotion`, `empty`, `too_long`, `provider_invalid`.
+- [x] TODO-2.63 Source of truth: filtering and category audit.
+- [x] TODO-2.64 Read/write access: server/admin only.
+- [x] TODO-2.65 Lifecycle: permanent operational log.
 
 ### `pushLogs/{pushLogId}`
 
-- [ ] TODO-2.66 New-worry push log fields: `kind: 'new_worry'`, `targetUid`, `sourceId`, `sourceType: 'worry' | 'delivery'`, `status: 'sent' | 'failed' | 'skipped_no_token'`, `tokenDocId`, `tokenSummary`, `errorCode`, `errorMessage`, `createdAt`.
+- [x] TODO-2.66 New-worry push log fields: `kind: 'new_worry'`, `targetUid`, `sourceId`, `sourceType: 'worry' | 'delivery'`, `status: 'sent' | 'failed' | 'skipped_no_token'`, `tokenDocId`, `tokenSummary`, `errorCode`, `errorMessage`, `createdAt`.
 - [ ] TODO-2.67 New-reply push log fields: `kind: 'new_reply'` plus common push log fields.
 - [ ] TODO-2.68 Reply-liked push log fields: `kind: 'reply_liked'`, `sourceType: 'reply' | 'feedback'`, plus common push log fields.
 - [ ] TODO-2.69 Push hardening status fields: `status: 'invalid_token_deleted' | 'skipped_deleted_user'`.
-- [ ] TODO-2.70 Source of truth: push attempt audit.
-- [ ] TODO-2.71 Read/write access: server/admin only.
-- [ ] TODO-2.72 Lifecycle: operational log; optional TTL later.
+- [x] TODO-2.70 Source of truth: push attempt audit.
+- [x] TODO-2.71 Read/write access: server/admin only.
+- [x] TODO-2.72 Lifecycle: operational log; optional TTL later.
 
 ### Optional Operational Collections
 
 - [ ] TODO-2.73 `jobLocks/{jobName}`: `ownerId`, `lockedUntil`, `lastStartedAt`, `lastCompletedAt`, `updatedAt`; server only; prevents overlapping jobs.
 - [ ] TODO-2.74 `rematchRuns/{runId}`: `startedAt`, `completedAt`, `status`, `dueCount`, `processedCount`, `createdDeliveryCount`, `error`; server/admin only.
-- [ ] TODO-2.75 `deliveryBatches/{batchId}` Round 0 fields:
+- [x] TODO-2.75 `deliveryBatches/{batchId}` Round 0 fields:
   - Fields: `worryId`, `batchRound: 0`, `createdAt`, `targetCount`, `createdCount`, `matchedCount`, `randomCount`, `reason: 'initial'`.
   - Round 0 batch is the initial 5-delivery batch and has no source batch.
 - [ ] TODO-2.76 `deliveryBatches/{batchId}` rematch lineage fields:
@@ -252,19 +252,19 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Auth Middleware
 
-- [ ] TODO-3.1 Create `src/server/auth.ts` or `src/services/userAccount/serverAuth.ts`.
-- [ ] TODO-3.2 `requireFirebaseAuth` verifies `Authorization: Bearer <idToken>` with Firebase Admin Auth, attaches authenticated `uid`, never trusts `uid` from request body, and rejects `users/{uid}.deleted == true` for app activity. Missing `deleted` is treated as not deleted until the Phase 14 deletion field exists on all active users.
-- [ ] TODO-3.3 Tests: missing bearer, invalid token, body `uid` ignored, deleted user blocked.
+- [x] TODO-3.1 Create `src/server/auth.ts` or `src/services/userAccount/serverAuth.ts`.
+- [x] TODO-3.2 `requireFirebaseAuth` verifies `Authorization: Bearer <idToken>` with Firebase Admin Auth, attaches authenticated `uid`, never trusts `uid` from request body, and rejects `users/{uid}.deleted == true` for app activity. Missing `deleted` is treated as not deleted until the Phase 14 deletion field exists on all active users.
+- [x] TODO-3.3 Tests: missing bearer, invalid token, body `uid` ignored, deleted user blocked.
 
 ### Worry Publication: `POST /api/worries/publish`
 
-- [ ] TODO-3.4 Request body: `{ content: string }`.
-- [ ] TODO-3.5 Auth: signed-in, not deleted, onboarded.
-- [ ] TODO-3.6 Server validation: trim, non-empty, max 1000.
-- [ ] TODO-3.7 Transaction boundary: moderation may run before transaction; transaction creates moderation log, worry, the initial Round 0 `deliveryBatches/{batchId}`, exactly 5 Round 0 deliveries, checks each selected recipient still has `activeDeliveryCount < 10`, increments each recipient's `activeDeliveryCount`, stores the Round 0 batch ID on `worries.initialDeliveryBatchId`, and fails without partial writes if fewer than 5 eligible recipients exist or any selected recipient no longer qualifies; push happens after commit; push logs happen after attempts.
-- [ ] TODO-3.8 Response: `200 { status: 'published', worryId, deliveryIds, moderationLogId }` or `200 { status: 'rejected', reasonCode, userMessage, helpMessage?, moderationLogId }`.
-- [ ] TODO-3.9 Idempotency: optional `Idempotency-Key`; if not implemented in Slice 1, document duplicate submissions as possible and keep UI submit disabled while pending.
-- [ ] TODO-3.10 Tests: auth, validation, rejected moderation creates no worry/deliveries/batch, fewer than 5 eligible recipients creates no worry/deliveries/batch/counter changes, approved creates a Round 0 batch plus exactly 5 deliveries with 4/1 selection, push failure warning/log only.
+- [x] TODO-3.4 Request body: `{ content: string }`.
+- [x] TODO-3.5 Auth: signed-in, not deleted, onboarded.
+- [x] TODO-3.6 Server validation: trim, non-empty, max 1000.
+- [x] TODO-3.7 Transaction boundary: moderation may run before transaction; transaction creates moderation log, worry, the initial Round 0 `deliveryBatches/{batchId}`, exactly 5 Round 0 deliveries, checks each selected recipient still has `activeDeliveryCount < 10`, increments each recipient's `activeDeliveryCount`, stores the Round 0 batch ID on `worries.initialDeliveryBatchId`, and fails without partial writes if fewer than 5 eligible recipients exist or any selected recipient no longer qualifies; push happens after commit; push logs happen after attempts.
+- [x] TODO-3.8 Response: `200 { status: 'published', worryId, deliveryIds, moderationLogId }` or `200 { status: 'rejected', reasonCode, userMessage, helpMessage?, moderationLogId }`.
+- [x] TODO-3.9 Idempotency: optional `Idempotency-Key`; if not implemented in Slice 1, document duplicate submissions as possible and keep UI submit disabled while pending.
+- [x] TODO-3.10 Tests: auth, validation, rejected moderation creates no worry/deliveries/batch, fewer than 5 eligible recipients creates no worry/deliveries/batch/counter changes, approved creates a Round 0 batch plus exactly 5 deliveries with 4/1 selection, push failure warning/log only.
 
 ### Answer Feed Read State: `POST /api/deliveries/:deliveryId/read`
 
@@ -338,28 +338,28 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### `worryPublication`
 
-- [ ] TODO-4.1 Purpose: publish a moderated worry and create initial deliveries.
-- [ ] TODO-4.2 Public interface: `publishWorryOnServer({ authorUid, content, idempotencyKey? })`.
-- [ ] TODO-4.3 Internal dependencies: moderation, recipient selection, Firestore Admin adapter, push service, clock/id factory.
-- [ ] TODO-4.4 Files to create/update: `src/services/worryPublication/serverPublication.ts`, `serverFirestore.ts`, `policy/recipientSelection.ts`, `adapters/http.ts`, `productionFactory.ts`, `types.ts`, `packages/domain/src/index.ts`, `server.ts`.
-- [ ] TODO-4.5 Tests: `serverPublication.test.ts`, recipient selection tests, production factory tests, publish API tests.
-- [ ] TODO-4.6 Deletion test: deleting `serverPublication.ts` and route binding removes all PRD publication behavior; client cannot recreate it through Firestore.
+- [x] TODO-4.1 Purpose: publish a moderated worry and create initial deliveries.
+- [x] TODO-4.2 Public interface: `publishWorryOnServer({ authorUid, content, idempotencyKey? })`.
+- [x] TODO-4.3 Internal dependencies: moderation, recipient selection, Firestore Admin adapter, push service, clock/id factory.
+- [x] TODO-4.4 Files to create/update: `src/services/worryPublication/serverPublication.ts`, `serverFirestore.ts`, `policy/recipientSelection.ts`, `adapters/http.ts`, `productionFactory.ts`, `types.ts`, `packages/domain/src/index.ts`, `server.ts`.
+- [x] TODO-4.5 Tests: `serverPublication.test.ts`, recipient selection tests, production factory tests, publish API tests.
+- [x] TODO-4.6 Deletion test: deleting `serverPublication.ts` and route binding removes all PRD publication behavior; client cannot recreate it through Firestore.
 
 ### `moderation`
 
-- [ ] TODO-4.7 Purpose: normalize provider output, map reason codes/messages, preserve category evidence.
-- [ ] TODO-4.8 Public interface: `moderateWorry`, `moderateReply`, `moderateFeedbackComment`, `moderateAiReply`, `normalizeWorryModeration`.
-- [ ] TODO-4.9 Files: `src/services/moderation/normalize.ts`, `src/server/moderationResponses.ts`, optional `reasonCodes.ts`, provider prompts in `server.ts`.
-- [ ] TODO-4.10 Tests: normalization, server response processing, malformed provider responses, high-risk help message.
-- [ ] TODO-4.11 Deletion test: removing moderation module should make APIs fail closed, not save unmoderated content.
+- [x] TODO-4.7 Purpose: normalize provider output, map reason codes/messages, preserve category evidence.
+- [x] TODO-4.8 Public interface: `moderateWorry`, `moderateReply`, `moderateFeedbackComment`, `moderateAiReply`, `normalizeWorryModeration`.
+- [x] TODO-4.9 Files: `src/services/moderation/normalize.ts`, `src/server/moderationResponses.ts`, optional `reasonCodes.ts`, provider prompts in `server.ts`.
+- [x] TODO-4.10 Tests: normalization, server response processing, malformed provider responses, high-risk help message.
+- [x] TODO-4.11 Deletion test: removing moderation module should make APIs fail closed, not save unmoderated content.
 
 ### `homeWorryFeed` / `answerFeed`
 
-- [ ] TODO-4.12 Purpose: client read model for `답변하기`.
-- [ ] TODO-4.13 Public interface: `useAnswerFeed({ user })` returns deliveries joined with worry display fields.
-- [ ] TODO-4.14 Files: update or rename `src/services/homeWorryFeed/*`; create `src/services/answerFeed/*` if clearer; keep temporary `legacyLettersFallback.ts`.
-- [ ] TODO-4.15 Tests: active deliveries, hidden/answered/passed exclusions, additive rematch leaves old active deliveries visible and answerable, legacy fallback isolation.
-- [ ] TODO-4.16 Deletion test: deleting legacy fallback does not affect new delivery feed.
+- [x] TODO-4.12 Purpose: client read model for `답변하기`.
+- [x] TODO-4.13 Public interface: `useAnswerFeed({ user })` returns deliveries joined with worry display fields.
+- [x] TODO-4.14 Files: update or rename `src/services/homeWorryFeed/*`; create `src/services/answerFeed/*` if clearer; keep temporary `legacyLettersFallback.ts`.
+- [x] TODO-4.15 Tests: active deliveries, hidden/answered/passed exclusions, additive rematch leaves old active deliveries visible and answerable, legacy fallback isolation.
+- [x] TODO-4.16 Deletion test: deleting legacy fallback does not affect new delivery feed.
 
 ### `replyPublication`
 
@@ -429,17 +429,17 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 1: Server-owned worry publication
 
-- [ ] TODO-5.1 Goal: publish worry through authenticated server endpoint, preserving moderation/category evidence and creating the initial Round 0 delivery batch plus exactly 5 initial deliveries. Strict policy: if fewer than 5 eligible human recipients exist, publication fails with no partial state.
-- [ ] TODO-5.2 Files to inspect: `docs/PRD.md`, `src/App.tsx`, `server.ts`, `firestore.rules`, `packages/domain/src/index.ts`, `src/services/worryPublication/*`, `src/services/homeWorryFeed/*`, `src/services/moderation/*`, `src/server/moderationResponses.ts`.
-- [ ] TODO-5.3 Files to modify/create: server publication and Firestore Admin adapter under `src/services/worryPublication`, `server.ts` auth and `POST /api/worries/publish`, client wrapper in `adapters/http.ts`, production factory, home/answer feed, domain match types.
-- [ ] TODO-5.4 Data model changes: add `worries`, `deliveries`, required `deliveryBatches` for Round 0 lineage, `moderationLogs`, `pushLogs`; keep legacy `letters`.
-- [ ] TODO-5.5 API changes: new publish endpoint; `/api/process-worry`, `/api/notify-new-worry`, and `/api/schedule-bot-reply` become legacy/internal-to-be-removed paths.
-- [ ] TODO-5.6 UI/read-path changes: `App.tsx#publishWorry` calls endpoint and shows `고민이 전달되었어요!`; answer feed reads new deliveries first with temporary `letters` fallback.
-- [ ] TODO-5.7 Firestore rules dependency: runtime app code no longer performs PRD worry publication through direct Firestore writes in this slice; full Firestore rules denial for new PRD collections is completed in Slice 2.
-- [ ] TODO-5.8 Tests: moderation normalization, recipient selection exactly 5 and 4/1, fewer-than-5 eligible recipient failure with no partial writes, server publication transaction creates `deliveryBatches/{batchId}` with `batchRound: 0` and no source batch, API auth/body validation, feed read model with fallback.
-- [ ] TODO-5.9 Manual verification: publish worry; verify one `worries` doc, five `deliveries`, one moderation log, push logs; recipient sees delivery without push permission.
-- [ ] TODO-5.10 Explicit non-goals: no reply migration, no pass/rematch/AI/examples, no bottom-tab rebuild.
-- [ ] TODO-5.11 Deletion test: if server publish route/module is removed, browser cannot publish PRD worries by direct Firestore writes.
+- [x] TODO-5.1 Goal: publish worry through authenticated server endpoint, preserving moderation/category evidence and creating the initial Round 0 delivery batch plus exactly 5 initial deliveries. Strict policy: if fewer than 5 eligible human recipients exist, publication fails with no partial state.
+- [x] TODO-5.2 Files to inspect: `docs/PRD.md`, `src/App.tsx`, `server.ts`, `firestore.rules`, `packages/domain/src/index.ts`, `src/services/worryPublication/*`, `src/services/homeWorryFeed/*`, `src/services/moderation/*`, `src/server/moderationResponses.ts`.
+- [x] TODO-5.3 Files to modify/create: server publication and Firestore Admin adapter under `src/services/worryPublication`, `server.ts` auth and `POST /api/worries/publish`, client wrapper in `adapters/http.ts`, production factory, home/answer feed, domain match types.
+- [x] TODO-5.4 Data model changes: add `worries`, `deliveries`, required `deliveryBatches` for Round 0 lineage, `moderationLogs`, `pushLogs`; keep legacy `letters`.
+- [x] TODO-5.5 API changes: new publish endpoint; `/api/process-worry`, `/api/notify-new-worry`, and `/api/schedule-bot-reply` become legacy/internal-to-be-removed paths.
+- [x] TODO-5.6 UI/read-path changes: `App.tsx#publishWorry` calls endpoint and shows `고민이 전달되었어요!`; answer feed reads new deliveries first with temporary `letters` fallback.
+- [x] TODO-5.7 Firestore rules dependency: runtime app code no longer performs PRD worry publication through direct Firestore writes in this slice; full Firestore rules denial for new PRD collections is completed in Slice 2.
+- [x] TODO-5.8 Tests: moderation normalization, recipient selection exactly 5 and 4/1, fewer-than-5 eligible recipient failure with no partial writes, server publication transaction creates `deliveryBatches/{batchId}` with `batchRound: 0` and no source batch, API auth/body validation, feed read model with fallback.
+- [x] TODO-5.9 Manual verification: publish worry; verify one `worries` doc, five `deliveries`, one moderation log, push logs; recipient sees delivery without push permission.
+- [x] TODO-5.10 Explicit non-goals: no reply migration, no pass/rematch/AI/examples, no bottom-tab rebuild.
+- [x] TODO-5.11 Deletion test: if server publish route/module is removed, browser cannot publish PRD worries by direct Firestore writes.
 
 ### Slice 2: Firestore rules first hardening
 
@@ -660,11 +660,11 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ## 6. Matching Policy Detail
 
-- [ ] TODO-6.1 Initial publication candidate eligibility: user exists, not author, not deleted, not inactive if `lastActive` remains a product signal, valid `gender`, valid `interests`, active delivery count `< 10`, has not already received this worry, push token not required. Missing `deleted` is not deleted; exclude only when `deleted === true` or the final explicit inactive/deleted marker is present.
+- [x] TODO-6.1 Initial publication candidate eligibility: user exists, not author, not deleted, not inactive if `lastActive` remains a product signal, valid `gender`, valid `interests`, active delivery count `< 10`, has not already received this worry, push token not required. Missing `deleted` is not deleted; exclude only when `deleted === true` or the final explicit inactive/deleted marker is present.
 - [ ] TODO-6.2 Rematch candidate eligibility: user exists, not author, not deleted or inactive, valid `gender`, valid `interests`, active delivery count `< 10`, has not previously received this worry, and is not passed or answered for this worry. Missing `deleted` is not deleted; exclude only when `deleted === true` or the final explicit inactive/deleted marker is present.
-- [ ] TODO-6.3 Ranking for matched slots: category overlap desc, `helpedCount` desc, same gender as author first, random tie-break after those.
-- [ ] TODO-6.4 Random slot: same eligibility constraints, ignores overlap/helpedCount/gender ranking, no duplicate with matched slots.
-- [ ] TODO-6.5 Fallback if fewer than 5 eligible users:
+- [x] TODO-6.3 Ranking for matched slots: category overlap desc, `helpedCount` desc, same gender as author first, random tie-break after those.
+- [x] TODO-6.4 Random slot: same eligibility constraints, ignores overlap/helpedCount/gender ranking, no duplicate with matched slots.
+- [x] TODO-6.5 Fallback if fewer than 5 eligible users:
   - Required choice for this implementation plan: fail publication with a clear server error during Slice 1.
   - Why: preserves the exact 5-delivery invariant and keeps tests strict.
   - Tradeoff: small test/user pools may be unable to publish until enough users exist.
@@ -689,9 +689,9 @@ All error responses should use `{ error: { code: string, message: string, detail
   - If eligible users are scarce, create only non-duplicate eligible deliveries and log the shortfall.
   - Partial batches still follow PRD 8.5: one random only when the source batch random-slot recipient has not answered and `targetSize >= 1`; otherwise matched-only.
   - Never exceed 15 human deliveries and never deliver the same worry to the same user twice.
-- [ ] TODO-6.8 Snapshot fields: recipient gender/interests/helpedCount, author gender, matching categories, overlap count, selection type, batch ID/round/slot.
-- [ ] TODO-6.9 ActiveDeliveryCount source decision: `users/{uid}.activeDeliveryCount` is a transactionally maintained server-owned counter; query-based active delivery counting is not allowed as the production eligibility source.
-- [ ] TODO-6.10 ActiveDeliveryCount publication increment: initial publication checks selected recipients have `activeDeliveryCount < 10` inside the creation transaction and increments selected recipients exactly once.
+- [x] TODO-6.8 Snapshot fields: recipient gender/interests/helpedCount, author gender, matching categories, overlap count, selection type, batch ID/round/slot.
+- [x] TODO-6.9 ActiveDeliveryCount source decision: `users/{uid}.activeDeliveryCount` is a transactionally maintained server-owned counter; query-based active delivery counting is not allowed as the production eligibility source.
+- [x] TODO-6.10 ActiveDeliveryCount publication increment: initial publication checks selected recipients have `activeDeliveryCount < 10` inside the creation transaction and increments selected recipients exactly once.
 - [ ] TODO-6.11 ActiveDeliveryCount reply decrement: replying transitions an active delivery to `answered` and decrements the recipient's `activeDeliveryCount` exactly once.
 - [ ] TODO-6.12 ActiveDeliveryCount pass decrement: passing transitions an active delivery to `passed` and decrements the passer's `activeDeliveryCount` exactly once.
 - [ ] TODO-6.13 ActiveDeliveryCount rematch semantics: old active deliveries remain counted after additive rematch, rematch checks new recipients have `activeDeliveryCount < 10` inside the creation transaction, and rematch increments only newly created delivery recipients.
@@ -699,9 +699,9 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-6.15 ActiveDeliveryCount non-decrement events: read marking, push failure, and additive rematch creation elsewhere do not decrement `activeDeliveryCount`.
 - [ ] TODO-6.16 ActiveDeliveryCount idempotency: deterministic delivery IDs, status preconditions, and transaction reads prevent double-increment and double-decrement on retry paths.
 - [ ] TODO-6.17 ActiveDeliveryCount rules protection: Firestore rules forbid all client writes to `activeDeliveryCount`.
-- [ ] TODO-6.18 Initial matching tests: exactly 5 initial deliveries, 4 matched + 1 random, fewer-than-5 failure with no partial writes, tie-breaks, active delivery limit, and initial redelivery prevention.
+- [x] TODO-6.18 Initial matching tests: exactly 5 initial deliveries, 4 matched + 1 random, fewer-than-5 failure with no partial writes, tie-breaks, active delivery limit, and initial redelivery prevention.
 - [ ] TODO-6.19 Rematch matching tests: duplicate-recipient exclusion, additive rematch cap 15, passed/answered exclusion, and PRD 8.5 random-slot behavior.
-- [ ] TODO-6.20 Counter tests for publication: publish increments selected recipients, rejects recipients with `activeDeliveryCount >= 10`, and does not change counters when fewer than 5 eligible recipients exist.
+- [x] TODO-6.20 Counter tests for publication: publish increments selected recipients, rejects recipients with `activeDeliveryCount >= 10`, and does not change counters when fewer than 5 eligible recipients exist.
 - [ ] TODO-6.21 Counter tests for reply/pass/hidden: answered, passed, and hidden active deliveries decrement exactly once.
 - [ ] TODO-6.22 Counter tests for rematch/idempotency: rematch increments only new recipients, read marking/push failure/additive rematch elsewhere do not decrement, and retries never double-increment or double-decrement.
 - [ ] TODO-6.23 Immediate pass replacement eligibility:
@@ -744,8 +744,8 @@ All error responses should use `{ error: { code: string, message: string, detail
   - Why: current `letters` documents are duplicated per recipient and mix worries, replies, bot replies, feedback, and public worries; a perfect migration is more expensive than MVP data warrants.
   - Tradeoff: historical test data may be discarded or archived.
   - Affected files: `homeWorryFeed`, `replyMailbox`, migration/ops docs.
-- [ ] TODO-8.2 During transition: new worries write only to `worries`/`deliveries`; feed adapters read new data first and legacy `letters` second.
-- [ ] TODO-8.3 Avoid duplicate worries: if any backfill is attempted, exclude legacy `letters` with `publicationGroupId` known to have a matching `worries` doc; if no backfill, new publications should not duplicate.
+- [x] TODO-8.2 During transition: new worries write only to `worries`/`deliveries`; feed adapters read new data first and legacy `letters` second.
+- [x] TODO-8.3 Avoid duplicate worries: if any backfill is attempted, exclude legacy `letters` with `publicationGroupId` known to have a matching `worries` doc; if no backfill, new publications should not duplicate.
 - [ ] TODO-8.4 Remove old bot replies: stop `/api/schedule-bot-reply`; ignore/archive `letters` replies where `senderId` starts with `bot_`.
 - [ ] TODO-8.5 Remove public worries: remove `receiverId === 'public'` inclusion; optionally export/delete legacy public test docs outside app runtime.
 - [ ] TODO-8.6 Verify no legacy write path remains with `rg "collection\\([^)]*'letters'|doc\\([^)]*'letters'|letters" src server.ts firestore.rules`.
@@ -754,23 +754,23 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Unit Policy Tests
 
-- [ ] TODO-9.1 Moderation normalization preserves raw/valid/invalid/matching categories.
+- [x] TODO-9.1 Moderation normalization preserves raw/valid/invalid/matching categories.
 - [ ] TODO-9.2 Reason code mapping and high-risk help message.
 - [ ] TODO-9.3 Input validator trims, rejects empty, rejects >1000, allows short content.
-- [ ] TODO-9.4 Recipient selection exactly 5, 4 matched + 1 random, and returns a publish-blocking shortfall when fewer than 5 eligible recipients exist.
-- [ ] TODO-9.5 Active delivery `< 10`, author/deleted/existing-recipient exclusion, and missing `deleted` treated as not deleted.
+- [x] TODO-9.4 Recipient selection exactly 5, 4 matched + 1 random, and returns a publish-blocking shortfall when fewer than 5 eligible recipients exist.
+- [x] TODO-9.5 Active delivery `< 10`, author/deleted/existing-recipient exclusion, and missing `deleted` treated as not deleted.
 - [ ] TODO-9.6 Rematch additive batch sizing, PRD 8.5 random-slot replacement semantics, duplicate-recipient exclusion, and 15 cap.
 - [ ] TODO-9.7 Feedback visibility and helpedCount eligibility.
 
 ### Server Use-Case Tests
 
-- [ ] TODO-9.8 Publish rejected worry creates moderation log only.
-- [ ] TODO-9.9 Publish approved worry creates one worry, one Round 0 `deliveryBatches/{batchId}` with no source batch, and five Round 0 deliveries; fewer-than-5 eligible recipients fails with no partial state.
-- [ ] TODO-9.10 Worry publication push failure creates push log and does not roll back.
+- [x] TODO-9.8 Publish rejected worry creates moderation log only.
+- [x] TODO-9.9 Publish approved worry creates one worry, one Round 0 `deliveryBatches/{batchId}` with no source batch, and five Round 0 deliveries; fewer-than-5 eligible recipients fails with no partial state.
+- [x] TODO-9.10 Worry publication push failure creates push log and does not roll back.
 - [ ] TODO-9.11 Reply publication push failure creates push log and does not roll back.
 - [ ] TODO-9.12 Feedback push failure creates push log and does not roll back.
 - [ ] TODO-9.13 Reply publication creates one reply and sets delivery answered.
-- [ ] TODO-9.14 Publish increments each selected recipient's `activeDeliveryCount` exactly once.
+- [x] TODO-9.14 Publish increments each selected recipient's `activeDeliveryCount` exactly once.
 - [ ] TODO-9.15 Reply transitions active delivery to answered and decrements recipient `activeDeliveryCount` exactly once.
 - [ ] TODO-9.16 Pass transitions own active delivery to passed, removes it from the passer's feed, decrements passer `activeDeliveryCount` exactly once, and exposes no pass signal to the author.
 - [ ] TODO-9.17 Admin/system hide of an active delivery decrements recipient `activeDeliveryCount` exactly once.
@@ -779,7 +779,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### API Tests
 
-- [ ] TODO-9.20 Worry publication API rejects missing/invalid auth and ignores body-supplied uid.
+- [x] TODO-9.20 Worry publication API rejects missing/invalid auth and ignores body-supplied uid.
 - [ ] TODO-9.21 Reply publication API rejects missing/invalid auth and ignores body-supplied uid.
 - [ ] TODO-9.22 Read-state APIs reject missing/invalid auth and ignore body-supplied uid.
 - [ ] TODO-9.23 Pass API rejects missing/invalid auth, ignores body-supplied uid, rejects passing someone else's delivery, and rejects answered/hidden non-passable deliveries.
@@ -806,7 +806,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Read Model Tests
 
-- [ ] TODO-9.41 Active delivery appears in answer feed.
+- [x] TODO-9.41 Active delivery appears in answer feed.
 - [ ] TODO-9.42 Answered deliveries are excluded from answer feed.
 - [ ] TODO-9.43 Passed deliveries are excluded from answer feed.
 - [ ] TODO-9.44 Hidden deliveries are excluded from answer feed.
@@ -842,7 +842,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-9.71 Read marking and push failure do not decrement `activeDeliveryCount`.
 - [ ] TODO-9.72 Rematch increments `activeDeliveryCount` for newly created delivery recipients.
 - [ ] TODO-9.73 Publication/rematch reject recipients with `activeDeliveryCount >= 10` inside the creation transaction.
-- [ ] TODO-9.74 Publication retry paths do not double-increment `activeDeliveryCount`.
+- [x] TODO-9.74 Publication retry paths do not double-increment `activeDeliveryCount`.
 - [ ] TODO-9.75 Reply/pass/hide retry paths do not double-decrement `activeDeliveryCount`.
 - [ ] TODO-9.76 Rematch retry paths do not double-increment or double-decrement `activeDeliveryCount`.
 - [ ] TODO-9.77 AI fallback only when 24h, delivery cap exhausted, zero human replies, no existing AI.
@@ -915,7 +915,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-11.9 Notification failure ambiguity:
   - Risk: users think delivery failed when only push failed.
   - Mitigation: core transaction commits before push, pushLogs, UI success based on core state.
-- [ ] TODO-11.10 Moderation provider malformed responses:
+- [x] TODO-11.10 Moderation provider malformed responses:
   - Risk: unsafe or uncategorized content saved.
   - Mitigation: normalize strictly, retry once, fail closed with moderation log.
 - [ ] TODO-11.11 UI regressions due to `App.tsx` size:
@@ -924,7 +924,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-11.12 Test brittleness:
   - Risk: random matching and timestamps make flaky tests.
   - Mitigation: inject clock/random/id factories; test observable invariants.
-- [ ] TODO-11.13 Strict initial 5-recipient publication:
+- [x] TODO-11.13 Strict initial 5-recipient publication:
   - Risk: early MVP testing can fail to publish if the test pool has fewer than 5 eligible human recipients.
   - Mitigation: document seed/test-user requirements, return a clear server error, and verify no partial state is written on shortfall.
 

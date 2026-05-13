@@ -58,9 +58,7 @@ import {
   publishPublisherCommentWithProductionAdapters,
   publishReplyWithProductionAdapters,
 } from './services/replyPublication/production';
-import {
-  publishWorryWithProductionAdapters,
-} from './services/worryPublication/production';
+import { publishWorryViaApi } from './services/worryPublication/apiClient';
 import { submitReplyFeedbackWithProductionAdapters } from './services/replyFeedback/production';
 import type { ReplyFeedback } from './services/replyFeedback/types';
 import {
@@ -336,8 +334,8 @@ export default function App() {
 
     setIsProcessing(true);
     try {
-      const result = await publishWorryWithProductionAdapters({
-        authorUid: user.uid,
+      const result = await publishWorryViaApi({
+        user,
         content,
       });
 
@@ -351,7 +349,7 @@ export default function App() {
         return;
       }
 
-      if (result.warnings.length > 0) {
+      if (result.status === 'published' && result.warnings.length > 0) {
         console.warn("Worry publication completed with warnings:", result.warnings);
       }
 
