@@ -150,7 +150,6 @@ service cloud.firestore {
       allow create: if isSelf(uid) && hasOnlySafeUserKeys() && uidMatchesPath(uid);
       allow update: if isSelf(uid)
         && existingUserIsNotDeleted()
-        && hasOnlySafeUserKeys()
         && uidMatchesPath(uid)
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(safeUserKeys());
       allow delete: if false;

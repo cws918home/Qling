@@ -123,6 +123,29 @@ describe('profile and token transition', () => {
     }));
   });
 
+  test('safe update succeeds when existing activeDeliveryCount is preserved', async () => {
+    await seed('users/recipient', {
+      ...safeProfile('recipient'),
+      activeDeliveryCount: 3,
+    });
+
+    await assertSucceeds(dbFor('recipient').doc('users/recipient').update({
+      lastActive: new Date(),
+    }));
+  });
+
+  test('safe update succeeds when existing helpedCount is preserved but changing it fails', async () => {
+    await seed('users/author', {
+      ...safeProfile('author'),
+      helpedCount: 2,
+    });
+
+    await assertSucceeds(dbFor('author').doc('users/author').update({
+      lastActive: new Date(),
+    }));
+    await assertFails(dbFor('author').doc('users/author').update({ helpedCount: 3 }));
+  });
+
   test('own profile update fails for forbidden fields', async () => {
     await seed('users/author', safeProfile('author'));
     await assertFails(dbFor('author').doc('users/author').update({ helpedCount: 1 }));
@@ -130,14 +153,44 @@ describe('profile and token transition', () => {
     await assertFails(dbFor('author').doc('users/author').update({ deletedAt: new Date() }));
   });
 
-  test('activeDeliveryCount protection rejects create update merge and delete', async () => {
+  test('server-owned field protection rejects create update merge remove and delete', async () => {
     await assertFails(dbFor('author').doc('users/author').set({
       ...safeProfile('author'),
       activeDeliveryCount: 1,
     }));
-    await seed('users/author', safeProfile('author'));
-    await assertFails(dbFor('author').doc('users/author').update({ activeDeliveryCount: 1 }));
-    await assertFails(dbFor('author').doc('users/author').set({ activeDeliveryCount: 1 }, { merge: true }));
+    await assertFails(dbFor('author').doc('users/author').set({
+      ...safeProfile('author'),
+      helpedCount: 1,
+    }));
+
+    await seed('users/author', {
+      ...safeProfile('author'),
+      activeDeliveryCount: 1,
+      helpedCount: 2,
+    });
+    await assertFails(dbFor('author').doc('users/author').update({ activeDeliveryCount: 2 }));
+    await assertFails(dbFor('author').doc('users/author').update({ helpedCount: 3 }));
+    await assertFails(dbFor('author').doc('users/author').set({ activeDeliveryCount: 2 }, { merge: true }));
+    await assertFails(dbFor('author').doc('users/author').set({ helpedCount: 3 }, { merge: true }));
+    await seed('users/recipient', safeProfile('recipient'));
+    await assertFails(dbFor('recipient').doc('users/recipient').set({ activeDeliveryCount: 1 }, { merge: true }));
+    await assertFails(dbFor('recipient').doc('users/recipient').set({ helpedCount: 1 }, { merge: true }));
+    await assertFails(dbFor('author').doc('users/author').set({
+      uid: 'author',
+      gender: 'female',
+      interests: ['career'],
+      createdAt: new Date(),
+      lastActive: new Date(),
+      helpedCount: 2,
+    }));
+    await assertFails(dbFor('author').doc('users/author').set({
+      uid: 'author',
+      gender: 'female',
+      interests: ['career'],
+      createdAt: new Date(),
+      lastActive: new Date(),
+      activeDeliveryCount: 1,
+    }));
     await assertFails(dbFor('author').doc('users/author').delete());
   });
 
