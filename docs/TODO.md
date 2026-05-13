@@ -22,7 +22,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.2 Reply publication mutation boundary is server-owned: browser submits by delivery ID to an authenticated endpoint, stored reply ID is deterministic from delivery ID, and no runtime reply publication path creates `letters` replies.
 - [x] TODO-1.3 Read-state mutation boundary is server-owned: delivery and reply read markers are set only through authenticated endpoints and are not public read receipts.
 - [x] TODO-1.4 Pass mutation boundary is server-owned: pass status changes, same-worry exclusion, immediate replacement attempt, and `activeDeliveryCount` decrement/increment behavior happen only in an authenticated server transaction or transaction-plus-best-effort-push flow.
-- [ ] TODO-1.5 Feedback mutation boundary is server-owned: like/dislike/comment writes and helpedCount changes happen only through an authenticated server transaction.
+- [x] TODO-1.5 Feedback mutation boundary is server-owned: like/dislike/comment writes and helpedCount changes happen only through an authenticated server transaction.
 - [ ] TODO-1.6 Rematch job mutation boundary is server-owned: rematch runs are performed only by authenticated internal endpoints or server jobs.
 - [ ] TODO-1.7 AI fallback job mutation boundary is server-owned: AI fallback runs are performed only by authenticated internal endpoints or server jobs.
 - [ ] TODO-1.8 Example feedback job mutation boundary is server-owned: example creation and delayed example feedback are performed only by authenticated server endpoints or internal jobs.
@@ -30,11 +30,11 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.10 Final source-of-truth mutation boundary is closed: after legacy removal, the browser cannot create or mutate `worries`, `deliveries`, `replies`, `feedbacks`, `moderationLogs`, `pushLogs`, operational job collections, or legacy `letters`.
 - [x] TODO-1.11 Answer feed read path reads active `deliveries` for the signed-in recipient plus enough worry display data, with any legacy fallback isolated behind an explicitly named adapter.
 - [x] TODO-1.12 My worries and reply mailbox read paths read `worries` authored by the signed-in user, `replies` for those worries, and replies written by the signed-in user, with legacy fallback isolated behind an explicitly named adapter.
-- [ ] TODO-1.13 My page read path reads own profile, own written replies, and like/comment state visible to the replier.
+- [x] TODO-1.13 My page read path reads own profile, own written replies, and like/comment state visible to the replier.
 - [ ] TODO-1.14 Temporary legacy read fallbacks are removed from runtime code.
 - [x] TODO-1.15 Firestore ownership for initial PRD collections is enforced: `worries`, `deliveries`, `moderationLogs`, `pushLogs`, and initial `deliveryBatches` are server-owned; clients keep only narrow profile/token writes and temporary legacy reads.
 - [x] TODO-1.16 Firestore ownership for replies is enforced: `replies` are server-owned and legacy reply write paths are not needed for PRD replies.
-- [ ] TODO-1.17 Firestore ownership for feedback is enforced: `feedbacks` and helpedCount changes are server-owned.
+- [x] TODO-1.17 Firestore ownership for feedback is enforced: `feedbacks` and helpedCount changes are server-owned.
 - [ ] TODO-1.18 Firestore ownership for rematch operational collections is enforced.
 - [ ] TODO-1.19 Firestore ownership for AI fallback operational collections is enforced.
 - [ ] TODO-1.20 Firestore ownership for example operational collections is enforced.
@@ -42,10 +42,10 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.22 Server invariant for auth/deleted-user blocking is enforced for all user endpoints. Compatibility rule: until Phase 14 backfills/sets deletion state, a missing `deleted` field means "not deleted"; only `deleted === true` or another final explicit inactive/deleted marker blocks activity and matching.
 - [x] TODO-1.23 Server invariant for worry content validation is enforced: trim, non-empty, max 1000.
 - [x] TODO-1.24 Server invariant for reply content validation is enforced: trim, non-empty, max 1000.
-- [ ] TODO-1.25 Server invariant for feedback comment validation is enforced: trim, non-empty when submitted, max 1000.
+- [x] TODO-1.25 Server invariant for feedback comment validation is enforced: trim, non-empty when submitted, max 1000.
 - [x] TODO-1.26 Server invariant for worry moderation is enforced before saving user-visible worries.
 - [x] TODO-1.27 Server invariant for reply moderation is enforced before saving user-visible replies.
-- [ ] TODO-1.28 Server invariant for feedback comment moderation is enforced before saving user-visible feedback comments.
+- [x] TODO-1.28 Server invariant for feedback comment moderation is enforced before saving user-visible feedback comments.
 - [ ] TODO-1.29 Server invariant for AI reply moderation is enforced before saving AI replies.
 - [ ] TODO-1.30 Server invariant for example reply moderation is enforced before saving example replies.
 - [x] TODO-1.31 Server invariant for category preservation is enforced for worry publication: raw, valid, invalid, and matching categories are stored.
@@ -54,8 +54,8 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.34 Server invariant for same-worry redelivery exclusion metadata is enforced when users pass or answer.
 - [ ] TODO-1.35 Server invariant for rematch delivery limits is enforced: total human delivery cap `15`, active delivery limit `< 10`, and no redelivery of the same worry to the same user.
 - [x] TODO-1.36 Server invariant for one reply per delivery is enforced with deterministic reply IDs and idempotency/duplicate-content behavior.
-- [ ] TODO-1.37 Server invariant for one immutable feedback per reply is enforced with deterministic feedback IDs and delayed like-comment rules.
-- [ ] TODO-1.38 Server invariant for helpedCount is enforced: increments happen exactly once only for eligible human/example likes, and AI likes are excluded.
+- [x] TODO-1.37 Server invariant for one immutable feedback per reply is enforced with deterministic feedback IDs and delayed like-comment rules.
+- [x] TODO-1.38 Server invariant for helpedCount is enforced: increments happen exactly once only for eligible human/example likes, and AI likes are excluded.
 - [x] TODO-1.39 Server invariant for pass idempotency is enforced by status preconditions.
 - [ ] TODO-1.40 Server invariant for rematch job idempotency is enforced by deterministic IDs, job locks, and status preconditions.
 - [ ] TODO-1.41 Server invariant for AI fallback idempotency is enforced by deterministic AI reply state and status preconditions.
@@ -67,7 +67,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.46 Firestore rules invariant for initial PRD collections is enforced: clients cannot create/update/delete `worries`, `deliveries`, `moderationLogs`, `pushLogs`, or initial `deliveryBatches`.
 - [x] TODO-1.47 Firestore rules invariant for profile/token surfaces is enforced: users can read/write only narrow own profile fields and own push token docs during transition.
 - [x] TODO-1.48 Firestore rules invariant for replies is enforced: users can read only permitted reply surfaces and cannot write replies directly.
-- [ ] TODO-1.49 Firestore rules invariant for feedback is enforced: publisher can read own feedback, replier can read only likes and like comments, and clients cannot write feedback directly.
+- [x] TODO-1.49 Firestore rules invariant for feedback is enforced: publisher can read own feedback, replier can read only likes and like comments, and clients cannot write feedback directly.
 - [ ] TODO-1.50 Firestore rules invariant for hidden/admin-only data is enforced: users cannot read moderation logs, push logs, operational logs, hidden content, or admin-only feedback comments.
 - [ ] TODO-1.51 Firestore rules invariant for legacy removal is enforced: final rules deny legacy `letters` runtime reads/writes/deletes.
 - [ ] TODO-1.52 `App.tsx` does not own matching, moderation interpretation, Firestore transaction rules, delivery status transitions, helpedCount changes, push dispatch, AI fallback, example scheduling, deletion blocking, or legacy migration decisions.
@@ -97,7 +97,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.61 Apply deep-module guardrails to `worryPublication`, `moderation`, and `answerFeed`.
 - [x] TODO-1.62 Apply deep-module guardrails to `replyPublication`.
 - [x] TODO-1.63 Apply deep-module guardrails to `replyMailbox` / `myWorries`.
-- [ ] TODO-1.64 Apply deep-module guardrails to `replyFeedback`.
+- [x] TODO-1.64 Apply deep-module guardrails to `replyFeedback`.
 - [x] TODO-1.65 Apply deep-module guardrails to `pass` / `rematch`.
 - [ ] TODO-1.66 Apply deep-module guardrails to `aiFallback`.
 - [ ] TODO-1.67 Apply deep-module guardrails to `exampleWorries`.
@@ -178,7 +178,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 - [x] TODO-2.38 Deterministic ID recommendation: `deliveryId`, so one reply per delivery is enforced by create-if-absent.
 - [x] TODO-2.39 Core human reply fields: `deliveryId`, `worryId`, `authorUid`, `replierUid`, `content`, `status: 'active'`, `moderationLogId`, `createdAt`, `updatedAt`.
 - [x] TODO-2.40 Reply read-state field: `readByAuthorAt` lives under `users/{authorUid}/replyReadStates/{replyId}`, not on `replies/{replyId}`.
-- [ ] TODO-2.41 Feedback summary fields: `feedbackType`, `likedAt`, `dislikedAt`.
+- [x] TODO-2.41 Feedback summary fields: `feedbackType`, `likedAt`, `dislikedAt`.
 - [ ] TODO-2.42 AI reply fields: `isAiGenerated`.
 - [ ] TODO-2.43 Example reply fields: `isExampleReply`.
 - [ ] TODO-2.44 Hidden reply fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`.
@@ -190,23 +190,23 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 ### `feedbacks/{feedbackId}`
 
-- [ ] TODO-2.50 Deterministic feedback ID policy: `feedbacks/{replyId}`.
+- [x] TODO-2.50 Deterministic feedback ID policy: `feedbacks/{replyId}`.
   - Recommended choice: allow one later `comment` update only for `type == 'like'` when no comment exists.
   - Why: PRD allows delayed like comments but immutable like/dislike choice.
   - Tradeoff: feedback creation and like-comment update need separate server branches.
   - Affected files: `src/services/replyFeedback/*`, `server.ts`, `firestore.rules`.
-- [ ] TODO-2.51 Fields: `replyId`, `worryId`, `deliveryId`, `publisherUid`, `replierUid`, `type: 'like' | 'dislike'`, `comment`, `commentVisibility: 'replier' | 'admin_only' | 'none'`, `commentModerationLogId`, `helpedCountApplied`, `isForAiReply`, `isForExampleReply`, `createdAt`, `updatedAt`.
-- [ ] TODO-2.52 Source of truth: immutable like/dislike choice and optional moderated comment.
-- [ ] TODO-2.53 Read access: publisher can read own feedback; replier can read likes and like comments only; dislike and dislike comments are admin-only.
-- [ ] TODO-2.54 Write access: server only.
-- [ ] TODO-2.55 Lifecycle: no cancel/change. Like comment may be added later once if absent; dislike comment cannot be added later after leaving.
-- [ ] TODO-2.56 Replaces `letters.feedback` and `letters.publisherComment`.
+- [x] TODO-2.51 Fields: `replyId`, `worryId`, `deliveryId`, `publisherUid`, `replierUid`, `type: 'like' | 'dislike'`, `comment`, `commentVisibility: 'replier' | 'admin_only' | 'none'`, `commentModerationLogId`, `helpedCountApplied`, `isForAiReply`, `isForExampleReply`, `createdAt`, `updatedAt`.
+- [x] TODO-2.52 Source of truth: immutable like/dislike choice and optional moderated comment.
+- [x] TODO-2.53 Read access: publisher can read own feedback; replier can read likes and like comments only; dislike and dislike comments are admin-only.
+- [x] TODO-2.54 Write access: server only.
+- [x] TODO-2.55 Lifecycle: no cancel/change. Like comment may be added later once if absent; dislike comment cannot be added later after leaving.
+- [x] TODO-2.56 Replaces `letters.feedback` and `letters.publisherComment`.
 
 ### `moderationLogs/{logId}`
 
 - [x] TODO-2.57 Worry moderation log fields: `targetType: 'worry'`, `targetId`, `uid`, `originalContent`, `status: 'approved' | 'rejected' | 'invalid_provider_response' | 'provider_error'`, `reasonCode`, `userMessage`, `helpMessage`, `rawProviderResponse`, `rawCategories`, `validCategories`, `invalidCategories`, `matchingCategories`, `provider`, `model`, `createdAt`, `updatedAt`.
 - [x] TODO-2.58 Reply moderation log fields: `targetType: 'reply'` plus common moderation fields.
-- [ ] TODO-2.59 Feedback comment moderation log fields: `targetType: 'feedback_comment'` plus common moderation fields.
+- [x] TODO-2.59 Feedback comment moderation log fields: `targetType: 'feedback_comment'` plus common moderation fields.
 - [ ] TODO-2.60 AI reply moderation log fields: `targetType: 'ai_reply'` plus common moderation fields.
 - [ ] TODO-2.61 Example reply moderation log fields: `targetType: 'example_reply'` plus common moderation fields.
 - [x] TODO-2.62 Reason codes: `abuse_hate_profanity`, `sexual`, `self_harm_suicide`, `crime_violence_victim`, `personal_info`, `spam_promotion`, `empty`, `too_long`, `provider_invalid`.
@@ -308,12 +308,12 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Feedback: `POST /api/replies/:replyId/feedback`
 
-- [ ] TODO-3.39 Request body: `{ type: 'like' | 'dislike', comment?: string }`.
-- [ ] TODO-3.40 Auth: signed-in worry author/publisher, not deleted.
-- [ ] TODO-3.41 Validation: reply exists, reply belongs to publisher's worry, no existing feedback unless adding a first like comment under the allowed delayed-comment rule, comment trim/max 1000, comment moderation when present.
-- [ ] TODO-3.42 Transaction: create `feedbacks/{replyId}`, set reply feedback summary, increment `users/{replierUid}.helpedCount` exactly once for eligible human likes, hide disliked reply from publisher read model.
-- [ ] TODO-3.43 Response: `200 { status: 'saved', feedbackId, helpedCountApplied }`.
-- [ ] TODO-3.44 Idempotency: same feedback repeat returns existing; different type returns `409`; delayed like comment update allowed once if no prior comment.
+- [x] TODO-3.39 Request body: `{ type: 'like' | 'dislike', comment?: string }`.
+- [x] TODO-3.40 Auth: signed-in worry author/publisher, not deleted.
+- [x] TODO-3.41 Validation: reply exists, reply belongs to publisher's worry, no existing feedback unless adding a first like comment under the allowed delayed-comment rule, comment trim/max 1000, comment moderation when present.
+- [x] TODO-3.42 Transaction: create `feedbacks/{replyId}`, set reply feedback summary, increment `users/{replierUid}.helpedCount` exactly once for eligible human likes, hide disliked reply from publisher read model.
+- [x] TODO-3.43 Response: `200 { status: 'saved', feedbackId, helpedCountApplied }`.
+- [x] TODO-3.44 Idempotency: same feedback repeat returns existing; different type returns `409`; delayed like comment update allowed once if no prior comment.
 - [x] TODO-3.45 Tests: one feedback, AI like excluded from helpedCount, dislike hidden, comments visibility, like push only.
 
 ### Account Deletion: `POST /api/users/me/delete`
@@ -371,11 +371,11 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### `replyFeedback`
 
-- [ ] TODO-4.22 Purpose: one immutable feedback per reply and helpedCount transaction.
-- [ ] TODO-4.23 Public interface: `submitReplyFeedbackOnServer({ publisherUid, replyId, type, comment? })`.
-- [ ] TODO-4.24 Files: `src/services/replyFeedback/serverFeedback.ts`, `serverFirestore.ts`, `submitReplyFeedback.ts`, `types.ts`, `production.ts`, `firestoreAdapters.ts`.
+- [x] TODO-4.22 Purpose: one immutable feedback per reply and helpedCount transaction.
+- [x] TODO-4.23 Public interface: `submitReplyFeedbackOnServer({ publisherUid, replyId, type, comment? })`.
+- [x] TODO-4.24 Files: `src/services/replyFeedback/serverFeedback.ts`, `serverFirestore.ts`, `submitReplyFeedback.ts`, `types.ts`, `production.ts`, `firestoreAdapters.ts`.
 - [x] TODO-4.25 Tests: deterministic ID, like/dislike behavior, comments visibility, push policy.
-- [ ] TODO-4.26 Deletion test: deleting server feedback module removes feedback mutation; helpedCount cannot be changed from client.
+- [x] TODO-4.26 Deletion test: deleting server feedback module removes feedback mutation; helpedCount cannot be changed from client.
 
 ### `replyMailbox` / `myWorries`
 
@@ -384,7 +384,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-4.29 Files: `src/services/replyMailbox/*`, new `src/services/myWorries/*`, `src/App.tsx` decomposition.
 - [x] TODO-4.30 Tests: authored worries, received replies, own written replies, and isolated legacy fallback behavior.
 - [x] TODO-4.31 Read-state extension: unread counts and unread emphasis are added by Slice 5 after read APIs exist.
-- [ ] TODO-4.32 Feedback extension: disliked filtering is completed by Slice 7 after feedback exists.
+- [x] TODO-4.32 Feedback extension: disliked filtering is completed by Slice 7 after feedback exists.
 - [ ] TODO-4.33 Admin hiding extension: hidden filtering is completed by Slice 15 after admin hiding exists.
 - [x] TODO-4.34 Deletion test: legacy mailbox deletion does not remove PRD mailbox behavior.
 
@@ -504,15 +504,15 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 7: Feedback migration
 
-- [ ] TODO-5.58 Goal: feedback lives in `feedbacks/{replyId}` with immutable like/dislike semantics.
-- [ ] TODO-5.59 Files: `src/services/replyFeedback/*`, `server.ts`, my worries reply UI, my page liked-comment UI.
-- [ ] TODO-5.60 API: `POST /api/replies/:replyId/feedback`.
-- [ ] TODO-5.61 Data: deterministic feedback doc, reply summary fields, helpedCount transaction.
-- [ ] TODO-5.62 Rules: deny direct feedback/helpedCount writes.
+- [x] TODO-5.58 Goal: feedback lives in `feedbacks/{replyId}` with immutable like/dislike semantics.
+- [x] TODO-5.59 Files: `src/services/replyFeedback/*`, `server.ts`, my worries reply UI, my page liked-comment UI.
+- [x] TODO-5.60 API: `POST /api/replies/:replyId/feedback`.
+- [x] TODO-5.61 Data: deterministic feedback doc, reply summary fields, helpedCount transaction.
+- [x] TODO-5.62 Rules: deny direct feedback/helpedCount writes.
 - [x] TODO-5.63 Tests: one-time immutable feedback, deterministic ID, AI reply like excluded, example like included, dislike hides reply, comment visibility, no comment push, like push only.
-- [ ] TODO-5.64 Manual verification: like increments count once; dislike hides; comments visibility correct.
-- [ ] TODO-5.65 Explicit non-goals: feedback cancellation/change.
-- [ ] TODO-5.66 Deletion test: deleting feedback module removes all ways to mutate feedback/helpedCount.
+- [x] TODO-5.64 Manual verification: like increments count once; dislike hides; comments visibility correct.
+- [x] TODO-5.65 Explicit non-goals: feedback cancellation/change.
+- [x] TODO-5.66 Deletion test: deleting feedback module removes all ways to mutate feedback/helpedCount.
 
 ### Slice 8: Rematch job
 
@@ -726,7 +726,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-7.5 Transition `worries/{worryId}` rules: reads only for author or recipient with matching delivery; writes server only; no public read.
 - [x] TODO-7.6 Transition `deliveries/{deliveryId}` rules: recipient reads own delivery; author may read limited metadata if needed; writes server only.
 - [x] TODO-7.7 Reply `replies/{replyId}` rules: reads for replier or worry author; writes server only.
-- [ ] TODO-7.8 Feedback `feedbacks/{feedbackId}` rules: publisher reads own feedback, replier reads only likes and like comments, and writes are server only.
+- [x] TODO-7.8 Feedback `feedbacks/{feedbackId}` rules: publisher reads own feedback, replier reads only likes and like comments, and writes are server only.
 - [ ] TODO-7.9 Admin/hidden rules: hidden/admin-only state is filtered in read models and denied by rules where possible.
 - [x] TODO-7.10 Initial log rules: `moderationLogs` and `pushLogs` client reads/writes denied.
 - [ ] TODO-7.11 Rematch operational collection rules: `jobLocks` and `rematchRuns` client reads/writes denied when introduced.
@@ -762,7 +762,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.4 Recipient selection exactly 5, 4 matched + 1 random, and returns a publish-blocking shortfall when fewer than 5 eligible recipients exist.
 - [x] TODO-9.5 Active delivery `< 10`, author/deleted/existing-recipient exclusion, and missing `deleted` treated as not deleted.
 - [ ] TODO-9.6 Rematch additive batch sizing, PRD 8.5 random-slot replacement semantics, duplicate-recipient exclusion, and 15 cap.
-- [ ] TODO-9.7 Feedback visibility and helpedCount eligibility.
+- [x] TODO-9.7 Feedback visibility and helpedCount eligibility.
 
 ### Server Use-Case Tests
 
@@ -776,7 +776,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.15 Reply transitions active delivery to answered and decrements recipient `activeDeliveryCount` exactly once.
 - [x] TODO-9.16 Pass transitions own active delivery to passed, removes it from the passer's feed, decrements passer `activeDeliveryCount` exactly once, and exposes no pass signal to the author.
 - [ ] TODO-9.17 Admin/system hide of an active delivery decrements recipient `activeDeliveryCount` exactly once.
-- [ ] TODO-9.18 Feedback creates deterministic doc and increments helpedCount once.
+- [x] TODO-9.18 Feedback creates deterministic doc and increments helpedCount once.
 - [ ] TODO-9.19 Account deletion soft deletes and removes tokens.
 
 ### API Tests
@@ -785,7 +785,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.21 Reply publication API rejects missing/invalid auth and ignores body-supplied uid.
 - [x] TODO-9.22 Read-state APIs reject missing/invalid auth and ignore body-supplied uid.
 - [x] TODO-9.23 Pass API rejects missing/invalid auth, ignores body-supplied uid, rejects passing someone else's delivery, and rejects answered/hidden non-passable deliveries.
-- [ ] TODO-9.24 Feedback API rejects missing/invalid auth and ignores body-supplied uid.
+- [x] TODO-9.24 Feedback API rejects missing/invalid auth and ignores body-supplied uid.
 - [ ] TODO-9.25 Account deletion API rejects missing/invalid auth and ignores body-supplied uid.
 - [ ] TODO-9.26 Deleted users are blocked from all user endpoints; users with a missing `deleted` field are not blocked before Phase 14.
 - [ ] TODO-9.27 API responses use correct status/error shape for validation, ownership, conflicts, and provider failures.
@@ -797,13 +797,13 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 - [x] TODO-9.31 No client direct source-of-truth writes to worries/deliveries/initial batches/logs.
 - [x] TODO-9.32 No client direct source-of-truth writes to replies.
-- [ ] TODO-9.33 No client direct source-of-truth writes to feedbacks.
+- [x] TODO-9.33 No client direct source-of-truth writes to feedbacks.
 - [ ] TODO-9.34 No client direct source-of-truth writes to operational collections.
 - [x] TODO-9.35 Own profile safe fields allowed; server-owned fields denied.
 - [x] TODO-9.36 Client writes to `users/{uid}.activeDeliveryCount` are denied.
 - [x] TODO-9.37 Recipient can read own delivery and allowed worry surface.
 - [x] TODO-9.38 Non-recipient cannot read other delivery/worry.
-- [ ] TODO-9.39 Replier cannot read dislike feedback/comment.
+- [x] TODO-9.39 Replier cannot read dislike feedback/comment.
 - [ ] TODO-9.40 Legacy `letters` writes denied in final state.
 
 ### Read Model Tests
@@ -816,7 +816,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.46 My worries list includes own worries.
 - [x] TODO-9.47 My worries list includes unread reply count after read state exists.
 - [x] TODO-9.48 Replies written by me shown in My Page.
-- [ ] TODO-9.49 Disliked reply hidden from publisher but not deleted.
+- [x] TODO-9.49 Disliked reply hidden from publisher but not deleted.
 - [x] TODO-9.50 Read state private.
 
 ### Job / Idempotency Tests
