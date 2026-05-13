@@ -436,6 +436,24 @@ Create onboarding example deliveries once per user and delayed example likes.
 - Example selection uses interests and does not create later additions after interest edits.
 - Example feedback creates one delayed like, no comment, and increments helpedCount.
 
+### TODO-5.94 Manual-Equivalent Verification
+
+Live browser/Firebase manual verification was unavailable in the executor environment. TODO-5.94 is therefore covered by automated/manual-equivalent verification only:
+
+1. Seed fixture path exists at `src/services/exampleWorries/exampleSeedFixtures.ts`, and dev/admin seeding is script-only through `scripts/seedExampleWorrySeeds.ts`.
+2. Fresh profile plus onboarding endpoint behavior is covered by `src/services/exampleWorries/createExamplesForUser.test.ts` and `src/server/exampleWorryRoutes.test.ts`.
+3. Answer feed delivery visibility and no example label exposure are covered by `src/services/homeWorryFeed/prdPolicy.test.ts`.
+
+Executor command run for this manual-equivalent check:
+
+```bash
+npm test -- src/services/exampleWorries/createExamplesForUser.test.ts src/server/exampleWorryRoutes.test.ts src/services/homeWorryFeed/prdPolicy.test.ts
+```
+
+Result: passed. The project test script expands the full `src/**/*.test.ts` suite, so this command ran the full automated suite plus the named manual-equivalent files.
+
+Unresolved risk: a real browser/Firebase onboarding session has still not been exercised; before Phase 11 UI/navigation work, run the seed script against the target Firebase project, create a new user, complete onboarding, and visually confirm unlabeled example deliveries in the answer feed.
+
 ### Evidence Matrix
 
 | TODO ID | Checked? | Evidence |
