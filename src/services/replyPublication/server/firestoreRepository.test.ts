@@ -23,18 +23,26 @@ function createFakeFirestore(initial: Record<string, Record<string, unknown>>) {
       };
     },
     async runTransaction<T>(callback: (transaction: unknown) => Promise<T>) {
+      let hasWritten = false;
       return callback({
-        get: async (docRef: { path: string }) => ({
-          exists: store.has(docRef.path),
-          data: () => {
-            const data = store.get(docRef.path);
-            return data ? { ...data } : undefined;
-          },
-        }),
+        get: async (docRef: { path: string }) => {
+          if (hasWritten) {
+            throw new Error(`read_after_write:${docRef.path}`);
+          }
+          return {
+            exists: store.has(docRef.path),
+            data: () => {
+              const data = store.get(docRef.path);
+              return data ? { ...data } : undefined;
+            },
+          };
+        },
         set: (docRef: { path: string }, data: Record<string, unknown>, options?: { merge?: boolean }) => {
+          hasWritten = true;
           store.set(docRef.path, options?.merge ? { ...(store.get(docRef.path) ?? {}), ...data } : { ...data });
         },
         update: (docRef: { path: string }, data: Record<string, unknown>) => {
+          hasWritten = true;
           store.set(docRef.path, { ...(store.get(docRef.path) ?? {}), ...data });
         },
       });
@@ -97,6 +105,30 @@ test('repository creates replies by deterministic delivery id and answers delive
   assert.equal(db.store.get('deliveries/delivery1')?.status, 'answered');
   assert.equal(db.store.get('worries/worry1')?.hasHumanReply, true);
   assert.equal(db.store.get('users/recipient')?.activeDeliveryCount, 1);
+});
+
+test('repository reads user counter before any transaction write', async () => {
+  const db = createFakeFirestore({
+    'deliveries/delivery1': {
+      worryId: 'worry1',
+      authorUid: 'author',
+      recipientUid: 'recipient',
+      status: 'active',
+      answeredAt: null,
+    },
+    'worries/worry1': { authorUid: 'author' },
+    'users/recipient': { activeDeliveryCount: 3 },
+  });
+  const repo = createReplyPublicationRepository({ db: db as never });
+
+  await assert.doesNotReject(() => repo.commitApprovedReplyPublication({
+    deliveryId: 'delivery1',
+    replierUid: 'recipient',
+    content: 'reply',
+    moderationLog,
+  }));
+
+  assert.equal(db.store.get('users/recipient')?.activeDeliveryCount, 2);
 });
 
 test('repository idempotent same-content retry does not decrement counter again', async () => {

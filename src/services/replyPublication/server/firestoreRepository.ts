@@ -68,6 +68,9 @@ export function createReplyPublicationRepository(params: {
 
         const worryRef = db.collection('worries').doc(worryId);
         const worryDoc = await transaction.get(worryRef);
+        const userRef = db.collection('users').doc(replierUid);
+        const userDoc = await transaction.get(userRef);
+
         if (!worryDoc.exists) {
           throw buildError('worry_missing');
         }
@@ -123,8 +126,6 @@ export function createReplyPublicationRepository(params: {
           updatedAt: timestamp,
         });
 
-        const userRef = db.collection('users').doc(replierUid);
-        const userDoc = await transaction.get(userRef);
         const activeDeliveryCount = typeof userDoc.data()?.activeDeliveryCount === 'number'
           ? userDoc.data()?.activeDeliveryCount
           : 0;
