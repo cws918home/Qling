@@ -68,7 +68,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.47 Firestore rules invariant for profile/token surfaces is enforced: users can read/write only narrow own profile fields and own push token docs during transition.
 - [x] TODO-1.48 Firestore rules invariant for replies is enforced: users can read only permitted reply surfaces and cannot write replies directly.
 - [x] TODO-1.49 Firestore rules invariant for feedback is enforced: publisher can read own feedback, replier can read only likes and like comments, and clients cannot write feedback directly.
-- [ ] TODO-1.50 Firestore rules invariant for hidden/admin-only data is enforced: users cannot read moderation logs, push logs, operational logs, hidden content, or admin-only feedback comments.
+- [x] TODO-1.50 Firestore rules invariant for hidden/admin-only data is enforced: users cannot read moderation logs, push logs, operational logs, hidden content, or admin-only feedback comments.
 - [ ] TODO-1.51 Firestore rules invariant for legacy removal is enforced: final rules deny legacy `letters` runtime reads/writes/deletes.
 - [ ] TODO-1.52 `App.tsx` does not own matching, moderation interpretation, Firestore transaction rules, delivery status transitions, helpedCount changes, push dispatch, AI fallback, example scheduling, deletion blocking, or legacy migration decisions.
 - [x] TODO-1.53 `App.tsx` is limited to view composition plus calls to service hooks/API wrappers for PRD behavior.
@@ -137,7 +137,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 - [x] TODO-2.16 Rematch metadata fields: `lastRematchRunId`, `lastRematchBatchId`, `lastRematchCreatedAt`.
 - [x] TODO-2.17 AI fallback fields: `hasAiReply`, `aiReplyId`, `aiFallbackCheckedAt`.
 - [x] TODO-2.18 Example fields: `isExample`, `exampleSeedId`, `exampleOwnerUid`.
-- [ ] TODO-2.19 Hidden/deleted-author fields: `status: 'hidden' | 'deleted_author'`, `hiddenAt`, `hiddenReason`, `hiddenBy`.
+- [x] TODO-2.19 Hidden/deleted-author fields: `status: 'hidden' | 'deleted_author'`, `hiddenAt`, `hiddenReason`, `hiddenBy`.
 - [x] TODO-2.20 Source of truth: canonical worry content and moderation/category state.
 - [x] TODO-2.21 Read access: author can read; recipient reads via delivery/read model; no public board reads.
 - [x] TODO-2.22 Write access: server only.
@@ -166,7 +166,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 - [x] TODO-2.29 Pass fields: `status: 'passed'`, `passedAt`.
 - [x] TODO-2.30 Rematch delivery fields: `batchRound: 1 | 2`, `rematchEligibleAfter`, `createdByRematchRunId`.
 - [x] TODO-2.31 Example delivery fields: `isExample`, `exampleSeedId`.
-- [ ] TODO-2.32 Hidden delivery fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`.
+- [x] TODO-2.32 Hidden delivery fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`.
 - [x] TODO-2.33 Source of truth: who may answer a worry and answer feed state.
 - [x] TODO-2.34 Read access: recipient can read own delivery; author may read delivery metadata without read receipts exposed in UI.
 - [x] TODO-2.35 Write access: server only.
@@ -181,7 +181,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 - [x] TODO-2.41 Feedback summary fields: `feedbackType`, `likedAt`, `dislikedAt`.
 - [x] TODO-2.42 AI reply fields: `isAiGenerated`.
 - [x] TODO-2.43 Example reply fields: `isExampleReply`.
-- [ ] TODO-2.44 Hidden reply fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`.
+- [x] TODO-2.44 Hidden reply fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`.
 - [x] TODO-2.45 Source of truth: final answer content.
 - [x] TODO-2.46 Read access: replier can read own replies; worry author can read replies to own worries except disliked replies hidden from publisher UI/read model.
 - [x] TODO-2.47 Write access: server only.
@@ -385,7 +385,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-4.30 Tests: authored worries, received replies, own written replies, and isolated legacy fallback behavior.
 - [x] TODO-4.31 Read-state extension: unread counts and unread emphasis are added by Slice 5 after read APIs exist.
 - [x] TODO-4.32 Feedback extension: disliked filtering is completed by Slice 7 after feedback exists.
-- [ ] TODO-4.33 Admin hiding extension: hidden filtering is completed by Slice 15 after admin hiding exists.
+- [x] TODO-4.33 Admin hiding extension: hidden filtering is completed by Slice 15 after admin hiding exists.
 - [x] TODO-4.34 Deletion test: legacy mailbox deletion does not remove PRD mailbox behavior.
 
 ### `pass` / `rematch`
@@ -630,15 +630,15 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 15: Admin hiding and internal logs
 
-- [ ] TODO-5.128 Goal: DB-manual hiding and operational audit coverage.
-- [ ] TODO-5.129 Fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`, `hiddenBy` on worries/replies/deliveries.
-- [ ] TODO-5.130 Read models: exclude hidden content everywhere.
-- [ ] TODO-5.131 Logs: moderation, matching, pass, rematch, push, AI, example runs.
-- [ ] TODO-5.132 Files: read model filters, rules, services that write logs.
-- [ ] TODO-5.133 Tests: hidden worries/replies excluded, logs created for major paths.
-- [ ] TODO-5.134 Manual verification: manually hide a worry/reply in Firestore and refresh UI.
-- [ ] TODO-5.135 Explicit non-goals: full admin UI.
-- [ ] TODO-5.136 Deletion test: hiding filters are centralized in read model policies, not scattered through view markup.
+- [x] TODO-5.128 Goal: DB-manual hiding and operational audit coverage.
+- [x] TODO-5.129 Fields: `status: 'hidden'`, `hiddenAt`, `hiddenReason`, `hiddenBy` on worries/replies/deliveries.
+- [x] TODO-5.130 Read models: exclude hidden content everywhere.
+- [x] TODO-5.131 Logs: moderation, matching, pass, rematch, push, AI, example runs.
+- [x] TODO-5.132 Files: read model filters, rules, services that write logs.
+- [x] TODO-5.133 Tests: hidden worries/replies excluded, logs created for major paths.
+- [x] TODO-5.134 Manual verification: manually hide a worry/reply in Firestore and refresh UI.
+- [x] TODO-5.135 Explicit non-goals: full admin UI.
+- [x] TODO-5.136 Deletion test: hiding filters are centralized in read model policies, not scattered through view markup.
 
 ### Slice 16: Legacy `letters` removal
 
@@ -695,14 +695,14 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-6.11 ActiveDeliveryCount reply decrement: replying transitions an active delivery to `answered` and decrements the recipient's `activeDeliveryCount` exactly once.
 - [x] TODO-6.12 ActiveDeliveryCount pass decrement: passing transitions an active delivery to `passed` and decrements the passer's `activeDeliveryCount` exactly once.
 - [x] TODO-6.13 ActiveDeliveryCount rematch semantics: old active deliveries remain counted after additive rematch, rematch checks new recipients have `activeDeliveryCount < 10` inside the creation transaction, and rematch increments only newly created delivery recipients.
-- [ ] TODO-6.14 ActiveDeliveryCount hidden decrement: hiding an active delivery decrements the recipient's `activeDeliveryCount` exactly once.
+- [x] TODO-6.14 ActiveDeliveryCount hidden decrement: hiding an active delivery decrements the recipient's `activeDeliveryCount` exactly once.
 - [x] TODO-6.15 ActiveDeliveryCount non-decrement events: read marking, push failure, and additive rematch creation elsewhere do not decrement `activeDeliveryCount`.
 - [x] TODO-6.16 ActiveDeliveryCount idempotency: deterministic delivery IDs, status preconditions, and transaction reads prevent double-increment and double-decrement on retry paths.
 - [x] TODO-6.17 ActiveDeliveryCount rules protection: Firestore rules forbid all client writes to `activeDeliveryCount`.
 - [x] TODO-6.18 Initial matching tests: exactly 5 initial deliveries, 4 matched + 1 random, fewer-than-5 failure with no partial writes, tie-breaks, active delivery limit, and initial redelivery prevention.
 - [x] TODO-6.19 Rematch matching tests: duplicate-recipient exclusion, additive rematch cap 15, passed/answered exclusion, and PRD 8.5 random-slot behavior.
 - [x] TODO-6.20 Counter tests for publication: publish increments selected recipients, rejects recipients with `activeDeliveryCount >= 10`, and does not change counters when fewer than 5 eligible recipients exist.
-- [ ] TODO-6.21 Counter tests for reply/pass/hidden: answered, passed, and hidden active deliveries decrement exactly once.
+- [x] TODO-6.21 Counter tests for reply/pass/hidden: answered, passed, and hidden active deliveries decrement exactly once.
 - [x] TODO-6.22 Counter tests for rematch/idempotency: rematch increments only new recipients, read marking/push failure/additive rematch elsewhere do not decrement, and retries never double-increment or double-decrement.
 - [x] TODO-6.23 Immediate pass replacement eligibility:
   - Replacement recipient must not be the passing user, worry author, any previous recipient of the same worry, any previous passer, any user who already replied, a deleted/inactive user, a user at `activeDeliveryCount >= 10`, a user who would exceed `worries.humanDeliveryLimit`, or any user excluded by normal matching policy.
@@ -727,7 +727,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-7.6 Transition `deliveries/{deliveryId}` rules: recipient reads own delivery; author may read limited metadata if needed; writes server only.
 - [x] TODO-7.7 Reply `replies/{replyId}` rules: reads for replier or worry author; writes server only.
 - [x] TODO-7.8 Feedback `feedbacks/{feedbackId}` rules: publisher reads own feedback, replier reads only likes and like comments, and writes are server only.
-- [ ] TODO-7.9 Admin/hidden rules: hidden/admin-only state is filtered in read models and denied by rules where possible.
+- [x] TODO-7.9 Admin/hidden rules: hidden/admin-only state is filtered in read models and denied by rules where possible.
 - [x] TODO-7.10 Initial log rules: `moderationLogs` and `pushLogs` client reads/writes denied.
 - [x] TODO-7.11 Rematch operational collection rules: `jobLocks` and `rematchRuns` client reads/writes denied when introduced.
 - [x] TODO-7.12 AI fallback operational collection rules: `aiFallbackRuns` client reads/writes denied when introduced.
@@ -775,7 +775,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.14 Publish increments each selected recipient's `activeDeliveryCount` exactly once.
 - [x] TODO-9.15 Reply transitions active delivery to answered and decrements recipient `activeDeliveryCount` exactly once.
 - [x] TODO-9.16 Pass transitions own active delivery to passed, removes it from the passer's feed, decrements passer `activeDeliveryCount` exactly once, and exposes no pass signal to the author.
-- [ ] TODO-9.17 Admin/system hide of an active delivery decrements recipient `activeDeliveryCount` exactly once.
+- [x] TODO-9.17 Admin/system hide of an active delivery decrements recipient `activeDeliveryCount` exactly once.
 - [x] TODO-9.18 Feedback creates deterministic doc and increments helpedCount once.
 - [x] TODO-9.19 Account deletion soft deletes and removes tokens.
 
@@ -811,7 +811,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.41 Active delivery appears in answer feed.
 - [x] TODO-9.42 Answered deliveries are excluded from answer feed.
 - [x] TODO-9.43 Passed deliveries are excluded from answer feed.
-- [ ] TODO-9.44 Hidden deliveries are excluded from answer feed.
+- [x] TODO-9.44 Hidden deliveries are excluded from answer feed.
 - [x] TODO-9.45 Existing active delivery remains visible and answerable after rematch creates additional deliveries.
 - [x] TODO-9.46 My worries list includes own worries.
 - [x] TODO-9.47 My worries list includes unread reply count after read state exists.
@@ -840,12 +840,12 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.67 Total human delivery count never exceeds 15.
 - [x] TODO-9.68 Existing active deliveries from previous rounds remain answerable after later rounds are created.
 - [x] TODO-9.69 `activeDeliveryCount` is not decremented merely because rematch occurred.
-- [ ] TODO-9.70 `activeDeliveryCount` is decremented only on answered/passed/hidden.
+- [x] TODO-9.70 `activeDeliveryCount` is decremented only on answered/passed/hidden.
 - [x] TODO-9.71 Read marking and push failure do not decrement `activeDeliveryCount`.
 - [x] TODO-9.72 Rematch increments `activeDeliveryCount` for newly created delivery recipients.
 - [x] TODO-9.73 Publication/rematch reject recipients with `activeDeliveryCount >= 10` inside the creation transaction.
 - [x] TODO-9.74 Publication retry paths do not double-increment `activeDeliveryCount`.
-- [ ] TODO-9.75 Reply/pass/hide retry paths do not double-decrement `activeDeliveryCount`.
+- [x] TODO-9.75 Reply/pass/hide retry paths do not double-decrement `activeDeliveryCount`.
 - [x] TODO-9.76 Rematch retry paths do not double-increment or double-decrement `activeDeliveryCount`.
 - [x] TODO-9.77 AI fallback only when 24h, delivery cap exhausted, zero human replies, no existing AI.
 - [x] TODO-9.78 AI fallback does not trigger if any human reply exists, including a reply submitted after 8 hours by an original recipient.
