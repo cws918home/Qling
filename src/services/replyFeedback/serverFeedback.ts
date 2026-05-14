@@ -1,6 +1,8 @@
 import { FieldValue, type Firestore } from 'firebase-admin/firestore';
 import type { Messaging } from 'firebase-admin/messaging';
 import { processSimpleModerationResponse, type SimpleProvider } from '../../server/moderationResponses';
+import { getModerationRejectionCopy } from '../moderation/rejectionCopy';
+import { validateContent } from '../validation/content';
 import { createReplyFeedbackPushService } from './feedbackPush';
 import { createReplyFeedbackRepository } from './serverFirestore';
 import type { ReplyFeedbackType, ServerReplyFeedbackResult } from './types';
@@ -82,11 +84,15 @@ export async function submitReplyFeedbackOnServer(params: SubmitReplyFeedbackOnS
       uid: params.publisherUid,
       originalContent: commentResult.comment,
       status: moderation.statusCode === 200 ? moderation.body.status : 'provider_error',
-      reasonCode: moderation.statusCode === 200 && moderation.body.status === 'rejected' ? moderation.body.reason : '',
-      userMessage: moderation.statusCode === 200 && moderation.body.status === 'rejected'
-        ? moderation.body.reason
+      reasonCode: moderation.statusCode === 200 && moderation.body.status === 'rejected'
+        ? getModerationRejectionCopy(moderation.body.reason).reasonCode
         : '',
-      helpMessage: null,
+      userMessage: moderation.statusCode === 200 && moderation.body.status === 'rejected'
+        ? getModerationRejectionCopy(moderation.body.reason).userMessage
+        : '',
+      helpMessage: moderation.statusCode === 200 && moderation.body.status === 'rejected'
+        ? getModerationRejectionCopy(moderation.body.reason).helpMessage
+        : null,
       rawProviderResponse: moderation.body,
       provider: 'feedback_comment',
       model: 'configured-provider',
@@ -99,10 +105,14 @@ export async function submitReplyFeedbackOnServer(params: SubmitReplyFeedbackOnS
     }
 
     if (moderation.body.status === 'rejected') {
+      const copy = getModerationRejectionCopy(moderation.body.reason);
       return {
         status: 'rejected',
         code: 'comment_rejected',
-        message: moderation.body.reason,
+        message: copy.userMessage,
+        reasonCode: copy.reasonCode,
+        userMessage: copy.userMessage,
+        helpMessage: copy.helpMessage ?? undefined,
         moderationLogId: commentModerationLogId,
       };
     }
@@ -159,20 +169,12 @@ function parseComment(value: unknown): { status: 'ok'; comment: string | null } 
     return { status: 'ok', comment: null };
   }
 
-  if (typeof value !== 'string') {
-    return { status: 'error', result: { status: 'validation_error', code: 'comment_empty', message: '코멘트를 입력해 주세요.' } };
+  const validation = validateContent(value, 'feedback_comment');
+  if (validation.status === 'validation_error') {
+    return { status: 'error', result: validation };
   }
 
-  const trimmed = value.trim();
-  if (!trimmed) {
-    return { status: 'error', result: { status: 'validation_error', code: 'comment_empty', message: '코멘트를 입력해 주세요.' } };
-  }
-
-  if (trimmed.length > 1000) {
-    return { status: 'error', result: { status: 'validation_error', code: 'comment_too_long', message: '코멘트는 1000자 이내로 입력해 주세요.' } };
-  }
-
-  return { status: 'ok', comment: trimmed };
+  return { status: 'ok', comment: validation.content };
 }
 
 function mapRepositoryError(code: string): ServerReplyFeedbackResult | null {

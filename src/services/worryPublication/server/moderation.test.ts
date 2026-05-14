@@ -42,7 +42,7 @@ test('rejected moderation maps reason code and message', () => {
   assert.equal(result.status, 'rejected');
   if (result.status !== 'rejected') return;
   assert.equal(result.reasonCode, 'personal_info');
-  assert.equal(result.userMessage, '개인정보가 포함되어 있습니다.');
+  assert.equal(result.userMessage, '개인정보가 포함되어 전송할 수 없습니다.');
 });
 
 test('invalid provider output retries once', async () => {

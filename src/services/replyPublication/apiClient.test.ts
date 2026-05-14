@@ -33,6 +33,7 @@ test('reply API client maps rejection and error responses', async () => {
       status: 'rejected',
       reasonCode: 'spam_promotion',
       userMessage: 'blocked',
+      helpMessage: 'help',
       moderationLogId: 'mod1',
     }), { status: 200 }),
   });
@@ -49,6 +50,8 @@ test('reply API client maps rejection and error responses', async () => {
     status: 'rejected',
     reason: 'blocked',
     reasonCode: 'spam_promotion',
+    userMessage: 'blocked',
+    helpMessage: 'help',
     moderationLogId: 'mod1',
   });
   assert.deepEqual(failed, {

@@ -102,9 +102,60 @@ test('whitespace-only comment is rejected before state lookup', async () => {
 
   assert.deepEqual(result, {
     status: 'validation_error',
-    code: 'comment_empty',
+    code: 'empty',
     message: '코멘트를 입력해 주세요.',
   });
+  assert.deepEqual(calls, []);
+});
+
+test('feedback comment validation rejects too long and allows short content', async () => {
+  const tooLongRepo = createRepository();
+  const tooLong = await submitReplyFeedbackOnServer({
+    db: {} as never,
+    repository: tooLongRepo.repository,
+    moderationProvider: async () => ({ status: 'approved' }),
+    pushService: { async sendReplyLiked() {} },
+    publisherUid: 'publisher',
+    replyId: 'reply-1',
+    type: 'like',
+    comment: 'a'.repeat(1001),
+  });
+  assert.equal(tooLong.status, 'validation_error');
+  assert.equal(tooLong.status === 'validation_error' ? tooLong.code : '', 'too_long');
+  assert.deepEqual(tooLongRepo.calls, []);
+
+  const shortRepo = createRepository();
+  const short = await submitReplyFeedbackOnServer({
+    db: {} as never,
+    repository: shortRepo.repository,
+    moderationProvider: async () => ({ status: 'approved' }),
+    pushService: { async sendReplyLiked() {} },
+    publisherUid: 'publisher',
+    replyId: 'reply-1',
+    type: 'like',
+    comment: '굿',
+  });
+  assert.equal(short.status, 'saved');
+  assert.equal(shortRepo.calls.length, 1);
+});
+
+test('rejected feedback comment creates no feedback state and returns canonical copy', async () => {
+  const { repository, calls } = createRepository();
+  const result = await submitReplyFeedbackOnServer({
+    db: {} as never,
+    repository,
+    moderationProvider: async () => ({ status: 'rejected', reason: 'self harm' }),
+    publisherUid: 'publisher',
+    replyId: 'reply-1',
+    type: 'like',
+    comment: 'comment',
+  });
+
+  assert.equal(result.status, 'rejected');
+  if (result.status !== 'rejected') return;
+  assert.equal(result.reasonCode, 'self_harm_suicide');
+  assert.equal(result.userMessage, '자해나 자살 위험 표현이 포함되어 전송할 수 없습니다.');
+  assert.equal(result.helpMessage?.length > 0, true);
   assert.deepEqual(calls, []);
 });
 

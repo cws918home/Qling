@@ -596,13 +596,13 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 12: Input validation and copy
 
-- [ ] TODO-5.103 Goal: common validation and PRD moderation copy.
-- [ ] TODO-5.104 Files: create `src/services/validation/content.ts`; update publish/reply/feedback APIs and UI forms.
-- [ ] TODO-5.105 Rules: trim, non-empty, max 1000; remove current/implicit min 10 constraints if any exist.
-- [ ] TODO-5.106 Copy: moderation failure reason messages, high-risk help message, preserve drafts on failure.
-- [ ] TODO-5.107 Tests: validator unit tests, API validation, draft preservation UI/manual tests.
-- [ ] TODO-5.108 Explicit non-goals: rich text.
-- [ ] TODO-5.109 Deletion test: removing validator should cause API tests to fail across worry/reply/comment.
+- [x] TODO-5.103 Goal: common validation and PRD moderation copy.
+- [x] TODO-5.104 Files: create `src/services/validation/content.ts`; update publish/reply/feedback APIs and UI forms.
+- [x] TODO-5.105 Rules: trim, non-empty, max 1000; remove current/implicit min 10 constraints if any exist.
+- [x] TODO-5.106 Copy: moderation failure reason messages, high-risk help message, preserve drafts on failure.
+- [x] TODO-5.107 Tests: validator unit tests, API validation, draft preservation UI/manual tests.
+- [x] TODO-5.108 Explicit non-goals: rich text.
+- [x] TODO-5.109 Deletion test: removing validator should cause API tests to fail across worry/reply/comment.
 
 ### Slice 13: Notifications
 
@@ -757,8 +757,8 @@ All error responses should use `{ error: { code: string, message: string, detail
 ### Unit Policy Tests
 
 - [x] TODO-9.1 Moderation normalization preserves raw/valid/invalid/matching categories.
-- [ ] TODO-9.2 Reason code mapping and high-risk help message.
-- [ ] TODO-9.3 Input validator trims, rejects empty, rejects >1000, allows short content.
+- [x] TODO-9.2 Reason code mapping and high-risk help message.
+- [x] TODO-9.3 Input validator trims, rejects empty, rejects >1000, allows short content.
 - [x] TODO-9.4 Recipient selection exactly 5, 4 matched + 1 random, and returns a publish-blocking shortfall when fewer than 5 eligible recipients exist.
 - [x] TODO-9.5 Active delivery `< 10`, author/deleted/existing-recipient exclusion, and missing `deleted` treated as not deleted.
 - [x] TODO-9.6 Rematch additive batch sizing, PRD 8.5 random-slot replacement semantics, duplicate-recipient exclusion, and 15 cap.
@@ -863,13 +863,13 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.82 First screen is `답변하기`.
 - [x] TODO-9.83 Bottom tabs match PRD.
 - [x] TODO-9.84 Worry write starts from `나의 고민`.
-- [ ] TODO-9.85 Moderation failure preserves draft and shows reason/help copy.
+- [x] TODO-9.85 Moderation failure preserves draft and shows reason/help copy.
 - [x] TODO-9.86 Happy path publish -> receive -> read.
 - [x] TODO-9.87 Happy path reply -> author reads.
 - [x] TODO-9.88 Happy path like.
-- [ ] TODO-9.89 Rejection path: unsafe worry not saved.
-- [ ] TODO-9.90 Rejection path: unsafe reply not saved.
-- [ ] TODO-9.91 Rejection path: unsafe feedback comment not saved.
+- [x] TODO-9.89 Rejection path: unsafe worry not saved.
+- [x] TODO-9.90 Rejection path: unsafe reply not saved.
+- [x] TODO-9.91 Rejection path: unsafe feedback comment not saved.
 - [x] TODO-9.92 Pass manual simulation, including immediate replacement success and no-eligible-recipient shortfall.
 - [x] TODO-9.93 Additive rematch manual simulation, including old active deliveries remaining answerable.
 - [x] TODO-9.94 AI fallback manual simulation, including old active deliveries remaining answerable.

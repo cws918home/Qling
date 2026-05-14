@@ -35,6 +35,17 @@ export function createReplyFeedbackApiClient(params: {
         throw new Error(code);
       }
 
+      if (body?.status === 'rejected') {
+        return {
+          status: 'rejected',
+          reason: body.userMessage ?? body.message ?? '부적절한 표현이 감지되었습니다.',
+          reasonCode: body.reasonCode,
+          userMessage: body.userMessage,
+          helpMessage: body.helpMessage,
+          moderationLogId: body.moderationLogId,
+        };
+      }
+
       return body as SubmitReplyFeedbackResult;
     },
   };

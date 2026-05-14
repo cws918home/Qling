@@ -11,10 +11,15 @@ export interface ReplyFeedbackTarget {
 }
 
 export interface SubmitReplyFeedbackResult {
-  status: 'saved';
+  status: 'saved' | 'rejected';
   feedbackId?: string;
   helpedCountApplied?: boolean;
   feedback?: LegacyReplyFeedback;
+  reason?: string;
+  reasonCode?: string;
+  userMessage?: string;
+  helpMessage?: string;
+  moderationLogId?: string;
 }
 
 export interface ReplyFeedbackPersistence {
@@ -51,8 +56,8 @@ export interface ReplyFeedbackDoc {
 
 export type ServerReplyFeedbackResult =
   | { status: 'saved'; feedbackId: string; helpedCountApplied: boolean }
-  | { status: 'validation_error'; code: 'invalid_type' | 'comment_empty' | 'comment_too_long'; message: string }
-  | { status: 'rejected'; code: 'comment_rejected'; message: string; moderationLogId: string }
+  | { status: 'validation_error'; code: 'invalid_type' | 'empty' | 'too_long' | 'invalid_content_type'; message: string }
+  | { status: 'rejected'; code: 'comment_rejected'; message: string; reasonCode: string; userMessage: string; helpMessage?: string; moderationLogId: string }
   | { status: 'provider_error'; code: 'provider_error' | 'provider_invalid'; message: string; details?: unknown }
   | { status: 'forbidden'; code: 'not_worry_publisher' | 'reply_worry_mismatch' | 'publisher_reply_forbidden' | 'invalid_reply'; message: string }
   | { status: 'not_found'; code: 'reply_missing' | 'worry_missing'; message: string }

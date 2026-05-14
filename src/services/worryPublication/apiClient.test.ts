@@ -23,3 +23,26 @@ test('wrapper sends Authorization bearer token and only content body', async () 
   assert.equal((request?.init?.headers as Record<string, string>).Authorization, 'Bearer token');
   assert.deepEqual(JSON.parse(String(request?.init?.body)), { content: 'hello' });
 });
+
+test('worry API client preserves structured rejection fields', async () => {
+  const result = await publishWorryViaApi({
+    user: { getIdToken: async () => 'token' } as never,
+    content: 'bad',
+    fetchImpl: async () => new Response(JSON.stringify({
+      status: 'rejected',
+      reasonCode: 'crime_violence_victim',
+      userMessage: 'blocked',
+      helpMessage: 'help',
+      moderationLogId: 'mod1',
+    }), { status: 200 }),
+  });
+
+  assert.deepEqual(result, {
+    status: 'rejected',
+    reason: 'blocked',
+    reasonCode: 'crime_violence_victim',
+    userMessage: 'blocked',
+    helpMessage: 'help',
+    moderationLogId: 'mod1',
+  });
+});

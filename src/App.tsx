@@ -24,7 +24,6 @@ import { auth, db, googleProvider, messaging } from './firebase';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Send,
-  Inbox,
   ArrowLeft,
   Radio,
   Headphones,
@@ -37,7 +36,6 @@ import {
   MessageSquare,
   CheckCircle2,
   XCircle,
-  Settings,
   ThumbsUp,
   FileText,
   Bell,
@@ -99,6 +97,8 @@ import {
   type AppRoute,
   type PrdAppTab,
 } from './services/appShell/prdNavigationPolicy';
+import { CONTENT_MAX_LENGTH, validateDraftContent } from './services/validation/content';
+import { clearDraft, getDraft, setDraft, type DraftMap } from './services/drafts/contentDrafts';
 
 // --- Constants ---
 const CATEGORIES = WORRY_CATEGORIES;
@@ -174,6 +174,9 @@ export default function App() {
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [worryDraft, setWorryDraft] = useState('');
+  const [replyDrafts, setReplyDrafts] = useState<DraftMap>({});
+  const [feedbackCommentDrafts, setFeedbackCommentDrafts] = useState<DraftMap>({});
   
   // PWA Install Logic
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -375,6 +378,11 @@ export default function App() {
 
   const [filterAlert, setFilterAlert] = useState<string | null>(null);
 
+  const showRejectionAlert = (result: { reason?: string; userMessage?: string; helpMessage?: string }) => {
+    const message = result.userMessage ?? result.reason ?? "오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+    setFilterAlert(result.helpMessage ? `${message}\n\n${result.helpMessage}` : message);
+  };
+
   const publishWorry = async (content: string) => {
     if (!user || !profile) {
       setFilterAlert("로그인 정보가 없습니다.");
@@ -389,7 +397,7 @@ export default function App() {
       });
 
       if (result.status === 'rejected') {
-        setFilterAlert(result.reason || "오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        showRejectionAlert(result);
         return;
       }
 
@@ -402,6 +410,7 @@ export default function App() {
         console.warn("Worry publication completed with warnings:", result.warnings);
       }
 
+      setWorryDraft('');
       setView(routeAfterWorryPublish());
       window.scrollTo(0, 0);
     } catch (e: any) {
@@ -430,7 +439,7 @@ export default function App() {
       });
 
       if (result.status === 'rejected') {
-        setFilterAlert(result.reason);
+        showRejectionAlert(result);
         return;
       }
 
@@ -440,6 +449,7 @@ export default function App() {
       }
 
       setView(routeAfterReplyPublish());
+      setReplyDrafts(prev => worry.deliveryId ? clearDraft(prev, worry.deliveryId) : prev);
       setSelectedWorry(null);
     } catch (e) {
       console.error(e);
@@ -512,6 +522,10 @@ export default function App() {
         reply: selectedReply,
         feedbackType,
       });
+      if (result.status === 'rejected') {
+        showRejectionAlert(result);
+        return;
+      }
       setSelectedReply(prev => prev ? { ...prev, feedback: result.feedback } : null);
       setView(prev => routeAfterFeedbackPublish(prev));
     } catch (e) {
@@ -930,7 +944,13 @@ export default function App() {
               <h2 className="text-2xl font-serif font-bold mb-2">당신의 이야기를 들려주세요</h2>
               <p className="text-[#8B8B6B] mb-8">마음 한구석에 담아둔 고민을 적어보세요. AI 안심 필터가 내용을 확인한 뒤, 가장 따뜻한 답변을 줄 수 있는 이웃에게 전달합니다.</p>
               
-              <WriteForm type="worry" isProcessing={isProcessing} onSubmit={publishWorry} />
+              <WriteForm
+                type="worry"
+                value={worryDraft}
+                onChange={setWorryDraft}
+                isProcessing={isProcessing}
+                onSubmit={publishWorry}
+              />
             </motion.div>
           )}
 
@@ -947,7 +967,17 @@ export default function App() {
               
               <h2 className="text-2xl font-serif font-bold mb-2">위로를 건네주세요</h2>
               
-              <WriteForm type="reply" isProcessing={isProcessing} onSubmit={(content) => sendReply(content, selectedWorry)} />
+              <WriteForm
+                type="reply"
+                value={getDraft(replyDrafts, selectedWorry.deliveryId)}
+                onChange={content => {
+                  if (selectedWorry.deliveryId) {
+                    setReplyDrafts(prev => setDraft(prev, selectedWorry.deliveryId as string, content));
+                  }
+                }}
+                isProcessing={isProcessing}
+                onSubmit={(content) => sendReply(content, selectedWorry)}
+              />
             </motion.div>
           )}
 
@@ -1086,16 +1116,25 @@ export default function App() {
                           <CommentForm 
                             replyId={selectedReply.id} 
                             replierId={selectedReply.senderId}
+                            value={getDraft(feedbackCommentDrafts, selectedReply.id)}
+                            onChange={content => setFeedbackCommentDrafts(prev => setDraft(prev, selectedReply.id, content))}
                             onCommentAdded={(c) => setSelectedReply({...selectedReply, publisherComment: c})} 
                             onSubmit={selectedReply.source === 'prd_replies'
                               ? async content => {
-                                await submitReplyFeedbackWithProductionAdapters({
+                                const result = await submitReplyFeedbackWithProductionAdapters({
                                   reply: selectedReply,
                                   feedbackType: 'helpful',
                                   comment: content,
                                 });
+                                if (result.status === 'rejected') {
+                                  showRejectionAlert(result);
+                                  return result;
+                                }
+                                setFeedbackCommentDrafts(prev => clearDraft(prev, selectedReply.id));
+                                return result;
                               }
                               : undefined}
+                            onError={message => setFilterAlert(message)}
                           />
 
                         </div>
@@ -1286,26 +1325,39 @@ function OnboardingForm({ onSubmit, isProcessing, initialGender = '', initialInt
   );
 }
 
-function WriteForm({ type, isProcessing, onSubmit }: { type: 'worry'|'reply', isProcessing: boolean, onSubmit: (content: string) => void }) {
-  const [content, setContent] = useState('');
-
-  const charCount = content.replace(/\s/g, '').length;
-  const isLengthValid = charCount >= 10;
-  const isValid = isLengthValid;
+function WriteForm({
+  type,
+  value,
+  onChange,
+  isProcessing,
+  onSubmit,
+}: {
+  type: 'worry'|'reply';
+  value: string;
+  onChange: (content: string) => void;
+  isProcessing: boolean;
+  onSubmit: (content: string) => void;
+}) {
+  const validation = validateDraftContent(value, type);
+  const trimmedLength = value.trim().length;
+  const isTooLong = trimmedLength > CONTENT_MAX_LENGTH;
+  const isValid = validation.status === 'valid';
 
   return (
     <div className="space-y-6">
       <div className="relative">
         <textarea 
-          value={content} onChange={e => setContent(e.target.value)}
+          value={value} onChange={e => onChange(e.target.value)}
           placeholder={type === 'worry' ? "오늘 하루 속상했던 일, 불안했던 생각들을 편하게 털어놓으세요." : "따뜻한 위로의 말을 남겨주세요."}
           className="w-full h-48 bg-white p-6 rounded-2xl border border-[#FAEDCD] resize-none focus:outline-none focus:ring-2 focus:ring-[#D4A373] placeholder:text-[#E9EDC9] leading-loose shadow-inner"
         />
         <div className="absolute bottom-4 right-6 text-xs font-medium text-[#8B8B6B]">
-          {isLengthValid ? (
-            <span className="text-[#A3B18A]">{charCount}자 작성됨</span>
+          {isTooLong ? (
+            <span className="text-[#E07A5F]">{trimmedLength}/{CONTENT_MAX_LENGTH}자</span>
+          ) : trimmedLength > 0 ? (
+            <span className="text-[#A3B18A]">{trimmedLength}자 작성됨</span>
           ) : (
-            <span className="text-[#E07A5F]">최소 10자 이상 작성해주세요 (공백 제외 {charCount}자)</span>
+            <span className="text-[#8B8B6B]">최대 {CONTENT_MAX_LENGTH}자</span>
           )}
         </div>
       </div>
@@ -1320,7 +1372,7 @@ function WriteForm({ type, isProcessing, onSubmit }: { type: 'worry'|'reply', is
 
       <button 
         disabled={!isValid || isProcessing}
-        onClick={() => onSubmit(content)}
+        onClick={() => onSubmit(value)}
         className="w-full py-4 bg-[#5A5A40] text-white rounded-xl font-bold shadow-xl hover:bg-[#4A4A30] disabled:opacity-50 transition-all flex items-center justify-center gap-3"
       >
         {isProcessing ? <><Loader2 className="w-5 h-5 animate-spin" /> 전송 중...</> : <><Send className="w-5 h-5" /> 전달하기</>}
@@ -1358,51 +1410,60 @@ function Tabs({ tabs, render }: { tabs: {id: string, label: string}[], render: (
 function CommentForm({
   replyId,
   replierId,
+  value,
+  onChange,
   onCommentAdded,
   onSubmit,
+  onError,
 }: {
   replyId: string;
   replierId: string;
+  value: string;
+  onChange: (content: string) => void;
   onCommentAdded: (c: string) => void;
-  onSubmit?: (content: string) => Promise<void>;
+  onSubmit?: (content: string) => Promise<void | { status: 'saved' | 'rejected'; reason?: string; userMessage?: string; helpMessage?: string }>;
+  onError?: (message: string) => void;
 }) {
-  const [content, setContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const charCount = content.replace(/\s/g, '').length;
-  const isLengthValid = charCount >= 10;
+  const validation = validateDraftContent(value, 'feedback_comment');
+  const trimmedLength = value.trim().length;
+  const isTooLong = trimmedLength > CONTENT_MAX_LENGTH;
+  const isValid = validation.status === 'valid';
 
   const submitComment = async () => {
-    if (!isLengthValid) return;
+    if (!isValid) return;
     setIsProcessing(true);
     try {
       if (onSubmit) {
-        await onSubmit(content);
-        onCommentAdded(content.trim());
+        const result = await onSubmit(value);
+        if (result && result.status === 'rejected') return;
+        onCommentAdded(value.trim());
         return;
       }
 
       const result = await publishPublisherCommentWithProductionAdapters({
         replyId,
         replierId,
-        content,
+        content: value,
       });
 
       if (result.type === 'rejected') {
-        alert("부적절한 표현이 감지되었습니다. 내용을 수정해주세요."); // Fallback alert for simplicity inside component
+        onError?.("부적절한 표현이 감지되었습니다. 내용을 수정해주세요.");
         return;
       }
 
       if (result.type === 'failed') {
         console.error(result.error);
-        alert("전송 실패");
+        onError?.("전송 실패");
         return;
       }
 
-      onCommentAdded(content);
+      onCommentAdded(value.trim());
+      onChange('');
     } catch (e) {
       console.error(e);
-      alert("전송 실패");
+      onError?.("전송 실패");
     } finally {
       setIsProcessing(false);
     }
@@ -1411,17 +1472,23 @@ function CommentForm({
     <div className="space-y-4">
       <div className="relative">
         <textarea 
-          value={content} onChange={e => setContent(e.target.value)}
-          placeholder="따뜻한 코멘트를 남겨주세요. (10자 이상)"
+          value={value} onChange={e => onChange(e.target.value)}
+          placeholder="따뜻한 코멘트를 남겨주세요."
           className="w-full h-32 bg-[#FDFCF8] p-4 rounded-xl border border-[#FAEDCD] resize-none focus:outline-none focus:ring-2 focus:ring-[#D4A373] text-sm"
         />
         <div className="absolute bottom-3 right-4 text-[10px] font-medium text-[#8B8B6B]">
-          {isLengthValid ? <span className="text-[#A3B18A]">{charCount}자 작성됨</span> : <span className="text-[#E07A5F]">{charCount}/10자</span>}
+          {isTooLong ? (
+            <span className="text-[#E07A5F]">{trimmedLength}/{CONTENT_MAX_LENGTH}자</span>
+          ) : trimmedLength > 0 ? (
+            <span className="text-[#A3B18A]">{trimmedLength}자 작성됨</span>
+          ) : (
+            <span>최대 {CONTENT_MAX_LENGTH}자</span>
+          )}
         </div>
       </div>
       
       <button 
-        disabled={!isLengthValid || isProcessing}
+        disabled={!isValid || isProcessing}
         onClick={submitComment}
         className="w-full py-3 bg-[#5A5A40] text-white rounded-xl font-bold hover:bg-[#4A4A30] disabled:opacity-50 transition-all text-sm"
       >

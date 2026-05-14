@@ -2,7 +2,7 @@ import type { User } from 'firebase/auth';
 
 export type ClientPublishWorryResult =
   | { status: 'published'; worryId: string; deliveryIds: string[]; moderationLogId: string; warnings: string[] }
-  | { status: 'rejected'; reason: string }
+  | { status: 'rejected'; reason: string; reasonCode?: string; userMessage?: string; helpMessage?: string; moderationLogId?: string }
   | { status: 'failed'; reason: string; code?: string };
 
 export async function publishWorryViaApi(params: {
@@ -46,6 +46,10 @@ export async function publishWorryViaApi(params: {
     return {
       status: 'rejected',
       reason: body.userMessage ?? '부적절한 표현이 감지되었습니다.',
+      reasonCode: body.reasonCode,
+      userMessage: body.userMessage,
+      helpMessage: body.helpMessage,
+      moderationLogId: body.moderationLogId,
     };
   }
 
