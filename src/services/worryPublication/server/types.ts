@@ -73,7 +73,7 @@ export interface WorryWriteModel {
   initialDeliveryBatchId: string;
   initialDeliveryTargetCount: 5;
   humanDeliveryLimit: 15;
-  humanDeliveryCount: 5;
+  humanDeliveryCount: number;
   humanReplyCount: 0;
   hasHumanReply: false;
   createdAt: ServerTimestampValue;
@@ -87,9 +87,9 @@ export interface DeliveryBatchWriteModel {
   batchRound: 0;
   createdAt: ServerTimestampValue;
   targetCount: 5;
-  createdCount: 5;
-  matchedCount: 4;
-  randomCount: 1;
+  createdCount: number;
+  matchedCount: number;
+  randomCount: number;
   reason: 'initial';
 }
 
@@ -156,4 +156,4 @@ export type ServerPublishWorryResult =
   | { status: 'rejected'; reasonCode: string; userMessage: string; helpMessage?: string; moderationLogId: string; targetId: string }
   | { status: 'validation_error'; code: 'empty' | 'too_long' | 'invalid_content_type'; message: string }
   | { status: 'provider_error'; code: 'provider_error' | 'provider_invalid'; message: string; details?: unknown }
-  | { status: 'server_error'; code: 'not_enough_recipients' | 'transaction_aborted' | 'firebase_unavailable'; message: string; details?: unknown };
+  | { status: 'server_error'; code: 'transaction_aborted' | 'firebase_unavailable'; message: string; details?: unknown };

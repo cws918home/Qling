@@ -22,8 +22,7 @@ export function isEligiblePhase1HumanCandidate(
 }
 
 export type InitialRecipientSelectionResult =
-  | { status: 'selected'; recipients: SelectedPhase1Recipient[] }
-  | { status: 'not_enough_recipients'; eligibleCount: number };
+  | { status: 'selected'; recipients: SelectedPhase1Recipient[] };
 
 export function selectInitialWorryRecipients(params: {
   author: Phase1AuthorProfile;
@@ -39,7 +38,20 @@ export function selectInitialWorryRecipients(params: {
   });
 
   if (eligible.length < INITIAL_DELIVERY_TARGET_COUNT) {
-    return { status: 'not_enough_recipients', eligibleCount: eligible.length };
+    return {
+      status: 'selected',
+      recipients: eligible.map((candidate, index): SelectedPhase1Recipient => ({
+        uid: candidate.uid,
+        gender: candidate.gender,
+        interests: candidate.interests,
+        helpedCount: candidate.helpedCount,
+        activeDeliveryCount: candidate.activeDeliveryCount,
+        selectionType: 'matched',
+        matchOverlapCount: candidate.matchOverlapCount,
+        matchCategoriesSnapshot: [...params.matchingCategories],
+        slotIndex: index,
+      })),
+    };
   }
 
   const matched = eligible.slice(0, INITIAL_MATCHED_DELIVERY_COUNT);

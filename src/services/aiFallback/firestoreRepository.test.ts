@@ -78,7 +78,17 @@ function createFakeFirestore(initial: Record<string, Record<string, unknown>>) {
     collection(name: string) {
       return {
         doc(id = `${name}-generated`) {
-          return docRef(`${name}/${id}`);
+          const ref = docRef(`${name}/${id}`);
+          return {
+            ...ref,
+            get: async () => {
+              const data = store.get(ref.path);
+              return {
+                exists: Boolean(data),
+                data: () => data ? { ...data } : undefined,
+              };
+            },
+          };
         },
         where(field: string, op: string, value: unknown) {
           return query(name, [{ field, op, value }]);
@@ -148,6 +158,8 @@ function candidate(worryId = 'worry1'): AiFallbackCandidate {
     createdAt: new Date('2026-05-11T00:00:00.000Z'),
     humanDeliveryCount: 15,
     humanDeliveryLimit: 15,
+    initialDeliveryBatchId: 'batch0',
+    initialDeliveryCreatedCount: 5,
   };
 }
 
@@ -222,6 +234,123 @@ test('candidate scan over-scans old under-cap worries so small limits still reac
   assert.deepEqual(candidates.map(item => item.worryId), ['eligible']);
 });
 
+test('zero-initial worry appears in fallback candidates after 24h', async () => {
+  const db = createFakeFirestore({
+    'worries/worry1': {
+      authorUid: 'author',
+      content: '고민',
+      status: 'active',
+      createdAt: new Date('2026-05-11T00:00:00.000Z'),
+      humanDeliveryLimit: 15,
+      humanDeliveryCount: 0,
+      initialDeliveryBatchId: 'batch0',
+    },
+    'deliveryBatches/batch0': {
+      worryId: 'worry1',
+      batchRound: 0,
+      reason: 'initial',
+      createdCount: 0,
+    },
+  });
+  const candidates = await createAiFallbackRepository({ db: db as never }).fetchCandidates({ now, limit: 10 });
+
+  assert.deepEqual(candidates.map(item => item.worryId), ['worry1']);
+  assert.equal(candidates[0]?.initialDeliveryCreatedCount, 0);
+});
+
+test('partial-initial worry remains fallback-eligible even if later rematches leave it under cap', async () => {
+  const docs: Record<string, Record<string, unknown>> = {
+    'worries/worry1': {
+      authorUid: 'author',
+      content: '고민',
+      status: 'active',
+      createdAt: new Date('2026-05-11T00:00:00.000Z'),
+      humanDeliveryLimit: 15,
+      humanDeliveryCount: 14,
+      initialDeliveryBatchId: 'batch0',
+    },
+    'deliveryBatches/batch0': {
+      worryId: 'worry1',
+      batchRound: 0,
+      reason: 'initial',
+      createdCount: 4,
+    },
+  };
+  for (let i = 0; i < 14; i += 1) {
+    docs[`deliveries/d${i}`] = {
+      worryId: 'worry1',
+      recipientUid: `recipient${i}`,
+      status: 'active',
+      isAiRecipient: false,
+    };
+  }
+  const db = createFakeFirestore(docs);
+  const repo = createAiFallbackRepository({ db: db as never });
+
+  const candidates = await repo.fetchCandidates({ now, limit: 10 });
+  assert.deepEqual(candidates.map(item => item.worryId), ['worry1']);
+
+  const result = await repo.commitApprovedReply({
+    runId: 'run1',
+    now,
+    candidate: candidates[0],
+    content: '답장',
+    moderationLog: moderationLog(),
+  });
+
+  assert.equal(result.status, 'created');
+  assert.equal(db.store.get('replies/worry1_ai')?.isAiGenerated, true);
+});
+
+test('normal under-cap non-zero initial worries still skip AI fallback', async () => {
+  const docs: Record<string, Record<string, unknown>> = {
+    'worries/worry1': {
+      authorUid: 'author',
+      content: '고민',
+      status: 'active',
+      createdAt: new Date('2026-05-11T00:00:00.000Z'),
+      humanDeliveryLimit: 15,
+      humanDeliveryCount: 14,
+      initialDeliveryBatchId: 'batch0',
+    },
+    'deliveryBatches/batch0': {
+      worryId: 'worry1',
+      batchRound: 0,
+      reason: 'initial',
+      createdCount: 5,
+    },
+  };
+  for (let i = 0; i < 14; i += 1) {
+    docs[`deliveries/d${i}`] = {
+      worryId: 'worry1',
+      recipientUid: `recipient${i}`,
+      status: 'active',
+      isAiRecipient: false,
+    };
+  }
+  const db = createFakeFirestore(docs);
+  const repo = createAiFallbackRepository({ db: db as never });
+
+  const candidates = await repo.fetchCandidates({ now, limit: 10 });
+  assert.deepEqual(candidates, []);
+
+  const result = await repo.commitApprovedReply({
+    runId: 'run1',
+    now,
+    candidate: {
+      ...candidate(),
+      humanDeliveryCount: 14,
+      initialDeliveryBatchId: 'batch0',
+      initialDeliveryCreatedCount: 5,
+    },
+    content: '답장',
+    moderationLog: moderationLog(),
+  });
+
+  assert.equal(result.status, 'skipped');
+  assert.equal(result.reason, 'human_delivery_cap_not_exhausted');
+});
+
 test('example worries are skipped during AI fallback scan', async () => {
   const db = createFakeFirestore(baseDocs({
     'worries/worry1': {
@@ -283,6 +412,42 @@ test('active deliveries do not expire and AI fallback creates exactly one AI rep
   assert.equal(db.store.get('deliveries/d0')?.status, 'active');
 });
 
+test('zero-initial worry can create AI reply after 24h when no human reply exists', async () => {
+  const db = createFakeFirestore({
+    'worries/worry1': {
+      authorUid: 'author',
+      content: '고민',
+      status: 'active',
+      createdAt: new Date('2026-05-11T00:00:00.000Z'),
+      humanDeliveryLimit: 15,
+      humanDeliveryCount: 0,
+      initialDeliveryBatchId: 'batch0',
+    },
+    'deliveryBatches/batch0': {
+      worryId: 'worry1',
+      batchRound: 0,
+      reason: 'initial',
+      createdCount: 0,
+    },
+  });
+
+  const result = await createAiFallbackRepository({ db: db as never }).commitApprovedReply({
+    runId: 'run1',
+    now,
+    candidate: {
+      ...candidate(),
+      humanDeliveryCount: 0,
+      initialDeliveryCreatedCount: 0,
+    },
+    content: '답장',
+    moderationLog: moderationLog(),
+  });
+
+  assert.equal(result.status, 'created');
+  assert.equal(db.store.get('replies/worry1_ai')?.deliveryId, 'ai:worry1');
+  assert.equal(db.store.get('worries/worry1')?.hasAiReply, true);
+});
+
 test('late human reply race re-queries current replies and skips without AI fields', async () => {
   const db = createFakeFirestore(baseDocs({
     'replies/human-reply': {
@@ -308,6 +473,57 @@ test('late human reply race re-queries current replies and skips without AI fiel
   assert.equal(db.store.has('replies/worry1_ai'), false);
   assert.equal(db.store.get('worries/worry1')?.hasAiReply, undefined);
   assert.equal(db.store.get('worries/worry1')?.aiReplyId, undefined);
+});
+
+test('human reply blocks partial-initial AI fallback', async () => {
+  const db = createFakeFirestore({
+    'worries/worry1': {
+      authorUid: 'author',
+      content: '고민',
+      status: 'active',
+      createdAt: new Date('2026-05-11T00:00:00.000Z'),
+      humanDeliveryLimit: 15,
+      humanDeliveryCount: 1,
+      initialDeliveryBatchId: 'batch0',
+    },
+    'deliveryBatches/batch0': {
+      worryId: 'worry1',
+      batchRound: 0,
+      reason: 'initial',
+      createdCount: 1,
+    },
+    'deliveries/d0': {
+      worryId: 'worry1',
+      recipientUid: 'recipient0',
+      status: 'active',
+      isAiRecipient: false,
+    },
+    'replies/human-reply': {
+      deliveryId: 'd0',
+      worryId: 'worry1',
+      authorUid: 'author',
+      replierUid: 'recipient0',
+      content: 'human',
+      status: 'active',
+      isAiGenerated: false,
+    },
+  });
+
+  const result = await createAiFallbackRepository({ db: db as never }).commitApprovedReply({
+    runId: 'run1',
+    now,
+    candidate: {
+      ...candidate(),
+      humanDeliveryCount: 1,
+      initialDeliveryCreatedCount: 1,
+    },
+    content: '답장',
+    moderationLog: moderationLog(),
+  });
+
+  assert.equal(result.status, 'skipped');
+  assert.equal(result.reason, 'human_reply_exists');
+  assert.equal(db.store.has('replies/worry1_ai'), false);
 });
 
 test('original recipient reply after additive rematch blocks AI fallback', async () => {

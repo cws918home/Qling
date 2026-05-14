@@ -135,6 +135,94 @@ test('valid Round 0 creates Round 1 and existing Round 1 blocks another Round 1'
   assert.equal(repo.commits, 0);
 });
 
+test('zero-initial Round 0 batch enters rematch and targets later human deliveries', async () => {
+  repo = repository([scan({
+    humanDeliveryCount: 0,
+    sourceDeliveries: [],
+    allDeliveries: [],
+  })], {
+    onCommit: async params => {
+      assert.equal(params.nextRound, 1);
+      assert.equal(params.sourceBatch.id, 'batch0');
+      assert.equal(params.targetCount, 5);
+      assert.equal(params.recipients.length, 5);
+      return {
+        status: 'created',
+        worryId: params.scan.worryId,
+        batchId: 'worry1_rematch_1',
+        deliveryIds: params.recipients.map(recipient => `worry1_${recipient.uid}`),
+        recipientUids: params.recipients.map(recipient => recipient.uid),
+        createdCount: params.recipients.length,
+      };
+    },
+  });
+
+  const result = await rematchDueDeliveries({
+    db: {} as never,
+    messaging: null,
+    now,
+    repository: repo,
+    random: () => 0,
+    pushAdapter: async () => undefined,
+  });
+
+  assert.equal(result.status, 'completed');
+  assert.equal(result.createdDeliveryCount, 5);
+  assert.equal(repo.commits, 1);
+});
+
+test('partial initial Round 0 batch enters rematch and excludes original recipients', async () => {
+  repo = repository([scan({
+    humanDeliveryCount: 4,
+    sourceDeliveries: [
+      { id: 'worry1_r0a', worryId: 'worry1', batchId: 'batch0', recipientUid: 'r0a', selectionType: 'matched', answeredAt: null },
+      { id: 'worry1_r0b', worryId: 'worry1', batchId: 'batch0', recipientUid: 'r0b', selectionType: 'matched', answeredAt: null },
+      { id: 'worry1_r0c', worryId: 'worry1', batchId: 'batch0', recipientUid: 'r0c', selectionType: 'matched', answeredAt: null },
+      { id: 'worry1_r0d', worryId: 'worry1', batchId: 'batch0', recipientUid: 'r0d', selectionType: 'matched', answeredAt: null },
+    ],
+    allDeliveries: ['r0a', 'r0b', 'r0c', 'r0d'].map(uid => ({
+      id: `worry1_${uid}`,
+      worryId: 'worry1',
+      recipientUid: uid,
+      isAiRecipient: false,
+    })),
+    candidates: ['r0a', 'r1a', 'r1b', 'r1c', 'r1d', 'r1e'].map(uid => ({
+      uid,
+      gender: 'female',
+      interests: ['career'],
+      helpedCount: 0,
+      activeDeliveryCount: 0,
+    })),
+  })], {
+    onCommit: async params => {
+      assert.equal(params.targetCount, 5);
+      assert.equal(params.recipients.some(recipient => recipient.uid === 'r0a'), false);
+      assert.equal(params.recipients.length, 5);
+      return {
+        status: 'created',
+        worryId: params.scan.worryId,
+        batchId: 'worry1_rematch_1',
+        deliveryIds: params.recipients.map(recipient => `worry1_${recipient.uid}`),
+        recipientUids: params.recipients.map(recipient => recipient.uid),
+        createdCount: params.recipients.length,
+      };
+    },
+  });
+
+  const result = await rematchDueDeliveries({
+    db: {} as never,
+    messaging: null,
+    now,
+    repository: repo,
+    random: () => 0,
+    pushAdapter: async () => undefined,
+  });
+
+  assert.equal(result.status, 'completed');
+  assert.equal(result.createdDeliveryCount, 5);
+  assert.equal(repo.commits, 1);
+});
+
 test('Round 1 source creates Round 2 and Round 2 blocks Round 3', async () => {
   repo = repository([scan({
     humanDeliveryCount: 10,

@@ -32,6 +32,49 @@ test('selects exactly 5 recipients with 4 matched and 1 random', () => {
   assert.equal(result.recipients.filter(r => r.selectionType === 'random').length, 1);
 });
 
+test('selects empty list when no eligible recipients exist', () => {
+  const result = selectInitialWorryRecipients({
+    author: { uid: 'author', gender: 'female', interests: ['취업'] },
+    candidates: [],
+    matchingCategories: ['취업'],
+    random: () => 0,
+  });
+
+  assert.equal(result.status, 'selected');
+  assert.deepEqual(result.recipients, []);
+});
+
+test('selects all 1-4 eligible recipients as matched with sequential slots', () => {
+  for (const count of [1, 4]) {
+    const result = selectInitialWorryRecipients({
+      author: { uid: 'author', gender: 'female', interests: ['취업'] },
+      candidates: ['a', 'b', 'c', 'd'].slice(0, count).map(uid => candidate(uid)),
+      matchingCategories: ['취업'],
+      random: () => 0,
+    });
+
+    assert.equal(result.status, 'selected');
+    assert.equal(result.recipients.length, count);
+    assert.equal(result.recipients.every(recipient => recipient.selectionType === 'matched'), true);
+    assert.deepEqual(result.recipients.map(recipient => recipient.slotIndex), Array.from({ length: count }, (_, index) => index));
+  }
+});
+
+test('selected recipients are unique for partial and full selections', () => {
+  for (const count of [0, 1, 4, 5, 8]) {
+    const result = selectInitialWorryRecipients({
+      author: { uid: 'author', gender: 'female', interests: ['취업'] },
+      candidates: Array.from({ length: count }, (_, index) => candidate(`u${index}`)),
+      matchingCategories: ['취업'],
+      random: () => 0.2,
+    });
+
+    assert.equal(result.status, 'selected');
+    assert.equal(new Set(result.recipients.map(recipient => recipient.uid)).size, result.recipients.length);
+    assert.equal(result.recipients.length, Math.min(count, 5));
+  }
+});
+
 test('excludes author, deleted, inactive, disabled, bots, and over-limit users', () => {
   const authorUid = 'author';
   const excluded = [

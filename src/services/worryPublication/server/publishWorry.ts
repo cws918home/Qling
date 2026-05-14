@@ -77,6 +77,7 @@ function buildWorry(params: {
   validCategories: string[];
   invalidCategories: string[];
   matchingCategories: string[];
+  humanDeliveryCount: number;
 }): WorryWriteModel {
   const timestamp = serverTimestamp();
   return {
@@ -92,7 +93,7 @@ function buildWorry(params: {
     initialDeliveryBatchId: params.batchId,
     initialDeliveryTargetCount: 5,
     humanDeliveryLimit: 15,
-    humanDeliveryCount: 5,
+    humanDeliveryCount: params.humanDeliveryCount,
     humanReplyCount: 0,
     hasHumanReply: false,
     createdAt: timestamp,
@@ -101,16 +102,22 @@ function buildWorry(params: {
   };
 }
 
-function buildBatch(params: { batchId: string; worryId: string }): DeliveryBatchWriteModel {
+function buildBatch(params: {
+  batchId: string;
+  worryId: string;
+  createdCount: number;
+  matchedCount: number;
+  randomCount: number;
+}): DeliveryBatchWriteModel {
   return {
     id: params.batchId,
     worryId: params.worryId,
     batchRound: 0,
     createdAt: serverTimestamp(),
     targetCount: 5,
-    createdCount: 5,
-    matchedCount: 4,
-    randomCount: 1,
+    createdCount: params.createdCount,
+    matchedCount: params.matchedCount,
+    randomCount: params.randomCount,
     reason: 'initial',
   };
 }
@@ -229,14 +236,14 @@ export async function publishWorryOnServer(params: {
     random: params.random ?? Math.random,
   });
 
-  if (selection.status === 'not_enough_recipients') {
-    return {
-      status: 'server_error',
-      code: 'not_enough_recipients',
-      message: '고민을 전달할 수 있는 사용자가 부족합니다.',
-      details: { eligibleCount: selection.eligibleCount },
-    };
-  }
+  const deliveries = buildDeliveries({
+    worryId: ids.worryId,
+    batchId: ids.batchId,
+    author: params.author,
+    recipients: selection.recipients,
+  });
+  const matchedCount = selection.recipients.filter(recipient => recipient.selectionType === 'matched').length;
+  const randomCount = selection.recipients.filter(recipient => recipient.selectionType === 'random').length;
 
   const moderationLog = buildModerationLog({
     id: ids.moderationLogId,
@@ -263,13 +270,14 @@ export async function publishWorryOnServer(params: {
     validCategories: moderation.validCategories,
     invalidCategories: moderation.invalidCategories,
     matchingCategories: moderation.matchingCategories,
+    humanDeliveryCount: deliveries.length,
   });
-  const batch = buildBatch({ batchId: ids.batchId, worryId: ids.worryId });
-  const deliveries = buildDeliveries({
-    worryId: ids.worryId,
+  const batch = buildBatch({
     batchId: ids.batchId,
-    author: params.author,
-    recipients: selection.recipients,
+    worryId: ids.worryId,
+    createdCount: deliveries.length,
+    matchedCount,
+    randomCount,
   });
 
   try {
@@ -282,16 +290,18 @@ export async function publishWorryOnServer(params: {
       eligibilitySnapshot: buildRecipientEligibilitySnapshot(selection.recipients),
     });
 
-    await sendNewWorryPushesAfterCommit({
-      db: params.db,
-      messaging: params.messaging,
-      deliveries: deliveries.map(delivery => ({
-        deliveryId: delivery.id,
-        recipientUid: delivery.recipientUid,
-        worryId: delivery.worryId,
-      })),
-      now: params.now,
-    });
+    if (deliveries.length > 0) {
+      await sendNewWorryPushesAfterCommit({
+        db: params.db,
+        messaging: params.messaging,
+        deliveries: deliveries.map(delivery => ({
+          deliveryId: delivery.id,
+          recipientUid: delivery.recipientUid,
+          worryId: delivery.worryId,
+        })),
+        now: params.now,
+      });
+    }
 
     return {
       status: 'published',

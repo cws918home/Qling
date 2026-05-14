@@ -3,8 +3,12 @@ import assert from 'node:assert/strict';
 import { publishWorryOnServer } from './publishWorry';
 import type {
   InitialWorryPublicationRepository,
+  CommittedInitialWorryPublication,
+  DeliveryBatchWriteModel,
+  DeliveryWriteModel,
   ModerationLogWriteModel,
   Phase1HumanCandidate,
+  WorryWriteModel,
 } from './types';
 
 function createFakeDb(options: {
@@ -59,6 +63,12 @@ function candidate(uid: string, interests = ['취업']): Phase1HumanCandidate {
 function createFakeRepository(candidates: Phase1HumanCandidate[]): InitialWorryPublicationRepository & {
   moderationLogs: ModerationLogWriteModel[];
   commits: number;
+  lastCommit?: {
+    worry: WorryWriteModel;
+    batch: DeliveryBatchWriteModel;
+    deliveries: DeliveryWriteModel[];
+    selectedRecipientUids: string[];
+  };
 } {
   return {
     moderationLogs: [],
@@ -79,20 +89,38 @@ function createFakeRepository(candidates: Phase1HumanCandidate[]): InitialWorryP
     },
     commitInitialWorryPublication: async params => {
       repo.commits += 1;
+      repo.lastCommit = {
+        worry: params.worry,
+        batch: params.batch,
+        deliveries: params.deliveries,
+        selectedRecipientUids: params.selectedRecipientUids,
+      };
       assert.equal(params.worry.id, 'worry1');
       assert.equal(params.batch.batchRound, 0);
-      assert.equal(params.deliveries.length, 5);
+      assert.equal(params.worry.initialDeliveryTargetCount, 5);
+      assert.equal(params.worry.humanDeliveryLimit, 15);
+      assert.equal(params.worry.humanDeliveryCount, params.deliveries.length);
+      assert.equal(params.batch.targetCount, 5);
+      assert.equal(params.batch.createdCount, params.deliveries.length);
+      assert.equal(params.batch.matchedCount, params.deliveries.filter(delivery => delivery.selectionType === 'matched').length);
+      assert.equal(params.batch.randomCount, params.deliveries.filter(delivery => delivery.selectionType === 'random').length);
       assert.deepEqual(params.deliveries.map(d => d.id), params.deliveries.map(d => `worry1_${d.recipientUid}`));
       assert.ok(params.deliveries.every(d => d.authorGenderSnapshot === 'female'));
       return {
         worryId: params.worry.id,
         deliveryIds: params.deliveries.map(d => d.id),
         moderationLogId: params.moderationLog.id,
-      };
+      } satisfies CommittedInitialWorryPublication;
     },
   } as InitialWorryPublicationRepository & {
     moderationLogs: ModerationLogWriteModel[];
     commits: number;
+    lastCommit?: {
+      worry: WorryWriteModel;
+      batch: DeliveryBatchWriteModel;
+      deliveries: DeliveryWriteModel[];
+      selectedRecipientUids: string[];
+    };
   };
 }
 
@@ -114,6 +142,8 @@ test('happy path creates canonical worry batch deliveries and moderation log', a
   if (result.status !== 'published') return;
   assert.equal(result.deliveryIds.length, 5);
   assert.equal(repo.commits, 1);
+  assert.equal(repo.lastCommit?.batch.matchedCount, 4);
+  assert.equal(repo.lastCommit?.batch.randomCount, 1);
 });
 
 test('rejected moderation creates moderation log only with generated target id', async () => {
@@ -149,10 +179,11 @@ test('invalid provider output after retry creates no core publication state', as
   assert.equal(repo.moderationLogs.length, 0);
 });
 
-test('fewer than 5 eligible humans fails before writes', async () => {
-  repo = createFakeRepository(['a', 'b', 'c', 'd'].map(uid => candidate(uid)));
+test('0 eligible humans still publishes worry batch and no deliveries or push work', async () => {
+  repo = createFakeRepository([]);
+  const db = createFakeDb();
   const result = await publishWorryOnServer({
-    db: createFakeDb() as never,
+    db: db as never,
     messaging: null,
     author: { uid: 'author', gender: 'female', interests: ['취업'] },
     content: 'content',
@@ -160,8 +191,37 @@ test('fewer than 5 eligible humans fails before writes', async () => {
     repository: repo,
   });
 
-  assert.equal(result.status, 'server_error');
-  assert.equal(repo.commits, 0);
+  assert.equal(result.status, 'published');
+  assert.deepEqual(result.status === 'published' ? result.deliveryIds : [], []);
+  assert.equal(repo.commits, 1);
+  assert.equal(repo.lastCommit?.worry.humanDeliveryCount, 0);
+  assert.equal(repo.lastCommit?.worry.lastDeliveryCreatedAt, repo.lastCommit?.worry.createdAt);
+  assert.equal(repo.lastCommit?.batch.createdCount, 0);
+  assert.equal(repo.lastCommit?.batch.matchedCount, 0);
+  assert.equal(repo.lastCommit?.batch.randomCount, 0);
+  assert.deepEqual(repo.lastCommit?.selectedRecipientUids, []);
+  assert.equal(db.pushLogs.length, 0);
+});
+
+test('1 and 4 eligible humans publish actual matched delivery counts', async () => {
+  for (const count of [1, 4]) {
+    repo = createFakeRepository(['a', 'b', 'c', 'd'].slice(0, count).map(uid => candidate(uid)));
+    const result = await publishWorryOnServer({
+      db: createFakeDb() as never,
+      messaging: null,
+      author: { uid: 'author', gender: 'female', interests: ['취업'] },
+      content: 'content',
+      moderationProvider: async () => ({ status: 'approved', categories: ['취업'] }),
+      repository: repo,
+    });
+
+    assert.equal(result.status, 'published');
+    assert.equal(result.status === 'published' ? result.deliveryIds.length : 0, count);
+    assert.equal(repo.lastCommit?.worry.humanDeliveryCount, count);
+    assert.equal(repo.lastCommit?.batch.createdCount, count);
+    assert.equal(repo.lastCommit?.batch.matchedCount, count);
+    assert.equal(repo.lastCommit?.batch.randomCount, 0);
+  }
 });
 
 test('push logs run only after core transaction commit', async () => {
@@ -184,6 +244,23 @@ test('push logs run only after core transaction commit', async () => {
 
   assert.equal(result.status, 'published');
   assert.equal(db.pushLogs.length, 5);
+});
+
+test('push logs run only for actual partial deliveries', async () => {
+  repo = createFakeRepository(['a', 'b', 'c', 'd'].map(uid => candidate(uid)));
+  const db = createFakeDb();
+
+  const result = await publishWorryOnServer({
+    db: db as never,
+    messaging: null,
+    author: { uid: 'author', gender: 'female', interests: ['취업'] },
+    content: 'content',
+    moderationProvider: async () => ({ status: 'approved', categories: ['취업'] }),
+    repository: repo,
+  });
+
+  assert.equal(result.status, 'published');
+  assert.equal(db.pushLogs.length, 4);
 });
 
 test('push failure does not roll back core publication result', async () => {

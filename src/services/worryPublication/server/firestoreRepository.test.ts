@@ -210,6 +210,27 @@ test('successful commit re-reads selected recipients and increments each exactly
   assert.equal(Object.keys(db.state.moderationLogs).length, 1);
 });
 
+test('empty commit writes moderation log worry and batch without recipient reads updates or deliveries', async () => {
+  const db = createFakeFirestore();
+  const repository = createInitialWorryPublicationRepository({ db: db as never });
+  const models = buildCommitModels([]);
+  models.worry.humanDeliveryCount = 0;
+  models.batch.createdCount = 0;
+  models.batch.matchedCount = 0;
+  models.batch.randomCount = 0;
+
+  const result = await repository.commitInitialWorryPublication(models);
+
+  assert.deepEqual(result.deliveryIds, []);
+  assert.deepEqual(db.transactionReads, []);
+  assert.equal(Object.keys(db.state.worries).length, 1);
+  assert.equal(Object.keys(db.state.deliveryBatches).length, 1);
+  assert.equal(Object.keys(db.state.deliveries).length, 0);
+  assert.equal(Object.keys(db.state.moderationLogs).length, 1);
+  assert.equal(db.state.worries.worry1.humanDeliveryCount, 0);
+  assert.equal(db.state.deliveryBatches.batch1.createdCount, 0);
+});
+
 test('recipient becoming over activeDeliveryCount limit inside transaction aborts with no partial state', async () => {
   const db = createFakeFirestore({
     users: {

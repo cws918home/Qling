@@ -83,6 +83,8 @@ export interface AiFallbackCandidate {
   createdAt: Date | null;
   humanDeliveryCount?: number;
   humanDeliveryLimit?: number;
+  initialDeliveryBatchId?: string;
+  initialDeliveryCreatedCount?: number;
   hasAiReply?: boolean;
   aiReplyId?: string;
 }

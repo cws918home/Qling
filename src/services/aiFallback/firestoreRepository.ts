@@ -43,6 +43,39 @@ function hasHumanReply(replies: FirebaseFirestore.QuerySnapshot) {
   return replies.docs.some(doc => doc.data().isAiGenerated !== true);
 }
 
+function isPartialInitialDeliveryCount(value: unknown) {
+  return typeof value === 'number' && value >= 0 && value < 5;
+}
+
+function hasPartialInitialDelivery(candidate: AiFallbackCandidate) {
+  return isPartialInitialDeliveryCount(candidate.initialDeliveryCreatedCount);
+}
+
+async function fetchInitialDeliveryCreatedCount(params: {
+  db: Firestore;
+  initialDeliveryBatchId: unknown;
+}) {
+  if (typeof params.initialDeliveryBatchId !== 'string' || params.initialDeliveryBatchId.length === 0) {
+    return undefined;
+  }
+  const batchDoc = await params.db.collection('deliveryBatches').doc(params.initialDeliveryBatchId).get();
+  const createdCount = batchDoc.data()?.createdCount;
+  return typeof createdCount === 'number' ? createdCount : undefined;
+}
+
+async function fetchInitialDeliveryCreatedCountInTransaction(params: {
+  db: Firestore;
+  transaction: Transaction;
+  initialDeliveryBatchId: unknown;
+}) {
+  if (typeof params.initialDeliveryBatchId !== 'string' || params.initialDeliveryBatchId.length === 0) {
+    return undefined;
+  }
+  const batchDoc = await params.transaction.get(params.db.collection('deliveryBatches').doc(params.initialDeliveryBatchId));
+  const createdCount = batchDoc.data()?.createdCount;
+  return typeof createdCount === 'number' ? createdCount : undefined;
+}
+
 function precheckCandidate(candidate: AiFallbackCandidate, now: Date): AiFallbackSkipReason | null {
   if (!candidate.createdAt || now.getTime() - candidate.createdAt.getTime() < 24 * 60 * 60 * 1000) {
     return 'not_24h_elapsed';
@@ -53,6 +86,7 @@ function precheckCandidate(candidate: AiFallbackCandidate, now: Date): AiFallbac
   if (
     typeof candidate.humanDeliveryCount === 'number'
     && candidate.humanDeliveryCount < Math.min(candidate.humanDeliveryLimit ?? 15, 15)
+    && !hasPartialInitialDelivery(candidate)
   ) {
     return 'human_delivery_cap_not_exhausted';
   }
@@ -87,7 +121,13 @@ async function recheckEligibility(params: {
   if (aiReplyDoc.exists || worry.hasAiReply === true || typeof worry.aiReplyId === 'string') {
     return { status: 'skipped' as const, reason: 'ai_reply_exists' as const };
   }
-  if (currentHumanDeliveryCount(deliveriesSnap) < humanDeliveryLimit(worry)) {
+  const currentDeliveryCount = currentHumanDeliveryCount(deliveriesSnap);
+  const initialDeliveryCreatedCount = await fetchInitialDeliveryCreatedCountInTransaction({
+    db: params.db,
+    transaction: params.transaction,
+    initialDeliveryBatchId: worry.initialDeliveryBatchId,
+  });
+  if (currentDeliveryCount < humanDeliveryLimit(worry) && !isPartialInitialDeliveryCount(initialDeliveryCreatedCount)) {
     return { status: 'skipped' as const, reason: 'human_delivery_cap_not_exhausted' as const };
   }
   if (hasHumanReply(repliesSnap)) {
@@ -131,6 +171,11 @@ export function createAiFallbackRepository(params: { db: Firestore }): AiFallbac
           createdAt: toDate(data.createdAt),
           humanDeliveryCount: typeof data.humanDeliveryCount === 'number' ? data.humanDeliveryCount : undefined,
           humanDeliveryLimit: typeof data.humanDeliveryLimit === 'number' ? data.humanDeliveryLimit : undefined,
+          initialDeliveryBatchId: typeof data.initialDeliveryBatchId === 'string' ? data.initialDeliveryBatchId : undefined,
+          initialDeliveryCreatedCount: await fetchInitialDeliveryCreatedCount({
+            db,
+            initialDeliveryBatchId: data.initialDeliveryBatchId,
+          }),
           hasAiReply: data.hasAiReply,
           aiReplyId: typeof data.aiReplyId === 'string' ? data.aiReplyId : undefined,
         };
