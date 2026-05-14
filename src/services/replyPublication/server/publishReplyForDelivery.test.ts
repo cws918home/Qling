@@ -55,6 +55,7 @@ function reply(content = 'reply'): ReplyWriteModel {
     replierUid: 'recipient',
     content,
     status: 'active',
+    publisherVisible: true,
     moderationLogId: 'mod1',
     createdAt: {},
     updatedAt: {},

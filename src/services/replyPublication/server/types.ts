@@ -13,6 +13,7 @@ export interface ReplyWriteModel {
   replierUid: string;
   content: string;
   status: ReplyStatus;
+  publisherVisible: boolean;
   moderationLogId: string;
   createdAt: ServerTimestampValue;
   updatedAt: ServerTimestampValue;

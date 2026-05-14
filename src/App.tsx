@@ -102,7 +102,6 @@ const CATEGORIES = WORRY_CATEGORIES;
 const GENDERS = [
   { id: 'male', label: '남성' },
   { id: 'female', label: '여성' },
-  { id: 'hidden', label: '비공개' },
 ];
 
 // --- Types ---

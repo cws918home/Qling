@@ -12,7 +12,7 @@ import fs from "fs";
 import {
   processSimpleModerationResponse,
 } from "./src/server/moderationResponses";
-import { moderateAndInferWorryCategories } from "./src/server/moderationProvider";
+import { fetchFromOpenAI, moderateAndInferWorryCategories } from "./src/server/moderationProvider";
 import { registerWorryRoutes } from "./src/server/worryRoutes";
 import { registerReplyRoutes } from "./src/server/replyRoutes";
 import { registerReadStateRoutes } from "./src/server/readStateRoutes";
@@ -57,58 +57,6 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
 const db = getApps().length > 0 ? getFirestore(firestoreDatabaseId) : null;
 const messaging = getApps().length > 0 ? getMessaging() : null;
 
-async function fetchFromOpenRouter(systemInstruction: string, userContent: string) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
-  
-  if (!apiKey) {
-    console.error("CRITICAL ERROR: OPENROUTER_API_KEY is missing!");
-    throw new Error("OPENROUTER_API_KEY is not defined in .env file");
-  }
-
-  console.log(`Attempting to call OpenAI with model: gpt-5.4-mini`);
- 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model: "gpt-5.4-mini",
-      messages: [
-        { role: "system", content: systemInstruction },
-        { role: "user", content: userContent }
-      ],
-      temperature: 0.1,
-      max_completion_tokens: 1000
-    })
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    console.error(`OpenRouter API Error Status: ${response.status}`);
-    console.error(`OpenRouter API Error Body: ${errText}`);
-    throw new Error(`OpenRouter API Error: ${response.status}`);
-  }
-
-  const data = await response.json();
-  console.log("Successfully received response from OpenRouter.");
-  
-  let textContent = data.choices?.[0]?.message?.content || "{}";
-  
-  // Sometimes models wrap JSON in code blocks like ```json ... ```
-  if (textContent.includes("```")) {
-    textContent = textContent.replace(/```json|```/g, "").trim();
-  }
-  
-  try {
-    return JSON.parse(textContent);
-  } catch (parseError) {
-    console.error("JSON Parse Error. Raw content:", textContent);
-    return null;
-  }
-}
-
 async function startServer() {
   const app = express();
   const PORT = 3000;
@@ -128,7 +76,7 @@ async function startServer() {
       auth: getAuth(),
       moderationProvider: replyContent => processSimpleModerationResponse(
         replyContent,
-        content => fetchFromOpenRouter(`You are a moderator for a Korean anonymous worry-sharing app.
+        content => fetchFromOpenAI(`You are a moderator for a Korean anonymous worry-sharing app.
 1. Check if the reply is inappropriate, abusive, violent, or unhelpful spam.
 2. Return JSON exactly like this:
    - If bad: { "status": "rejected", "reason": "부적절한 표현이 감지되었습니다." }
@@ -150,7 +98,7 @@ async function startServer() {
       auth: getAuth(),
       moderationProvider: commentContent => processSimpleModerationResponse(
         commentContent,
-        content => fetchFromOpenRouter(`You are a moderator for a Korean anonymous worry-sharing app.
+        content => fetchFromOpenAI(`You are a moderator for a Korean anonymous worry-sharing app.
 1. Check if the feedback comment is inappropriate, abusive, violent, or spam.
 2. Return JSON exactly like this:
    - If bad: { "status": "rejected", "reason": "부적절한 표현이 감지되었습니다." }

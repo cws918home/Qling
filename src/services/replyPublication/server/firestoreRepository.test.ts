@@ -115,6 +115,7 @@ test('repository creates replies by deterministic delivery id and answers delive
   assert.equal(db.store.get('replies/delivery1')?.worryId, 'worry1');
   assert.equal(db.store.get('replies/delivery1')?.replierUid, 'recipient');
   assert.equal(db.store.get('replies/delivery1')?.authorUid, 'author');
+  assert.equal(db.store.get('replies/delivery1')?.publisherVisible, true);
   assert.equal(db.store.get('replies/delivery1')?.isAiGenerated, false);
   assert.equal(db.store.get('replies/delivery1')?.isExampleReply, false);
   assert.equal(db.store.get('deliveries/delivery1')?.status, 'answered');

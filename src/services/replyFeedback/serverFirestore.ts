@@ -118,6 +118,11 @@ export function createReplyFeedbackRepository(params: { db: Firestore }): ReplyF
             likedAt: timestamp,
             updatedAt: timestamp,
           });
+        } else {
+          transaction.update(replyRef, {
+            publisherVisible: false,
+            updatedAt: timestamp,
+          });
         }
 
         if (helpedCountApplied) {

@@ -49,6 +49,7 @@ export function useRepliesForWorry(params: {
         collection(firestore, 'replies'),
         where('worryId', '==', worryId),
         where('authorUid', '==', user.uid),
+        where('publisherVisible', '==', true),
         where('status', '==', 'active')
       ),
       snapshot => {

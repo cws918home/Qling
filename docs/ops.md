@@ -23,8 +23,7 @@ npm run dev
 Environment variables:
 
 - `FIREBASE_SERVICE_ACCOUNT`: Firebase Admin service account JSON.
-- `OPENROUTER_API_KEY`: moderation/provider key used by the server's provider call.
-- `OPENAI_API_KEY`: required when a provider path is configured to call OpenAI-compatible APIs directly.
+- `OPENAI_API_KEY`: OpenAI API key used by moderation and AI fallback provider calls.
 - `INTERNAL_JOB_SECRET`: bearer token for internal scheduled/admin endpoints.
 
 `firebase-applet-config.json` must include:
@@ -114,7 +113,7 @@ Scheduled jobs should call the internal endpoints with `Authorization: Bearer ${
 ## New Developer Checklist
 
 - Read `docs/PRD.md`, `docs/TODO.md`, `docs/phase.md`, and `docs/matching_algorithm.md`.
-- Verify `FIREBASE_SERVICE_ACCOUNT`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, and `INTERNAL_JOB_SECRET`.
+- Verify `FIREBASE_SERVICE_ACCOUNT`, `OPENAI_API_KEY`, and `INTERNAL_JOB_SECRET`.
 - Verify `firebase-applet-config.json` includes `projectId`, `appId`, `apiKey`, `authDomain`, `firestoreDatabaseId`, `storageBucket`, and `messagingSenderId`.
 - Run `npm install`.
 - Run `npm run dev`.

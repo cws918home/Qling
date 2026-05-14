@@ -92,6 +92,7 @@ export function selectVisibleRepliesForWorry(params: {
     if (
     reply.worryId === params.worryId
     && reply.authorUid === params.userUid
+    && reply.publisherVisible !== false
     ) {
       return params.feedbacksByReplyId?.get(reply.id)?.type !== 'dislike';
     }

@@ -83,7 +83,7 @@ No `code/test refactor required` finding remained after classification.
 | Checklist item | Evidence |
 |---|---|
 | Docs entrypoints present | `README.md`, `docs/ops.md`, `docs/PRD.md`, `docs/TODO.md`, `docs/phase.md`, `docs/matching_algorithm.md` |
-| Required env/config checklist present | `docs/ops.md` lists `FIREBASE_SERVICE_ACCOUNT`, `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, `INTERNAL_JOB_SECRET`, and `firebase-applet-config.json` fields. |
+| Required env/config checklist present | `docs/ops.md` lists `FIREBASE_SERVICE_ACCOUNT`, `OPENAI_API_KEY`, `INTERNAL_JOB_SECRET`, and `firebase-applet-config.json` fields. |
 | Exact setup command present | `README.md` and `docs/ops.md` include `npm install` and `npm run dev`. |
 | Exact test/lint/build/rules commands present | `README.md`, `docs/ops.md`, and `src/server/opsDocs.test.ts`. |
 | Scheduled-job invocation examples present | `docs/ops.md` includes examples for rematch, AI fallback, example feedback, and admin hide. |

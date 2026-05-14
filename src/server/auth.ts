@@ -37,7 +37,7 @@ function hasCompletePublicationProfile(data: FirebaseFirestore.DocumentData | un
   deleted?: boolean;
 } {
   return typeof data?.gender === 'string'
-    && data.gender.trim().length > 0
+    && (data.gender.trim() === 'male' || data.gender.trim() === 'female')
     && Array.isArray(data.interests)
     && data.interests.some((interest: unknown) => typeof interest === 'string' && interest.trim().length > 0);
 }

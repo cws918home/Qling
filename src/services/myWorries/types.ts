@@ -38,6 +38,7 @@ export interface PrdReplyDoc {
   replierUid?: string;
   content?: string;
   status?: string;
+  publisherVisible?: boolean;
   hiddenAt?: unknown;
   createdAt?: TimestampLike | null;
   isAiGenerated?: boolean;

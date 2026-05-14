@@ -53,6 +53,7 @@ const prdReply = {
   replierUid: 'recipient',
   content: 'reply',
   status: 'active',
+  publisherVisible: true,
   moderationLogId: 'mod1',
   createdAt: new Date(),
   updatedAt: new Date(),
@@ -145,6 +146,17 @@ after(async () => {
 describe('profile and token transition', () => {
   test('first-time own profile create succeeds with safe fields', async () => {
     await assertSucceeds(dbFor('author').doc('users/author').set(safeProfile('author')));
+  });
+
+  test('own profile create and gender update require PRD gender enum', async () => {
+    await assertFails(dbFor('author').doc('users/author').set({
+      ...safeProfile('author'),
+      gender: 'hidden',
+    }));
+
+    await seed('users/author', safeProfile('author'));
+    await assertSucceeds(dbFor('author').doc('users/author').update({ gender: 'male' }));
+    await assertFails(dbFor('author').doc('users/author').update({ gender: 'hidden' }));
   });
 
   test('own profile create fails when helpedCount is included', async () => {
@@ -664,6 +676,7 @@ describe('Phase 4 mailbox manual-equivalent read paths', () => {
       replierUid: 'recipient',
       content: 'manual-equivalent reply',
       status: 'active',
+      publisherVisible: true,
       createdAt: new Date(),
       updatedAt: new Date(),
       isAiGenerated: false,
@@ -688,6 +701,81 @@ describe('Phase 4 mailbox manual-equivalent read paths', () => {
         .collection('replies')
         .where('worryId', '==', 'manual_worry')
         .where('authorUid', '==', 'author')
+        .where('publisherVisible', '==', true)
+        .where('status', '==', 'active')
+        .get()
+    );
+
+    assert.deepEqual(snapshot.docs.map(doc => doc.id), ['manual_delivery']);
+  });
+
+  test('author replies query succeeds with liked disliked and hidden replies seeded', async () => {
+    await seed('replies/manual_like_reply', {
+      ...prdReply,
+      deliveryId: 'manual_like_reply',
+      worryId: 'manual_worry',
+      authorUid: 'author',
+      replierUid: 'recipient',
+      feedbackType: 'like',
+      likedAt: new Date(),
+    });
+    await seed('replies/manual_disliked_reply', {
+      ...prdReply,
+      deliveryId: 'manual_disliked_reply',
+      worryId: 'manual_worry',
+      authorUid: 'author',
+      replierUid: 'other',
+      publisherVisible: false,
+    });
+    await seed('replies/manual_hidden_reply', {
+      ...prdReply,
+      deliveryId: 'manual_hidden_reply',
+      worryId: 'manual_worry',
+      authorUid: 'author',
+      replierUid: 'other',
+      status: 'hidden',
+      publisherVisible: false,
+      hiddenAt: new Date(),
+    });
+
+    const snapshot = await assertSucceeds(
+      dbFor('author')
+        .collection('replies')
+        .where('authorUid', '==', 'author')
+        .where('publisherVisible', '==', true)
+        .where('status', '==', 'active')
+        .get()
+    );
+
+    assert.deepEqual(snapshot.docs.map(doc => doc.id).sort(), ['manual_delivery', 'manual_like_reply']);
+  });
+
+  test('selected worry replies query succeeds with disliked and hidden replies seeded', async () => {
+    await seed('replies/manual_disliked_reply', {
+      ...prdReply,
+      deliveryId: 'manual_disliked_reply',
+      worryId: 'manual_worry',
+      authorUid: 'author',
+      replierUid: 'other',
+      publisherVisible: false,
+    });
+    await seed('replies/manual_hidden_reply', {
+      ...prdReply,
+      deliveryId: 'manual_hidden_reply',
+      worryId: 'manual_worry',
+      authorUid: 'author',
+      replierUid: 'other',
+      status: 'hidden',
+      publisherVisible: false,
+      hiddenAt: new Date(),
+    });
+
+    const snapshot = await assertSucceeds(
+      dbFor('author')
+        .collection('replies')
+        .where('worryId', '==', 'manual_worry')
+        .where('authorUid', '==', 'author')
+        .where('publisherVisible', '==', true)
         .where('status', '==', 'active')
         .get()
     );

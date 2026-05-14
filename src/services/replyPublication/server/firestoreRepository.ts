@@ -117,6 +117,7 @@ export function createReplyPublicationRepository(params: {
           replierUid,
           content,
           status: 'active',
+          publisherVisible: true,
           moderationLogId: moderationLog.id,
           createdAt: timestamp,
           updatedAt: timestamp,

@@ -65,6 +65,7 @@ export function useMyWorries(params: {
       query(
         collection(firestore, 'replies'),
         where('authorUid', '==', user.uid),
+        where('publisherVisible', '==', true),
         where('status', '==', 'active')
       ),
       snapshot => {

@@ -118,6 +118,19 @@ test('incomplete profile is blocked for publication', async () => {
   assert.deepEqual(res.body, { error: { code: 'profile_incomplete', message: '고민을 보내려면 프로필 설정이 필요합니다.' } });
 });
 
+test('publication profile requires PRD gender enum', async () => {
+  const middleware = createRequireFirebaseAuth({
+    auth: { verifyIdToken: async () => ({ uid: 'verified' }) } as never,
+    db: createDb({ gender: 'hidden', interests: ['취업'] }) as never,
+  });
+  const res = createRes();
+
+  await middleware({ headers: { authorization: 'Bearer good' } } as never, res as never, () => undefined);
+
+  assert.equal(res.statusCode, 403);
+  assert.deepEqual(res.body, { error: { code: 'profile_incomplete', message: '고민을 보내려면 프로필 설정이 필요합니다.' } });
+});
+
 test('active auth allows missing profile fields for reply endpoints', async () => {
   const middleware = createRequireActiveFirebaseAuth({
     auth: { verifyIdToken: async () => ({ uid: 'verified' }) } as never,

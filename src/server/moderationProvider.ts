@@ -3,11 +3,11 @@ import { WORRY_CATEGORIES } from '@midnight-radio/domain';
 export const MODERATION_PROVIDER = 'openai';
 export const MODERATION_MODEL = 'gpt-5.4-mini';
 
-async function fetchFromOpenAI(systemInstruction: string, userContent: string) {
-  const apiKey = process.env.OPENROUTER_API_KEY;
+export async function fetchFromOpenAI(systemInstruction: string, userContent: string) {
+  const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY is not defined in .env file');
+    throw new Error('OPENAI_API_KEY is not defined in .env file');
   }
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {

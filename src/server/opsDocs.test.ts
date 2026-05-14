@@ -12,7 +12,6 @@ test('ops docs and README include required operational tokens', () => {
 
   for (const token of [
     'FIREBASE_SERVICE_ACCOUNT',
-    'OPENROUTER_API_KEY',
     'OPENAI_API_KEY',
     'INTERNAL_JOB_SECRET',
     'firebase-applet-config.json',
