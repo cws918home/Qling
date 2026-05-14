@@ -30,15 +30,6 @@ export function getGivenReplyNotifications<Reply extends ReplyMailboxLetter>(par
   permission: NotificationPermission;
   changes: ReplyMailboxChange<Reply>[];
 }): ReplyMailboxNotification[] {
-  if (params.isInitialSnapshot || !granted(params.permission)) return [];
-
-  return params.changes
-    .filter(change => change.type === 'modified' && Boolean(change.reply.publisherComment))
-    .map(change => ({
-      title: `💌 따뜻한 코멘트 도착`,
-      options: {
-        body: `상대방이 감사 인사를 남겼어요: "${change.reply.publisherComment}"`,
-        icon: '/pwa-192x192.png',
-      },
-    }));
+  void params;
+  return [];
 }

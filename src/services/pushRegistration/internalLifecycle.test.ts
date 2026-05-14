@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { buildPushTokenDoc, buildUserNotificationProfile } from './adapters';
 import { createPushRegistrationLifecycle, PUSH_CONFIRMATION_COOLDOWN_MS } from './internalLifecycle';
 import { getPushTokenSessionKey, getTokenPreview } from './policy';
 import { selectAppControlledRegistration } from './serviceWorker';
@@ -213,6 +214,60 @@ test('token preview formatting', () => {
   assert.equal(getTokenPreview(null), null);
 });
 
+test('token doc write model includes exact notification fields and preserves createdAt on update', () => {
+  const tokenDoc = buildPushTokenDoc({
+    token: 'token-1',
+    userAgent: 'agent',
+    instanceId: 'instance-1',
+    permission: 'granted',
+    installedPWA: true,
+    timestamp: 'updated-at',
+    existingCreatedAt: 'created-at',
+  });
+
+  assert.deepEqual(Object.keys(tokenDoc).sort(), [
+    'createdAt',
+    'instanceId',
+    'isInstalledPWA',
+    'lastSeenAt',
+    'notificationPermission',
+    'platform',
+    'token',
+    'updatedAt',
+    'userAgent',
+  ].sort());
+  assert.equal(tokenDoc.createdAt, 'created-at');
+  assert.equal(tokenDoc.updatedAt, 'updated-at');
+  assert.equal(tokenDoc.lastSeenAt, 'updated-at');
+  assert.equal(tokenDoc.notificationPermission, 'granted');
+  assert.equal(tokenDoc.isInstalledPWA, true);
+});
+
+test('new token doc write model uses current timestamp for createdAt updatedAt and lastSeenAt', () => {
+  const tokenDoc = buildPushTokenDoc({
+    token: 'token-1',
+    userAgent: 'agent',
+    instanceId: 'instance-1',
+    permission: 'granted',
+    installedPWA: false,
+    timestamp: 'now',
+  });
+
+  assert.equal(tokenDoc.createdAt, 'now');
+  assert.equal(tokenDoc.updatedAt, 'now');
+  assert.equal(tokenDoc.lastSeenAt, 'now');
+});
+
+test('user notification profile writes only notificationPermission and isInstalledPWA', () => {
+  assert.deepEqual(buildUserNotificationProfile({
+    permission: 'denied',
+    installedPWA: false,
+  }), {
+    notificationPermission: 'denied',
+    isInstalledPWA: false,
+  });
+});
+
 test('permission revoked after previous token triggers cleanup', async () => {
   const harness = createHarness();
   harness.permission = 'denied';
@@ -246,6 +301,43 @@ test('token change triggers previous token cleanup only after new registration s
 
   assert.deepEqual(harness.calls.writeTokenDoc.map(call => (call as { token: string }).token), ['token-2']);
   assert.deepEqual(harness.calls.deleteTokenDoc, [['user-1', 'token-1']]);
+});
+
+test('successful registration writes permission and PWA state to token doc request', async () => {
+  const harness = createHarness({ isInstalledPWA: () => true });
+  harness.permission = 'granted';
+
+  await harness.lifecycle.ensurePushRegistration({ uid: 'user-1' }, 'signed-in-stable');
+
+  assert.equal(harness.calls.writeTokenDoc.length, 1);
+  const write = harness.calls.writeTokenDoc[0] as {
+    uid: string;
+    token: string;
+    permission: NotificationPermission;
+    installedPWA: boolean;
+    instanceId: string;
+    existingTokenDoc: { exists(): boolean; data(): { createdAt?: unknown } };
+  };
+  assert.equal(write.uid, 'user-1');
+  assert.equal(write.token, 'token-1');
+  assert.equal(write.permission, 'granted');
+  assert.equal(write.installedPWA, true);
+  assert.equal(write.instanceId, 'instance-1');
+  assert.equal(write.existingTokenDoc.data().createdAt, 'created-at');
+});
+
+test('successful foreground confirmation refreshes token doc lastSeenAt path', async () => {
+  const harness = createHarness();
+  harness.metadata = completeMetadata({
+    lastSuccessfulRegistrationAt: 100_000 - PUSH_CONFIRMATION_COOLDOWN_MS - 1,
+    lastSuccessfulRegistrationToken: 'old-token',
+  });
+
+  const result = await harness.lifecycle.maybeRecoverPushRegistration({ uid: 'user-1' }, 'app-foreground');
+
+  assert.equal(result.status, 'confirmed');
+  assert.equal(harness.calls.writeTokenDoc.length, 1);
+  assert.equal((harness.calls.writeTokenDoc[0] as { token: string }).token, 'token-1');
 });
 
 test('confirmation cooldown suppresses repeated Firestore reads', async () => {

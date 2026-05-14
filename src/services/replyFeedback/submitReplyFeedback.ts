@@ -1,6 +1,6 @@
 import type {
   ReplyFeedback,
-  ReplyFeedbackPersistence,
+  ReplyFeedbackApiClient,
   ReplyFeedbackTarget,
   SubmitReplyFeedbackResult,
 } from './types';
@@ -8,29 +8,27 @@ import type {
 interface SubmitReplyFeedbackParams {
   reply: ReplyFeedbackTarget;
   feedbackType: ReplyFeedback;
-  persistence: ReplyFeedbackPersistence;
+  apiClient?: ReplyFeedbackApiClient;
+  comment?: string;
 }
 
 export async function submitReplyFeedback({
   reply,
   feedbackType,
-  persistence,
+  apiClient,
+  comment,
 }: SubmitReplyFeedbackParams): Promise<SubmitReplyFeedbackResult> {
-  await persistence.saveReplyFeedback(reply.id, feedbackType);
+  if (reply.source === 'prd_replies') {
+    if (!apiClient) {
+      throw new Error('reply_feedback_api_unavailable');
+    }
 
-  if (feedbackType !== 'helpful') {
-    return { feedback: feedbackType };
+    return apiClient.submitReplyFeedback({
+      replyId: reply.id,
+      type: feedbackType === 'helpful' ? 'like' : 'dislike',
+      comment,
+    });
   }
 
-  if (reply.isAiGenerated === true || reply.senderId.startsWith('bot_')) {
-    return { feedback: feedbackType };
-  }
-
-  try {
-    await persistence.incrementHelpedCount(reply.senderId);
-  } catch {
-    // Helped-count persistence is intentionally hidden from the caller.
-  }
-
-  return { feedback: feedbackType };
+  throw new Error('reply_feedback_prd_source_required');
 }

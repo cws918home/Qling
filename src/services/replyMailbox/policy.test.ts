@@ -59,20 +59,14 @@ test('given later modified change without publisherComment emits no notification
   assert.deepEqual(notifications, []);
 });
 
-test('given later modified change with publisherComment emits the comment notification', () => {
+test('given later modified change with publisherComment emits no comment notification', () => {
   const notifications = getGivenReplyNotifications({
     isInitialSnapshot: false,
     permission: 'granted',
     changes: [{ type: 'modified', reply: reply({ publisherComment: '고마워요' }) }],
   });
 
-  assert.deepEqual(notifications, [{
-    title: `💌 따뜻한 코멘트 도착`,
-    options: {
-      body: `상대방이 감사 인사를 남겼어요: "고마워요"`,
-      icon: '/pwa-192x192.png',
-    },
-  }]);
+  assert.deepEqual(notifications, []);
 });
 
 test('denied or default permission emits no notification', () => {

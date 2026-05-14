@@ -1,16 +1,60 @@
-export type ReplyFeedback = 'helpful' | 'not_helpful';
+export type LegacyReplyFeedback = 'helpful' | 'not_helpful';
+export type ReplyFeedbackType = 'like' | 'dislike';
+export type ReplyFeedback = LegacyReplyFeedback;
+export type CommentVisibility = 'replier' | 'admin_only' | 'none';
 
 export interface ReplyFeedbackTarget {
   id: string;
   senderId: string;
+  source?: 'prd_replies';
   isAiGenerated?: boolean;
 }
 
 export interface SubmitReplyFeedbackResult {
-  feedback: ReplyFeedback;
+  status: 'saved' | 'rejected';
+  feedbackId?: string;
+  helpedCountApplied?: boolean;
+  feedback?: LegacyReplyFeedback;
+  reason?: string;
+  reasonCode?: string;
+  userMessage?: string;
+  helpMessage?: string;
+  moderationLogId?: string;
 }
 
-export interface ReplyFeedbackPersistence {
-  saveReplyFeedback(replyId: string, feedbackType: ReplyFeedback): Promise<void>;
-  incrementHelpedCount(replierId: string): Promise<void>;
+export interface SubmitReplyFeedbackInput {
+  replyId: string;
+  type: ReplyFeedbackType;
+  comment?: string;
 }
+
+export interface ReplyFeedbackApiClient {
+  submitReplyFeedback(input: SubmitReplyFeedbackInput): Promise<SubmitReplyFeedbackResult>;
+}
+
+export interface ReplyFeedbackDoc {
+  replyId: string;
+  worryId: string;
+  deliveryId: string;
+  publisherUid: string;
+  replierUid: string;
+  type: ReplyFeedbackType;
+  comment: string | null;
+  commentVisibility: CommentVisibility;
+  commentModerationLogId: string | null;
+  helpedCountApplied: boolean;
+  isForAiReply: boolean;
+  isForExampleReply: boolean;
+  createdAt: unknown;
+  updatedAt: unknown;
+}
+
+export type ServerReplyFeedbackResult =
+  | { status: 'saved'; feedbackId: string; helpedCountApplied: boolean }
+  | { status: 'validation_error'; code: 'invalid_type' | 'empty' | 'too_long' | 'invalid_content_type'; message: string }
+  | { status: 'rejected'; code: 'comment_rejected'; message: string; reasonCode: string; userMessage: string; helpMessage?: string; moderationLogId: string }
+  | { status: 'provider_error'; code: 'provider_error' | 'provider_invalid'; message: string; details?: unknown }
+  | { status: 'forbidden'; code: 'not_worry_publisher' | 'reply_worry_mismatch' | 'publisher_reply_forbidden' | 'invalid_reply'; message: string }
+  | { status: 'not_found'; code: 'reply_missing' | 'worry_missing'; message: string }
+  | { status: 'conflict'; code: 'feedback_conflict'; message: string }
+  | { status: 'server_error'; code: 'transaction_aborted' | 'firebase_unavailable'; message: string; details?: unknown };

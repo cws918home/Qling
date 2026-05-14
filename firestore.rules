@@ -1,30 +1,267 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    function isAuthenticated() {
+
+    function signedIn() {
       return request.auth != null;
     }
 
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
     }
-    
-    match /users/{userId} {
-      allow read, write: if isAuthenticated();
+
+    function currentUserPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function isNotDeletedSelf() {
+      return signedIn()
+        && (!exists(currentUserPath())
+          || !('deleted' in get(currentUserPath()).data)
+          || get(currentUserPath()).data.deleted != true);
+    }
+
+    function deliveryIdFor(worryId, uid) {
+      return worryId + '_' + uid;
+    }
+
+    function hasDeliveryForWorry(worryId) {
+      let delivery = get(/databases/$(database)/documents/deliveries/$(deliveryIdFor(worryId, request.auth.uid)));
+      return signedIn()
+        && delivery.data.worryId == worryId
+        && delivery.data.recipientUid == request.auth.uid
+        && !isHidden(delivery.data);
+    }
+
+    function isWorryAuthor(worryId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/worries/$(worryId)).data.authorUid == request.auth.uid;
+    }
+
+    function isDeliveryRecipient(deliveryId) {
+      return signedIn()
+        && resource.data.recipientUid == request.auth.uid;
+    }
+
+    function isHidden(data) {
+      return ('status' in data && data.status == 'hidden')
+        || ('hiddenAt' in data && data.hiddenAt != null);
+    }
+
+    function deliveryWorryIsVisible() {
+      let worry = get(/databases/$(database)/documents/worries/$(resource.data.worryId));
+      return !isHidden(worry.data);
+    }
+
+    function safeUserKeys() {
+      return [
+        'uid',
+        'gender',
+        'interests',
+        'createdAt',
+        'updatedAt',
+        'lastActive',
+        'lastTokenRefresh',
+        'notificationPermission',
+        'isInstalledPWA'
+      ];
+    }
+
+    function forbiddenUserKeys() {
+      return [
+        'activeDeliveryCount',
+        'helpedCount',
+        'deleted',
+        'deletedAt',
+        'onboardingCompletedAt',
+        'exampleWorriesCreatedAt',
+        'exampleWorrySeedIds',
+        'exampleDeliveryIds',
+        'exampleFeedbackJobIds'
+      ];
+    }
+
+    function hasOnlySafeUserKeys() {
+      return request.resource.data.keys().hasOnly(safeUserKeys())
+        && !request.resource.data.keys().hasAny(forbiddenUserKeys());
+    }
+
+    function safeTokenKeys() {
+      return [
+        'token',
+        'platform',
+        'userAgent',
+        'instanceId',
+        'notificationPermission',
+        'isInstalledPWA',
+        'createdAt',
+        'updatedAt',
+        'lastSeenAt'
+      ];
+    }
+
+    function hasOnlySafeTokenKeys() {
+      return request.resource.data.keys().hasOnly(safeTokenKeys());
+    }
+
+    function uidMatchesPath(uid) {
+      return !('uid' in request.resource.data) || request.resource.data.uid == uid;
+    }
+
+    function isAllowedGender(value) {
+      return value == 'male' || value == 'female';
+    }
+
+    function safeProfileCreateValuesAreValid() {
+      return !('gender' in request.resource.data) || isAllowedGender(request.resource.data.gender);
+    }
+
+    function safeProfileUpdateValuesAreValid() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['gender'])
+        || isAllowedGender(request.resource.data.gender);
+    }
+
+    function existingUserIsNotDeleted() {
+      return !('deleted' in resource.data) || resource.data.deleted != true;
+    }
+
+    function noReplyDislikeLeak() {
+      return !resource.data.keys().hasAny([
+        'dislikedAt',
+        'publisherHiddenBecauseDisliked',
+        'hiddenBecauseDisliked'
+      ])
+      && (!('feedbackType' in resource.data) || resource.data.feedbackType == 'like');
+    }
+
+    function publisherCanListVisibleReply() {
+      return resource.data.authorUid == request.auth.uid
+        && resource.data.publisherVisible == true;
+    }
+
+    function replierCanListOwnReply() {
+      return resource.data.replierUid == request.auth.uid;
+    }
+
+    match /users/{uid} {
+      allow read: if isSelf(uid) && existingUserIsNotDeleted();
+      allow create: if isSelf(uid) && hasOnlySafeUserKeys() && uidMatchesPath(uid) && safeProfileCreateValuesAreValid();
+      allow update: if isSelf(uid)
+        && existingUserIsNotDeleted()
+        && uidMatchesPath(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(safeUserKeys())
+        && safeProfileUpdateValuesAreValid();
+      allow delete: if false;
 
       match /fcmTokens/{tokenId} {
-        allow read, write, delete: if isOwner(userId);
+        allow read, delete: if isSelf(uid) && isNotDeletedSelf();
+        allow create, update: if isSelf(uid) && isNotDeletedSelf() && hasOnlySafeTokenKeys();
+      }
+
+      match /deliveryReadStates/{deliveryId} {
+        allow read: if isSelf(uid) && isNotDeletedSelf();
+        allow create, update, delete: if false;
+      }
+
+      match /replyReadStates/{replyId} {
+        allow read: if isSelf(uid) && isNotDeletedSelf();
+        allow create, update, delete: if false;
       }
     }
 
-    match /letters/{letterId} {
-      // 테스트를 위해 모든 로그인 사용자의 읽기/쓰기/삭제를 허용합니다.
-      allow read, write, delete: if isAuthenticated();
+    match /worries/{worryId} {
+      allow read: if isNotDeletedSelf()
+        && !isHidden(resource.data)
+        && (
+          resource.data.authorUid == request.auth.uid
+          || hasDeliveryForWorry(worryId)
+        );
+      allow create, update, delete: if false;
     }
-    
+
+    match /deliveries/{deliveryId} {
+      allow read: if isNotDeletedSelf()
+        && isDeliveryRecipient(deliveryId)
+        && !isHidden(resource.data)
+        && deliveryWorryIsVisible();
+      allow create, update, delete: if false;
+    }
+
+    match /deliveryBatches/{batchId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /moderationLogs/{logId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /pushLogs/{logId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /passReplacementAttempts/{attemptId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /jobLocks/{jobName} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /rematchRuns/{runId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /aiFallbackRuns/{runId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /exampleWorrySeeds/{seedId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /exampleFeedbackJobs/{jobId} {
+      allow read, create, update, delete: if false;
+    }
+
+    match /replies/{replyId} {
+      allow get: if isNotDeletedSelf()
+        && noReplyDislikeLeak()
+        && !isHidden(resource.data)
+        && ('worryId' in resource.data)
+        && !isHidden(get(/databases/$(database)/documents/worries/$(resource.data.worryId)).data)
+        && (
+          resource.data.replierUid == request.auth.uid
+          || resource.data.authorUid == request.auth.uid
+        );
+      allow list: if isNotDeletedSelf()
+        && noReplyDislikeLeak()
+        && resource.data.status == 'active'
+        && (
+          replierCanListOwnReply()
+          || publisherCanListVisibleReply()
+        );
+      allow create, update, delete: if false;
+    }
+
+    match /feedbacks/{feedbackId} {
+      allow read: if isNotDeletedSelf()
+        && (
+          ('publisherUid' in resource.data && resource.data.publisherUid == request.auth.uid)
+          || (
+            'replierUid' in resource.data
+            && resource.data.replierUid == request.auth.uid
+            && resource.data.type == 'like'
+          )
+        );
+      allow create, update, delete: if false;
+    }
+
     match /test/connection {
       allow read: if true;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

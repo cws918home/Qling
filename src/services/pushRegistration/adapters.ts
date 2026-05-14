@@ -28,6 +28,38 @@ export const isInstalledPWA = () => {
     || ((navigator as Navigator & { standalone?: boolean }).standalone ?? false);
 };
 
+export function buildPushTokenDoc(params: {
+  token: string;
+  userAgent: string | null;
+  instanceId: string;
+  permission: NotificationPermission;
+  installedPWA: boolean;
+  timestamp: unknown;
+  existingCreatedAt?: unknown;
+}) {
+  return {
+    token: params.token,
+    platform: 'web',
+    userAgent: params.userAgent,
+    instanceId: params.instanceId,
+    notificationPermission: params.permission,
+    isInstalledPWA: params.installedPWA,
+    createdAt: params.existingCreatedAt ?? params.timestamp,
+    updatedAt: params.timestamp,
+    lastSeenAt: params.timestamp,
+  };
+}
+
+export function buildUserNotificationProfile(params: {
+  permission: NotificationPermission;
+  installedPWA: boolean;
+}) {
+  return {
+    notificationPermission: params.permission,
+    isInstalledPWA: params.installedPWA,
+  };
+}
+
 export const createProductionPushRegistrationAdapters = (): PushRegistrationAdapters<ServiceWorkerRegistration> => ({
   hasMessaging: () => Boolean(messaging),
   isNotificationSupported: () => typeof window !== 'undefined' && 'Notification' in window,
@@ -54,18 +86,19 @@ export const createProductionPushRegistrationAdapters = (): PushRegistrationAdap
   getTokenDoc: (uid, token) =>
     getDoc(doc(db, 'users', uid, 'fcmTokens', encodeURIComponent(token))) as Promise<ExistingTokenDoc>,
   writeTokenDoc: async ({ uid, token, permission, installedPWA, instanceId, existingTokenDoc }) => {
-    await setDoc(doc(db, 'users', uid, 'fcmTokens', encodeURIComponent(token)), {
-      token,
-      platform: 'web',
-      userAgent: navigator.userAgent,
-      createdAt: existingTokenDoc.exists()
-        ? (existingTokenDoc.data().createdAt ?? serverTimestamp())
-        : serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      notificationPermission: permission,
-      isInstalledPWA: installedPWA,
-      instanceId,
-    }, { merge: true });
+    const timestamp = serverTimestamp();
+    await Promise.all([
+      setDoc(doc(db, 'users', uid, 'fcmTokens', encodeURIComponent(token)), buildPushTokenDoc({
+        token,
+        userAgent: navigator.userAgent,
+        instanceId,
+        permission,
+        installedPWA,
+        timestamp,
+        existingCreatedAt: existingTokenDoc.exists() ? existingTokenDoc.data().createdAt : undefined,
+      }), { merge: true }),
+      setDoc(doc(db, 'users', uid), buildUserNotificationProfile({ permission, installedPWA }), { merge: true }),
+    ]);
   },
   updateLastTokenRefresh: uid =>
     updateDoc(doc(db, 'users', uid), {

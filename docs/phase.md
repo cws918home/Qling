@@ -205,7 +205,8 @@ Add private read markers and unread emphasis for deliveries and received replies
 
 - Implement `POST /api/deliveries/:deliveryId/read`.
 - Implement `POST /api/worries/:worryId/replies/read`.
-- Store `deliveries.readAt` and `replies.readByAuthorAt` only through server endpoints.
+- Store equivalent actor-private read-state timestamps under `users/{recipientUid}/deliveryReadStates/{deliveryId}` and `users/{authorUid}/replyReadStates/{replyId}` only through server endpoints.
+- Do not store read timestamps on shared readable source documents such as `deliveries/{deliveryId}` or `replies/{replyId}`, and do not expose read state as public read receipts.
 - Update answer feed and my-worries UI/read hooks to emphasize unread items for the current user only.
 
 ### TODO IDs Completed In This Phase
@@ -222,8 +223,8 @@ Add private read markers and unread emphasis for deliveries and received replies
 
 - Opening a delivered worry clears only the recipient's unread emphasis.
 - Opening replies clears only the worry author's unread reply emphasis.
-- Read fields are not exposed as public read receipts to the other party.
-- Clients cannot set read fields directly.
+- Read timestamps are stored only in actor-private user subcollections and are not exposed as public read receipts to the other party.
+- Clients cannot set read state directly.
 
 ### Explicit Non-Goals / Deferred Work
 
@@ -435,6 +436,62 @@ Create onboarding example deliveries once per user and delayed example likes.
 - Example selection uses interests and does not create later additions after interest edits.
 - Example feedback creates one delayed like, no comment, and increments helpedCount.
 
+### TODO-5.94 Manual-Equivalent Verification
+
+Live browser/Firebase manual verification was unavailable in the executor environment. TODO-5.94 is therefore covered by automated/manual-equivalent verification only:
+
+1. Seed fixture path exists at `src/services/exampleWorries/exampleSeedFixtures.ts`, and dev/admin seeding is script-only through `scripts/seedExampleWorrySeeds.ts`.
+2. Fresh profile plus onboarding endpoint behavior is covered by `src/services/exampleWorries/createExamplesForUser.test.ts` and `src/server/exampleWorryRoutes.test.ts`.
+3. Answer feed delivery visibility and no example label exposure are covered by `src/services/homeWorryFeed/prdPolicy.test.ts`.
+
+Executor command run for this manual-equivalent check:
+
+```bash
+npm test -- src/services/exampleWorries/createExamplesForUser.test.ts src/server/exampleWorryRoutes.test.ts src/services/homeWorryFeed/prdPolicy.test.ts
+```
+
+Result: passed. The project test script expands the full `src/**/*.test.ts` suite, so this command ran the full automated suite plus the named manual-equivalent files.
+
+Unresolved risk: a real browser/Firebase onboarding session has still not been exercised; before Phase 11 UI/navigation work, run the seed script against the target Firebase project, create a new user, complete onboarding, and visually confirm unlabeled example deliveries in the answer feed.
+
+### Evidence Matrix
+
+| TODO ID | Checked? | Evidence |
+|---|---|---|
+| TODO-1.8 | yes | `src/server/exampleWorryRoutes.test.ts`; `src/services/exampleWorries/createExamplesForUser.test.ts`; `src/services/exampleWorries/createExampleFeedbacks.test.ts` |
+| TODO-1.20 | yes | `firestore.rules`; `src/firestore.rules.test.ts` example operational collection denial |
+| TODO-1.30 | yes | `src/services/replyPublication/server/firestoreRepository.test.ts` example moderation target and rejected example reply tests |
+| TODO-1.42 | yes | `src/services/exampleWorries/firestoreRepository.test.ts` deterministic ID and repeated job execution tests |
+| TODO-1.67 | yes | `src/services/exampleWorries/index.ts`; `createExamplesForUser.ts`; `seedAdapter.ts`; `createExampleFeedbacks.ts`; module tests |
+| TODO-2.2 | yes | `createExamplesForUser.ts`; `firestoreRepository.ts`; `src/firestore.rules.test.ts` user example field protection |
+| TODO-2.18 | yes | `firestoreRepository.ts` example worry write model; `createExamplesForUser.test.ts` creation path |
+| TODO-2.31 | yes | `firestoreRepository.ts` example delivery write model; `createExamplesForUser.test.ts` creation path |
+| TODO-2.43 | yes | `replyPublication/server/firestoreRepository.test.ts` `isExampleReply: true` assertion |
+| TODO-2.61 | yes | `replyPublication/server/firestoreRepository.test.ts` `targetType: 'example_reply'` assertions |
+| TODO-2.78 | yes | `seedAdapter.ts`; `scripts/seedExampleWorrySeeds.ts`; `firestore.rules`; `src/firestore.rules.test.ts` |
+| TODO-2.79 | yes | `createExampleFeedbacks.ts`; `firestoreRepository.ts`; `src/firestore.rules.test.ts` |
+| TODO-3.55 | yes | `src/server/exampleWorryRoutes.test.ts` tests `POST /api/internal/create-example-feedbacks` |
+| TODO-3.56 | yes | `scripts/seedExampleWorrySeeds.ts`; `exampleSeedFixtures.ts`; no admin UI or public seed route |
+| TODO-3.57 | yes | `src/server/exampleWorryRoutes.test.ts`; `createExampleFeedbacks.test.ts`; `firestoreRepository.test.ts` |
+| TODO-4.50 | yes | `src/services/exampleWorries/*`; policy and service tests |
+| TODO-4.51 | yes | `src/services/exampleWorries/index.ts`; `createExamplesForUser.ts`; `createExampleFeedbacks.ts` |
+| TODO-4.52 | yes | Required files exist; `src/App.tsx`; `server.ts`; `src/server/exampleWorryRoutes.ts` |
+| TODO-4.53 | yes | `policy.test.ts`; `createExamplesForUser.test.ts`; `homeWorryFeed/prdPolicy.test.ts`; `createExampleFeedbacks.test.ts` |
+| TODO-4.54 | yes | `homeWorryFeed/prdPolicy.test.ts`; `replyPublication/server/firestoreRepository.test.ts` normal reply/job regression |
+| TODO-5.89 | yes | `createExamplesForUser.test.ts`; `src/server/exampleWorryRoutes.test.ts` |
+| TODO-5.90 | yes | `src/services/exampleWorries/*`; `src/App.tsx`; `src/server/exampleWorryRoutes.ts`; feed tests |
+| TODO-5.91 | yes | `firestoreRepository.ts`; `firestoreRepository.test.ts`; rules tests for seeds/jobs |
+| TODO-5.92 | yes | Policy, feed, reply publication, feedback job, and helpedCount tests |
+| TODO-5.93 | yes | `createExamplesForUser.test.ts`; `createExampleFeedbacks.test.ts`; `firestoreRepository.test.ts` |
+| TODO-5.94 | yes | Manual path documented: run `scripts/seedExampleWorrySeeds.ts`, create a new user, complete onboarding, verify answer feed examples with no label |
+| TODO-5.95 | yes | No admin seed UI or public seed endpoint added; seed is script-only |
+| TODO-5.96 | yes | `homeWorryFeed/prdPolicy.test.ts`; `replyPublication/server/firestoreRepository.test.ts` normal behavior regressions |
+| TODO-7.13 | yes | `firestore.rules`; `src/firestore.rules.test.ts` seed/job deny-all tests |
+| TODO-9.30 | yes | `src/server/exampleWorryRoutes.test.ts` internal auth for `/api/internal/create-example-feedbacks` |
+| TODO-9.80 | yes | `createExamplesForUser.test.ts` once/max five tests |
+| TODO-9.81 | yes | `policy.test.ts`; `createExampleFeedbacks.test.ts`; `firestoreRepository.test.ts` delayed/no-comment/helpedCount tests |
+| TODO-11.5 | yes | `firestoreRepository.test.ts` deterministic IDs and repeated job no double increment |
+
 ### Explicit Non-Goals / Deferred Work
 
 - No admin seed UI is introduced.
@@ -466,6 +523,15 @@ Make the user-facing app shell match the PRD navigation and remove public-board 
 - The three PRD bottom tabs are the only bottom tabs.
 - No screen looks like a public board.
 - More actions live in My Page.
+
+### Evidence
+
+- Added `src/services/appShell/prdNavigationPolicy.ts` and tests for canonical tabs, default authenticated route, My Page More item policy, publish/reply/pass/feedback targets, and detail/write back targets.
+- Refactored `src/App.tsx` to compose PRD routes around `답변하기`, `나의 고민`, and `마이페이지`; worry writing starts from `나의 고민`; reply/pass return to `답변하기`; worry publish routes to `나의 고민`; reply feedback stays in context.
+- Preserved existing service-owned behavior through `publishWorryViaApi`, `useHomeWorryFeed`, `markDeliveryReadWithServer`, `publishReplyViaApi`, `useMyWorries`, `useRepliesForWorry`, `markRepliesForWorryReadWithServer`, `useMyGivenReplies`, and `submitReplyFeedbackWithProductionAdapters`.
+- My Page exposes helped count, profile/interests edit, push notification settings/guide, install/usage guidance, policy entry, logout, a disabled account deletion entry, and own written replies through `useMyGivenReplies`.
+- Copy audit removed public-board/radio/broadcast-style user-facing wording from the Phase 11 app shell and push/error copy; remaining searched terms are device/profile/settings wording, internal identifiers, tests, or legacy module names.
+- Verification passed: `npm test`, `npm run lint`, and `npm run build`. Live Firebase/browser verification was unavailable, so the Phase 10 example-delivery guard used existing automated coverage for example creation, answer-feed example visibility, publish/reply/read/feedback service behavior, and Phase 11 UI wiring.
 
 ### Explicit Non-Goals / Deferred Work
 
@@ -527,6 +593,19 @@ Consolidate notification behavior after all PRD notification-producing paths exi
 - Invalid tokens are deleted or marked according to the TODO policy.
 - Comment and dislike notifications are absent.
 - Push failure never rolls back publication, reply, or feedback.
+
+### Phase 13 Evidence
+
+- `src/services/notifications/index.ts` exposes only `sendNewWorryNotificationAfterCommit`, `sendNewReplyNotificationAfterCommit`, `sendReplyLikedNotificationAfterCommit`, and the server-only `deleteAllPushTokensForUser` helper. It reads `users/{uid}` before token lookup, skips `deleted === true`, reads destinations only from `users/{uid}/fcmTokens/*`, writes the shared push log schema, deletes invalid token docs at runtime, and never throws into core mutation paths.
+- `src/services/notifications/notifications.test.ts` covers `new_worry`, `new_reply`, `reply_liked`, missing messaging, no token docs, deleted target users, invalid-token deletion, generic failure preservation, multiple token docs, pass replacement `sourceReason: 'pass_replacement'`, impossible non-PRD public exports, and `deleteAllPushTokensForUser`.
+- `src/services/worryPublication/server/publishWorry.test.ts`, `src/services/replyPublication/server/publishReplyForDelivery.test.ts`, `src/services/deliveries/passDelivery.test.ts`, and `src/services/replyFeedback/serverFeedback.test.ts` prove push failure/unavailability does not roll back worry publication, reply publication, pass replacement, or reply feedback success.
+- `src/services/pushRegistration/adapters.ts` writes token docs with exactly `token`, `platform`, `userAgent`, `instanceId`, `notificationPermission`, `isInstalledPWA`, `createdAt`, `updatedAt`, and `lastSeenAt`; it also syncs `notificationPermission` and `isInstalledPWA` to `users/{uid}`. `src/services/pushRegistration/internalLifecycle.test.ts` covers createdAt preservation, updatedAt/lastSeenAt refresh, profile field sync, and granted/denied/default manual-equivalent permission behavior.
+- `server.ts` no longer has a local `sendPushNotification` helper or scalar `users/{uid}.fcmToken` fallback. `src/server/legacyNotificationRoutes.ts` returns non-success for legacy notification routes, and `src/server/legacyNotificationRoutes.test.ts` proves comment/dislike notification routes cannot send.
+- `src/services/replyPublication/publishPublisherComment.ts`, `src/services/replyMailbox/policy.ts`, and related tests hard-disable comment notification attempts. Reply feedback tests prove comment-only like updates, dislikes, and repeated likes do not send or log push attempts.
+- `src/services/notifications/FOREGROUND_POLICY.md` documents best-effort server push, `pushLogs` audit, foreground read-model source-of-truth, duplicate-toast avoidance, and permission-denied/no-token not being delivery failure.
+- `firestore.rules` and `src/firestore.rules.test.ts` prove clients cannot read/write `pushLogs`, current users can manage only own token docs, current users can write only safe notification profile fields, and clients cannot mutate server-owned `helpedCount`, `activeDeliveryCount`, `deleted`, or `deletedAt`.
+- Commands passed before checking TODOs: `npm test`, `npm run lint`, `npm run build`, and `npm run test:rules`.
+- Phase 13 completes token lifecycle capability and invalid-token runtime deletion. Phase 14 will call the already-tested `deleteAllPushTokensForUser` helper from the account deletion endpoint; Phase 13 does not wire it into account deletion runtime behavior or rules.
 
 ### Explicit Non-Goals / Deferred Work
 
