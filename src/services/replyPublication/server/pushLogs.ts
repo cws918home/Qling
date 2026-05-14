@@ -82,10 +82,10 @@ export async function sendNewReplyPushAfterCommit(params: {
       try {
         await params.messaging.send({
           token,
-          notification: { title: '갈피', body: '보낸 사연에 답장이 도착했습니다.' },
+    notification: { title: '갈피', body: '보낸 고민에 답장이 도착했습니다.' },
           data: {
             title: '갈피',
-            body: '보낸 사연에 답장이 도착했습니다.',
+      body: '보낸 고민에 답장이 도착했습니다.',
             url: '/',
           },
         });

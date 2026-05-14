@@ -71,23 +71,23 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [ ] TODO-1.50 Firestore rules invariant for hidden/admin-only data is enforced: users cannot read moderation logs, push logs, operational logs, hidden content, or admin-only feedback comments.
 - [ ] TODO-1.51 Firestore rules invariant for legacy removal is enforced: final rules deny legacy `letters` runtime reads/writes/deletes.
 - [ ] TODO-1.52 `App.tsx` does not own matching, moderation interpretation, Firestore transaction rules, delivery status transitions, helpedCount changes, push dispatch, AI fallback, example scheduling, deletion blocking, or legacy migration decisions.
-- [ ] TODO-1.53 `App.tsx` is limited to view composition plus calls to service hooks/API wrappers for PRD behavior.
+- [x] TODO-1.53 `App.tsx` is limited to view composition plus calls to service hooks/API wrappers for PRD behavior.
 
 ### Architecture Safeguard: UI Extraction Before the Navigation Slice
 
-- [ ] TODO-1.54 UI tab restructuring waits until Slice 11, but feature-level extraction is allowed earlier when it prevents `src/App.tsx` from growing worse.
-- [ ] TODO-1.55 Allowed early extractions:
+- [x] TODO-1.54 UI tab restructuring waits until Slice 11, but feature-level extraction is allowed earlier when it prevents `src/App.tsx` from growing worse.
+- [x] TODO-1.55 Allowed early extractions:
   - `AnswerFeed` component/hook.
   - `MyWorries` read hook.
   - `ReplyDetail` action hook.
   - API wrappers for server-owned mutation endpoints.
-- [ ] TODO-1.56 Forbidden in UI code:
+- [x] TODO-1.56 Forbidden in UI code:
   - Matching policy.
   - Moderation interpretation.
   - Delivery status transition rules.
   - helpedCount or feedback invariants.
   - Thin pass-through components that add indirection without owning behavior.
-- [ ] TODO-1.57 Extract only when it improves locality or testability. Do not move server policy into React components while waiting for the full tab restructure.
+- [x] TODO-1.57 Extract only when it improves locality or testability. Do not move server policy into React components while waiting for the full tab restructure.
 
 ### Architecture Safeguard: Deep Modules and Interface Guardrails
 
@@ -587,12 +587,12 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 11: UI navigation PRD alignment
 
-- [ ] TODO-5.97 Goal: UI matches PRD navigation and removes public-board impression.
-- [ ] TODO-5.98 Files: `src/App.tsx`; create components under `src/components` or feature folders only when reducing real complexity.
-- [ ] TODO-5.99 UI changes: first screen `답변하기`; bottom tabs `답변하기`, `나의 고민`, `마이페이지`; worry writing entry from `나의 고민`; decompose current inbox/settings/home concepts; More menu in My Page with notifications, guide, policy, logout, delete account; remove public-board-looking UI.
-- [ ] TODO-5.100 Tests/manual: authenticated first route, mobile bottom tabs, worry write entry, logout/delete account access.
-- [ ] TODO-5.101 Explicit non-goals: new visual brand overhaul unless needed for PRD clarity.
-- [ ] TODO-5.102 Deletion test: feature hooks own data behavior; UI components can be reorganized without changing server invariants.
+- [x] TODO-5.97 Goal: UI matches PRD navigation and removes public-board impression.
+- [x] TODO-5.98 Files: `src/App.tsx`; create components under `src/components` or feature folders only when reducing real complexity.
+- [x] TODO-5.99 UI changes: first screen `답변하기`; bottom tabs `답변하기`, `나의 고민`, `마이페이지`; worry writing entry from `나의 고민`; decompose current inbox/settings/home concepts; More menu in My Page with notifications, guide, policy, logout, delete account; remove public-board-looking UI.
+- [x] TODO-5.100 Tests/manual: authenticated first route, mobile bottom tabs, worry write entry, logout/delete account access.
+- [x] TODO-5.101 Explicit non-goals: new visual brand overhaul unless needed for PRD clarity.
+- [x] TODO-5.102 Deletion test: feature hooks own data behavior; UI components can be reorganized without changing server invariants.
 
 ### Slice 12: Input validation and copy
 
@@ -860,13 +860,13 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### UI Integration / Manual Tests
 
-- [ ] TODO-9.82 First screen is `답변하기`.
-- [ ] TODO-9.83 Bottom tabs match PRD.
-- [ ] TODO-9.84 Worry write starts from `나의 고민`.
+- [x] TODO-9.82 First screen is `답변하기`.
+- [x] TODO-9.83 Bottom tabs match PRD.
+- [x] TODO-9.84 Worry write starts from `나의 고민`.
 - [ ] TODO-9.85 Moderation failure preserves draft and shows reason/help copy.
-- [ ] TODO-9.86 Happy path publish -> receive -> read.
-- [ ] TODO-9.87 Happy path reply -> author reads.
-- [ ] TODO-9.88 Happy path like.
+- [x] TODO-9.86 Happy path publish -> receive -> read.
+- [x] TODO-9.87 Happy path reply -> author reads.
+- [x] TODO-9.88 Happy path like.
 - [ ] TODO-9.89 Rejection path: unsafe worry not saved.
 - [ ] TODO-9.90 Rejection path: unsafe reply not saved.
 - [ ] TODO-9.91 Rejection path: unsafe feedback comment not saved.
@@ -920,7 +920,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-11.10 Moderation provider malformed responses:
   - Risk: unsafe or uncategorized content saved.
   - Mitigation: normalize strictly, retry once, fail closed with moderation log.
-- [ ] TODO-11.11 UI regressions due to `App.tsx` size:
+- [x] TODO-11.11 UI regressions due to `App.tsx` size:
   - Risk: navigation changes break unrelated flows.
   - Mitigation: extract feature components only around real screens/hooks; keep server behavior covered by tests.
 - [ ] TODO-11.12 Test brittleness:

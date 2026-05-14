@@ -524,6 +524,15 @@ Make the user-facing app shell match the PRD navigation and remove public-board 
 - No screen looks like a public board.
 - More actions live in My Page.
 
+### Evidence
+
+- Added `src/services/appShell/prdNavigationPolicy.ts` and tests for canonical tabs, default authenticated route, My Page More item policy, publish/reply/pass/feedback targets, and detail/write back targets.
+- Refactored `src/App.tsx` to compose PRD routes around `답변하기`, `나의 고민`, and `마이페이지`; worry writing starts from `나의 고민`; reply/pass return to `답변하기`; worry publish routes to `나의 고민`; reply feedback stays in context.
+- Preserved existing service-owned behavior through `publishWorryViaApi`, `useHomeWorryFeed`, `markDeliveryReadWithServer`, `publishReplyViaApi`, `useMyWorries`, `useRepliesForWorry`, `markRepliesForWorryReadWithServer`, `useMyGivenReplies`, and `submitReplyFeedbackWithProductionAdapters`.
+- My Page exposes helped count, profile/interests edit, push notification settings/guide, install/usage guidance, policy entry, logout, a disabled account deletion entry, and own written replies through `useMyGivenReplies`.
+- Copy audit removed public-board/radio/broadcast-style user-facing wording from the Phase 11 app shell and push/error copy; remaining searched terms are device/profile/settings wording, internal identifiers, tests, or legacy module names.
+- Verification passed: `npm test`, `npm run lint`, and `npm run build`. Live Firebase/browser verification was unavailable, so the Phase 10 example-delivery guard used existing automated coverage for example creation, answer-feed example visibility, publish/reply/read/feedback service behavior, and Phase 11 UI wiring.
+
 ### Explicit Non-Goals / Deferred Work
 
 - Visual brand overhaul is not part of this phase.

@@ -93,8 +93,8 @@ export async function sendReplacementPushAfterCommit(params: {
       try {
         await params.messaging.send({
           token,
-          notification: { title: '갈피', body: '새로운 사연이 도착했습니다.' },
-          data: { title: '갈피', body: '새로운 사연이 도착했습니다.', url: '/' },
+    notification: { title: '갈피', body: '새로운 고민이 도착했습니다.' },
+    data: { title: '갈피', body: '새로운 고민이 도착했습니다.', url: '/' },
         });
         hasSent = true;
         logIds.push(await writePushLog({

@@ -7,5 +7,5 @@ test('App reply submission uses server API and does not import legacy human repl
 
   assert.match(source, /publishReplyViaApi/);
   assert.doesNotMatch(source, /publishReplyWithProductionAdapters/);
-  assert.match(source, /이전 형식의 사연에는 새 답장을 보낼 수 없습니다/);
+  assert.match(source, /이전 형식의 고민에는 새 답장을 보낼 수 없습니다/);
 });

@@ -28,7 +28,7 @@ function mapTransactionError(error: unknown): ServerPublishReplyResult {
     return { status: 'not_found', code, message: '답장할 전달을 찾을 수 없습니다.' };
   }
   if (code === 'worry_missing') {
-    return { status: 'not_found', code, message: '원본 사연을 찾을 수 없습니다.' };
+      return { status: 'not_found', code, message: '원본 고민을 찾을 수 없습니다.' };
   }
   if (code === 'not_delivery_recipient') {
     return { status: 'forbidden', code, message: '이 전달에 답장할 권한이 없습니다.' };

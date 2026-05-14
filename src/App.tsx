@@ -15,7 +15,6 @@ import {
   serverTimestamp,
   doc,
   updateDoc,
-  deleteDoc,
   Timestamp,
   setDoc,
   getDoc,
@@ -44,6 +43,10 @@ import {
   Bell,
   Share2,
   QrCode,
+  UserRound,
+  BookOpen,
+  Shield,
+  Trash2,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { cn } from './lib/utils';
@@ -76,6 +79,26 @@ import {
   useHomeWorryFeed,
   type HomeWorryFeedLetter,
 } from './services/homeWorryFeed';
+import {
+  PRD_APP_TABS,
+  backRouteFromMyReplyDetail,
+  backRouteFromReceivedReplyDetail,
+  backRouteFromWriteReply,
+  backRouteFromWriteWorry,
+  routeAfterFeedbackPublish,
+  routeAfterAuthProfileLoad,
+  routeAfterOnboardingComplete,
+  routeAfterPass,
+  routeAfterReplyPublish,
+  routeAfterWorryPublish,
+  routeToMyReplyDetail,
+  routeToReceivedReplyDetail,
+  routeToWriteReply,
+  routeToWriteWorry,
+  tabForRoute,
+  type AppRoute,
+  type PrdAppTab,
+} from './services/appShell/prdNavigationPolicy';
 
 // --- Constants ---
 const CATEGORIES = WORRY_CATEGORIES;
@@ -143,7 +166,7 @@ export default function App() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   
-  const [view, setView] = useState<'login' | 'onboarding' | 'home' | 'write_worry' | 'write_reply' | 'inbox' | 'my_replies' | 'read_reply' | 'read_my_reply' | 'settings'>('login');
+  const [view, setView] = useState<AppRoute>('login');
   
   const [selectedWorry, setSelectedWorry] = useState<HomeWorryFeedLetter | null>(null);
   const [selectedMyWorry, setSelectedMyWorry] = useState<MyWorryListItem | null>(null);
@@ -221,7 +244,7 @@ export default function App() {
           if (userSnap.exists()) {
             const userData = userSnap.data() as UserProfile;
             setProfile(userData);
-            setView(prev => (['onboarding', 'login'].includes(prev) ? 'home' : prev));
+            setView(prev => routeAfterAuthProfileLoad(prev));
             if (!userData.exampleWorriesCreatedAt) {
               void createExampleWorriesForCurrentUser(currentUser)
                 .then(async () => {
@@ -337,7 +360,7 @@ export default function App() {
       setProfile(profileData as UserProfile);
       
       // 4. Forcefully switch view
-      setView('home');
+      setView(routeAfterOnboardingComplete());
       
       // 5. Scroll to top
       window.scrollTo(0, 0);
@@ -379,7 +402,7 @@ export default function App() {
         console.warn("Worry publication completed with warnings:", result.warnings);
       }
 
-      setView('home');
+      setView(routeAfterWorryPublish());
       window.scrollTo(0, 0);
     } catch (e: any) {
       console.error("Publication Error:", e);
@@ -394,7 +417,7 @@ export default function App() {
   const sendReply = async (content: string, worry: HomeWorryFeedLetter) => {
     if (!user) return;
     if (!worry.deliveryId) {
-      setFilterAlert("이전 형식의 사연에는 새 답장을 보낼 수 없습니다.");
+      setFilterAlert("이전 형식의 고민에는 새 답장을 보낼 수 없습니다.");
       return;
     }
 
@@ -416,7 +439,7 @@ export default function App() {
         return;
       }
 
-      setView('home');
+      setView(routeAfterReplyPublish());
       setSelectedWorry(null);
     } catch (e) {
       console.error(e);
@@ -428,7 +451,7 @@ export default function App() {
 
   const openWorryForReply = (worry: HomeWorryFeedLetter) => {
     setSelectedWorry(worry);
-    setView('write_reply');
+    setView(routeToWriteReply());
 
     if (!user || !worry.deliveryId || worry.source !== 'prd_delivery') return;
     void markDeliveryReadWithServer({
@@ -444,7 +467,7 @@ export default function App() {
   const passWorry = async (event: ReactMouseEvent, worry: HomeWorryFeedLetter) => {
     event.stopPropagation();
     if (!user || !worry.deliveryId || worry.source !== 'prd_delivery') {
-      setFilterAlert("이전 형식의 사연은 패스할 수 없습니다.");
+      setFilterAlert("이전 형식의 고민은 패스할 수 없습니다.");
       return;
     }
 
@@ -468,6 +491,7 @@ export default function App() {
       if (selectedWorry?.deliveryId === worry.deliveryId) {
         setSelectedWorry(null);
       }
+      setView(routeAfterPass());
     } catch (e) {
       console.error(e);
       setFilterAlert("패스 처리 실패");
@@ -489,20 +513,9 @@ export default function App() {
         feedbackType,
       });
       setSelectedReply(prev => prev ? { ...prev, feedback: result.feedback } : null);
+      setView(prev => routeAfterFeedbackPublish(prev));
     } catch (e) {
       console.error(e);
-    }
-  };
-
-  const deleteLetter = async (e: ReactMouseEvent, letterId: string) => {
-    e.stopPropagation(); // Prevent opening the letter view
-    if (!confirm("이 메시지를 삭제하시겠습니까?")) return;
-    try {
-      await deleteDoc(doc(db, 'letters', letterId));
-      console.log("Letter deleted:", letterId);
-    } catch (err) {
-      console.error("Delete failed:", err);
-      alert("삭제에 실패했습니다.");
     }
   };
 
@@ -559,11 +572,11 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Header (hidden in onboarding) */}
-      {view !== 'onboarding' && (
+      {/* Header (hidden before the authenticated shell) */}
+      {view !== 'login' && view !== 'onboarding' && (
         <header className="fixed top-0 left-0 right-0 bg-[#FDFCF8]/80 backdrop-blur-md z-50 border-b border-[#E9EDC9]/50">
           <div className="max-w-2xl mx-auto px-6 h-16 flex items-center justify-between">
-            <button onClick={() => setView('home')} className="text-xl font-serif font-bold tracking-tight text-[#D4A373] flex items-center gap-2">
+            <button onClick={() => setView('답변하기')} className="text-xl font-serif font-bold tracking-tight text-[#D4A373] flex items-center gap-2">
               <Radio className="w-5 h-5" /> 갈피
             </button>
             <div className="flex items-center gap-3">
@@ -574,18 +587,6 @@ export default function App() {
                 </span>
                 연결됨
               </div>
-              <button 
-                onClick={() => setView('settings')}
-                className="relative p-2 hover:bg-[#FAEDCD] rounded-full transition-colors text-[#8B8B6B] hover:text-[#5A5A40]"
-              >
-                <Settings className="w-6 h-6" />
-              </button>
-              <button 
-                onClick={() => setView('inbox')}
-                className="relative p-2 hover:bg-[#FAEDCD] rounded-full transition-colors"
-              >
-                <Inbox className="w-6 h-6" />
-              </button>
             </div>
           </div>
         </header>
@@ -635,26 +636,19 @@ export default function App() {
                   <Mic2 className="w-10 h-10 text-[#D4A373]" />
                 </div>
                 <h1 className="text-3xl font-serif font-bold text-[#5A5A40]">주파수를 맞춰주세요</h1>
-                <p className="text-[#8B8B6B]">당신의 취향을 알려주시면<br/>꼭 맞는 라디오 사연을 먼저 들려드릴게요.</p>
+                <p className="text-[#8B8B6B]">당신의 취향을 알려주시면<br/>답변할 수 있는 고민을 먼저 전해드릴게요.</p>
               </div>
 
               <OnboardingForm onSubmit={handleOnboardingSubmit} isProcessing={isProcessing} />
             </motion.div>
           )}
 
-          {/* 1.5 Settings View */}
-          {view === 'settings' && profile && (
-            <motion.div key="settings" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
-              <div className="flex items-center justify-between">
-                <button onClick={() => setView('home')} className="flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
-                  <ArrowLeft className="w-4 h-4" /> 돌아가기
-                </button>
-                <button 
-                 onClick={handleSignOut}
-                 className="px-4 py-2 text-sm text-red-500 hover:bg-red-50 rounded-xl transition-colors font-medium"
-                >
-                  로그아웃
-                </button>
+          {/* 1.5 My Page View */}
+          {view === '마이페이지' && profile && (
+            <motion.div key="my_page" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-serif font-bold">마이페이지</h2>
+                <p className="text-[#8B8B6B] text-sm">내 프로필과 내가 남긴 답장을 확인합니다.</p>
               </div>
               <div className="flex items-center gap-4 bg-[#FAEDCD]/50 p-6 rounded-2xl border border-[#FAEDCD] mb-8">
                 <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center text-[#E07A5F] shadow-sm">
@@ -667,6 +661,48 @@ export default function App() {
               </div>
 
               <div className="bg-white p-6 rounded-2xl border border-[#E9EDC9] space-y-4">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#FAEDCD] rounded-full flex items-center justify-center text-[#D4A373]">
+                      <UserRound className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-[#5A5A40]">내가 남긴 답장</h3>
+                      <p className="text-xs text-[#8B8B6B]">좋아요와 코멘트는 기존 답장 읽기 화면에서 확인합니다.</p>
+                    </div>
+                  </div>
+                  <span className="text-xs bg-[#E9EDC9] text-[#5A5A40] px-3 py-1 rounded-full">{myGivenReplies.length}</span>
+                </div>
+                {myGivenReplies.length === 0 ? (
+                  <div className="text-center py-10 bg-[#FDFCF8] rounded-2xl border border-dashed border-[#E9EDC9]">
+                    <Heart className="w-10 h-10 text-[#E9EDC9] mx-auto mb-3" />
+                    <p className="text-[#8B8B6B] text-sm">아직 내가 보낸 위로가 없어요.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3">
+                    {myGivenReplies.map(reply => (
+                      <button
+                        key={reply.id}
+                        onClick={() => {
+                          setSelectedReply(reply);
+                          setView(routeToMyReplyDetail());
+                        }}
+                        className="w-full text-left p-4 bg-[#FDFCF8] rounded-xl border border-[#E9EDC9] transition-all hover:bg-[#FAEDCD]"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <Send className="w-4 h-4 text-[#A3B18A]" />
+                          <span className="text-xs font-semibold text-[#8B8B6B]">나의 다정한 답장</span>
+                        </div>
+                        <p className="text-[#5A5A40] text-sm font-medium line-clamp-2 leading-relaxed">
+                          {reply.refinedContent}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white p-6 rounded-2xl border border-[#E9EDC9] space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-[#FAEDCD] rounded-full flex items-center justify-center text-[#D4A373]">
@@ -674,7 +710,7 @@ export default function App() {
                     </div>
                     <div>
                       <h3 className="font-bold text-[#5A5A40]">푸시 알림 설정</h3>
-                      <p className="text-xs text-[#8B8B6B]">새로운 사연이나 답장 알림을 받습니다.</p>
+                      <p className="text-xs text-[#8B8B6B]">새 고민이나 답장 알림을 받습니다.</p>
                     </div>
                   </div>
                   <div className={cn(
@@ -760,7 +796,7 @@ export default function App() {
                   <button 
                     onClick={() => {
                       if (navigator.share) {
-                        navigator.share({ title: '갈피', text: '당신의 밤을 위로하는 익명 라디오 사연 앱', url: window.location.origin });
+                        navigator.share({ title: '갈피', text: '익명으로 고민을 나누고 답장을 주고받는 앱', url: window.location.origin });
                       } else {
                         navigator.clipboard.writeText(window.location.origin);
                         alert("링크가 복사되었습니다!");
@@ -773,8 +809,37 @@ export default function App() {
                 </div>
               </div>
 
+              <div className="bg-white p-6 rounded-2xl border border-[#E9EDC9] space-y-3">
+                <h3 className="font-bold text-[#5A5A40]">더보기</h3>
+                <div className="grid gap-2">
+                  <button className="w-full p-4 rounded-xl bg-[#FDFCF8] border border-[#E9EDC9] text-left flex items-center gap-3">
+                    <BookOpen className="w-5 h-5 text-[#A3B18A]" />
+                    <span className="font-bold text-sm">이용 가이드</span>
+                  </button>
+                  <button className="w-full p-4 rounded-xl bg-[#FDFCF8] border border-[#E9EDC9] text-left flex items-center gap-3">
+                    <Shield className="w-5 h-5 text-[#A3B18A]" />
+                    <span className="font-bold text-sm">정책 및 개인정보 처리방침</span>
+                  </button>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full p-4 rounded-xl bg-[#FDFCF8] border border-[#E9EDC9] text-left flex items-center gap-3"
+                  >
+                    <ArrowLeft className="w-5 h-5 text-[#8B8B6B]" />
+                    <span className="font-bold text-sm">로그아웃</span>
+                  </button>
+                  <button
+                    disabled
+                    title="계정 삭제는 아직 준비 중입니다."
+                    className="w-full p-4 rounded-xl bg-gray-50 border border-gray-200 text-left flex items-center gap-3 opacity-70 cursor-not-allowed"
+                  >
+                    <Trash2 className="w-5 h-5 text-red-400" />
+                    <span className="font-bold text-sm text-red-500">계정 삭제 준비 중</span>
+                  </button>
+                </div>
+              </div>
+
               <div className="text-left space-y-2 mb-10">
-                <h1 className="text-3xl font-serif font-bold text-[#5A5A40]">내 주파수 설정</h1>
+                <h1 className="text-3xl font-serif font-bold text-[#5A5A40]">프로필 수정</h1>
                 <p className="text-[#8B8B6B]">나의 성별과 가장 관심있는 고민 주제를 변경할 수 있어요.</p>
               </div>
 
@@ -787,18 +852,18 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* 2. Home View (Feed) */}
-          {view === 'home' && (
-            <motion.div key="home" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
+          {/* 2. Answer View (Feed) */}
+          {view === '답변하기' && (
+            <motion.div key="answer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-serif font-bold">오늘 밤의 사연들</h2>
+                <h2 className="text-2xl font-serif font-bold">답변하기</h2>
                 <span className="text-xs bg-[#E9EDC9] text-[#5A5A40] px-3 py-1 rounded-full">{homeInterestBadgeText}</span>
               </div>
 
               {visibleFeedWorries.length === 0 ? (
                 <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
-                  <RadioReceiver className="w-12 h-12 text-[#E9EDC9] mx-auto mb-3" />
-                  <p className="text-[#8B8B6B]">아직 도착한 사연이 없네요.<br/>첫 번째 사연을 남겨보시겠어요?</p>
+                  <MessageSquare className="w-12 h-12 text-[#E9EDC9] mx-auto mb-3" />
+                  <p className="text-[#8B8B6B]">아직 답변할 고민이 없어요.</p>
                 </div>
               ) : (
                 <div className="grid gap-6">
@@ -853,24 +918,17 @@ export default function App() {
                 </div>
               )}
 
-              {/* Floating Action Button */}
-              <button 
-                onClick={() => setView('write_worry')}
-                className="fixed bottom-8 right-1/2 translate-x-1/2 sm:right-auto sm:translate-x-0 sm:left-1/2 sm:ml-48 px-6 py-4 bg-[#E07A5F] text-white rounded-full shadow-xl font-bold flex items-center gap-3 hover:scale-105 transition-transform"
-              >
-                <Send className="w-5 h-5" /> 내 고민 송출하기
-              </button>
             </motion.div>
           )}
 
           {/* 3. Write Worry View */}
           {view === 'write_worry' && (
             <motion.div key="write_worry" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-              <button onClick={() => setView('home')} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
+              <button onClick={() => setView(backRouteFromWriteWorry())} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 돌아가기
               </button>
               <h2 className="text-2xl font-serif font-bold mb-2">당신의 이야기를 들려주세요</h2>
-              <p className="text-[#8B8B6B] mb-8">마음 한구석에 담아둔 고민을 적어보세요. AI 안심 필터가 내용을 확인한 뒤, 가장 따뜻한 답변을 줄 수 있는 이웃에게 사연을 전달합니다.</p>
+              <p className="text-[#8B8B6B] mb-8">마음 한구석에 담아둔 고민을 적어보세요. AI 안심 필터가 내용을 확인한 뒤, 가장 따뜻한 답변을 줄 수 있는 이웃에게 전달합니다.</p>
               
               <WriteForm type="worry" isProcessing={isProcessing} onSubmit={publishWorry} />
             </motion.div>
@@ -879,11 +937,11 @@ export default function App() {
           {/* 4. Write Reply View */}
           {view === 'write_reply' && selectedWorry && (
             <motion.div key="write_reply" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-              <button onClick={() => setView('home')} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
+              <button onClick={() => setView(backRouteFromWriteReply())} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 돌아가기
               </button>
               <div className="bg-[#FAEDCD]/50 p-6 rounded-2xl mb-8 border border-[#FAEDCD]">
-                <div className="text-xs font-bold text-[#D4A373] mb-2">답장할 사연 ({selectedWorry.category})</div>
+                <div className="text-xs font-bold text-[#D4A373] mb-2">답장할 고민 ({selectedWorry.category})</div>
                 <p className="text-[#5A5A40] text-sm leading-relaxed whitespace-pre-wrap">{selectedWorry.refinedContent}</p>
               </div>
               
@@ -893,184 +951,100 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* 5. Inbox (My Received Replies & My Given Replies) View */}
-          {view === 'inbox' && (
-            <motion.div key="inbox" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <button onClick={() => setView('home')} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
-                <ArrowLeft className="w-4 h-4" /> 피드로 돌아가기
-              </button>
-              
-              <Tabs 
-                tabs={[
-                  { id: 'received', label: `받은 답장 (${selectedMyWorryReplies.length})` },
-                  { id: 'given', label: `내가 한 위로 (${myGivenReplies.length})` },
-                  { id: 'sent', label: `내 고민 내역 (${myWorries.length})` }
-                ]}
-                render={(activeTab) => (
-                  <div className="mt-6">
-                    {activeTab === 'received' && (
-                      !selectedMyWorry ? (
-                        <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
-                          <Inbox className="w-12 h-12 text-[#E9EDC9] mx-auto mb-3" />
-                          <p className="text-[#8B8B6B]">내 고민 내역에서 답장을 확인할 고민을 먼저 선택해주세요.</p>
-                        </div>
-                      ) : selectedMyWorryReplies.length === 0 ? (
-                        <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
-                          <Inbox className="w-12 h-12 text-[#E9EDC9] mx-auto mb-3" />
-                          <p className="text-[#8B8B6B]">아직 도착한 답장이 없어요.</p>
-                        </div>
-                      ) : (
-                        <div className="grid gap-4">
-                          <div className="bg-[#FAEDCD]/50 p-4 rounded-2xl border border-[#FAEDCD]">
-                            <div className="text-xs font-bold text-[#D4A373] mb-2">선택한 고민</div>
-                            <p className="text-sm text-[#5A5A40] line-clamp-3 whitespace-pre-wrap">{selectedMyWorry.content}</p>
-                          </div>
-                          {selectedMyWorryReplies.map(reply => (
-                            <button 
-                              key={reply.id}
-                              onClick={() => { 
-                                setSelectedReply(reply); 
-                                setView('read_reply'); 
-                              }}
-                              className={cn(
-                                "w-full text-left p-6 rounded-2xl border transition-all hover:bg-[#FAEDCD] relative group",
-                                reply.hasUnread ? "bg-[#FFF8F1] border-[#E07A5F]" : "bg-white border-[#E9EDC9]"
-                              )}
-                            >
-                              <div className="flex items-center gap-2 mb-3">
-                                <Headphones className="w-4 h-4 text-[#A3B18A]" />
-                                <span className="text-xs font-semibold text-[#8B8B6B]">누군가의 따뜻한 답장</span>
-                              </div>
-                              <p className="text-[#5A5A40] font-medium line-clamp-2 leading-relaxed">
-                                {reply.refinedContent}
-                              </p>
-                              {reply.source === 'legacy_letters' && !reply.publisherComment && (
-                                <div className="mt-3 text-xs text-[#E07A5F] font-bold">코멘트를 남겨주세요!</div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      )
-                    )}
+          {/* 5. My Worries View */}
+          {view === '나의 고민' && (
+            <motion.div key="my_worries" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-2xl font-serif font-bold">나의 고민</h2>
+                  <p className="text-[#8B8B6B] text-sm mt-1">내가 작성한 고민과 도착한 답장을 확인합니다.</p>
+                </div>
+                <button
+                  onClick={() => setView(routeToWriteWorry())}
+                  className="px-4 py-3 bg-[#E07A5F] text-white rounded-xl shadow-sm font-bold flex items-center gap-2 hover:bg-[#D46A4F] transition-colors"
+                >
+                  <Send className="w-4 h-4" /> 고민 쓰기
+                </button>
+              </div>
 
-                    {activeTab === 'given' && (
-                      myGivenReplies.length === 0 ? (
-                        <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
-                          <Heart className="w-12 h-12 text-[#E9EDC9] mx-auto mb-3" />
-                          <p className="text-[#8B8B6B]">아직 내가 보낸 위로가 없어요.</p>
-                        </div>
-                      ) : (
-                        <div className="grid gap-4">
-                          {myGivenReplies.map(reply => (
-                            <button 
-                              key={reply.id}
-                              onClick={() => { 
-                                setSelectedReply(reply); 
-                                setView('read_my_reply'); 
-                              }}
-                              className="w-full text-left p-6 bg-white rounded-2xl border border-[#E9EDC9] transition-all hover:bg-[#FAEDCD] relative group"
-                            >
-                              <div className="flex items-center gap-2 mb-3">
-                                <Send className="w-4 h-4 text-[#A3B18A]" />
-                                <span className="text-xs font-semibold text-[#8B8B6B]">나의 다정한 위로</span>
-                              </div>
-                              <p className="text-[#5A5A40] font-medium line-clamp-2 leading-relaxed">
-                                {reply.refinedContent}
-                              </p>
-                              {reply.source === 'legacy_letters' && reply.feedback === 'helpful' ? (
-                                <div className="mt-3 text-xs text-[#E07A5F] font-bold">
-                                  {reply.publisherComment ? '답장이 왔어요!' : '따뜻한 한 마디 감사해요!'}
-                                </div>
-                              ) : null}
-                              {reply.source === 'legacy_letters' && reply.publisherComment && (
-                                <div className="mt-3 bg-[#FAEDCD]/50 p-2 rounded text-xs text-[#5A5A40]">
-                                  <strong>답장받은 분의 코멘트:</strong> {reply.publisherComment}
-                                </div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      )
-                    )}
+              {myWorries.length === 0 ? (
+                <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
+                  <FileText className="w-12 h-12 text-[#E9EDC9] mx-auto mb-3" />
+                  <p className="text-[#8B8B6B]">아직 작성한 고민이 없어요.</p>
+                </div>
+              ) : (
+                <div className="grid gap-4">
+                  {myWorries.map((worry) => (
+                    <button
+                      key={worry.id}
+                      onClick={() => setSelectedMyWorry(worry)}
+                      className={cn(
+                        "w-full text-left p-6 rounded-2xl border relative group transition-all",
+                        selectedMyWorry?.id === worry.id
+                          ? "bg-[#FAEDCD] border-[#D4A373]"
+                          : worry.hasUnreadReplies
+                            ? "bg-[#FFF8F1] border-[#E07A5F] hover:bg-[#FAEDCD]"
+                            : "bg-white border-[#E9EDC9] hover:bg-[#FAEDCD]"
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <Signal className="w-4 h-4 text-[#D4A373]" />
+                        <span className="text-[10px] font-bold text-[#8B8B6B]">
+                          {worry.categories.join(', ') || '기타'}
+                        </span>
+                      </div>
+                      <p className="text-[#5A5A40] font-medium line-clamp-2 leading-relaxed">
+                        {worry.content}
+                      </p>
+                      <div className="mt-3 text-xs text-[#A3B18A] font-bold">
+                        {selectedMyWorry?.id === worry.id ? '아래에서 확인 중' : `답장 확인하기 (${worry.humanReplyCount ?? 0})`}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
 
-                    {activeTab === 'sent' && (
-                      myWorries.length === 0 ? (
-                        <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
-                          <FileText className="w-12 h-12 text-[#E9EDC9] mx-auto mb-3" />
-                          <p className="text-[#8B8B6B]">아직 송출한 고민이 없어요.</p>
-                        </div>
-                      ) : (
-                        <div className="grid gap-4">
-                          {myWorries.map((worry) => (
-                            <button
-                              key={worry.id}
-                              onClick={() => setSelectedMyWorry(worry)}
-                              className={cn(
-                                "w-full text-left p-6 rounded-2xl border relative group transition-all",
-                                selectedMyWorry?.id === worry.id
-                                  ? "bg-[#FAEDCD] border-[#D4A373]"
-                                  : worry.hasUnreadReplies
-                                    ? "bg-[#FFF8F1] border-[#E07A5F] hover:bg-[#FAEDCD]"
-                                    : "bg-white border-[#E9EDC9] hover:bg-[#FAEDCD]"
-                              )}
-                            >
-                              <div className="flex items-center gap-2 mb-3">
-                                <Signal className="w-4 h-4 text-[#D4A373]" />
-                                <span className="text-[10px] font-bold text-[#8B8B6B]">
-                                  {worry.categories.join(', ') || '기타'}
-                                </span>
-                              </div>
-                              <p className="text-[#5A5A40] font-medium line-clamp-2 leading-relaxed italic">
-                                "{worry.content}"
-                              </p>
-                              <div className="mt-3 text-xs text-[#A3B18A] font-bold">
-                                {selectedMyWorry?.id === worry.id ? '받은 답장 탭에서 확인 중' : `답장 확인하기 (${worry.humanReplyCount ?? 0})`}
-                              </div>
-                            </button>
-                          ))}
-                          {selectedMyWorry && (
-                            <div className="mt-2 grid gap-4">
-                              <div className="text-sm font-bold text-[#5A5A40]">선택한 고민의 답장 ({selectedMyWorryReplies.length})</div>
-                              {selectedMyWorryReplies.length === 0 ? (
-                                <div className="text-center py-10 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
-                                  <p className="text-[#8B8B6B] text-sm">아직 이 고민에 도착한 답장이 없어요.</p>
-                                </div>
-                              ) : selectedMyWorryReplies.map(reply => (
-                                <button
-                                  key={reply.id}
-                                  onClick={() => {
-                                    setSelectedReply(reply);
-                                    setView('read_reply');
-                                  }}
-                                  className={cn(
-                                    "w-full text-left p-6 rounded-2xl border transition-all hover:bg-[#FAEDCD]",
-                                    reply.hasUnread ? "bg-[#FFF8F1] border-[#E07A5F]" : "bg-white border-[#E9EDC9]"
-                                  )}
-                                >
-                                  <div className="flex items-center gap-2 mb-3">
-                                    <Headphones className="w-4 h-4 text-[#A3B18A]" />
-                                    <span className="text-xs font-semibold text-[#8B8B6B]">누군가의 따뜻한 답장</span>
-                                  </div>
-                                  <p className="text-[#5A5A40] font-medium line-clamp-2 leading-relaxed">
-                                    {reply.refinedContent}
-                                  </p>
-                                </button>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )
-                    )}
+              {selectedMyWorry && (
+                <div className="grid gap-4">
+                  <div className="bg-[#FAEDCD]/50 p-4 rounded-2xl border border-[#FAEDCD]">
+                    <div className="text-xs font-bold text-[#D4A373] mb-2">선택한 고민</div>
+                    <p className="text-sm text-[#5A5A40] line-clamp-3 whitespace-pre-wrap">{selectedMyWorry.content}</p>
                   </div>
-                )}
-              />
+                  <div className="text-sm font-bold text-[#5A5A40]">도착한 답장 ({selectedMyWorryReplies.length})</div>
+                  {selectedMyWorryReplies.length === 0 ? (
+                    <div className="text-center py-10 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
+                      <p className="text-[#8B8B6B] text-sm">아직 이 고민에 도착한 답장이 없어요.</p>
+                    </div>
+                  ) : selectedMyWorryReplies.map(reply => (
+                    <button
+                      key={reply.id}
+                      onClick={() => {
+                        setSelectedReply(reply);
+                        setView(routeToReceivedReplyDetail());
+                      }}
+                      className={cn(
+                        "w-full text-left p-6 rounded-2xl border transition-all hover:bg-[#FAEDCD]",
+                        reply.hasUnread ? "bg-[#FFF8F1] border-[#E07A5F]" : "bg-white border-[#E9EDC9]"
+                      )}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <Headphones className="w-4 h-4 text-[#A3B18A]" />
+                        <span className="text-xs font-semibold text-[#8B8B6B]">누군가의 따뜻한 답장</span>
+                      </div>
+                      <p className="text-[#5A5A40] font-medium line-clamp-2 leading-relaxed">
+                        {reply.refinedContent}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              )}
             </motion.div>
           )}
 
           {/* 6. Read Reply & Feedback View */}
-          {view === 'read_reply' && selectedReply && (
-            <motion.div key="read_reply" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-               <button onClick={() => setView('inbox')} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
+          {view === 'read_received_reply' && selectedReply && (
+            <motion.div key="read_received_reply" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+               <button onClick={() => setView(backRouteFromReceivedReplyDetail())} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 목록으로
               </button>
               
@@ -1107,7 +1081,7 @@ export default function App() {
                       
                       {!selectedReply.publisherComment && selectedReply.feedback === 'helpful' ? (
                         <div className="bg-white p-6 rounded-2xl border border-[#FAEDCD]">
-                          <h4 className="font-bold text-[#5A5A40] mb-2 text-sm">따뜻한 마음을 받은 답장, 코멘트 남기기</h4>
+                          <h4 className="font-bold text-[#5A5A40] mb-2 text-sm">따뜻한 마음이 담긴 답장에 코멘트 남기기</h4>
                           <p className="text-xs text-[#8B8B6B] mb-4">내 고민을 들어준 분에게 감사 인사나 추가 코멘트를 남길 수 있습니다.</p>
                           <CommentForm 
                             replyId={selectedReply.id} 
@@ -1159,7 +1133,7 @@ export default function App() {
           {/* 7. Read My Reply View */}
           {view === 'read_my_reply' && selectedReply && (
             <motion.div key="read_my_reply" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-               <button onClick={() => setView('inbox')} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
+               <button onClick={() => setView(backRouteFromMyReplyDetail())} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 목록으로
               </button>
               
@@ -1207,11 +1181,54 @@ export default function App() {
 
         </AnimatePresence>
       </main>
+      {tabForRoute(view) && (
+        <BottomTabBar
+          activeTab={tabForRoute(view) as PrdAppTab}
+          onSelect={(tab) => setView(tab)}
+        />
+      )}
     </div>
   );
 }
 
 // --- Sub Components ---
+
+function BottomTabBar({
+  activeTab,
+  onSelect,
+}: {
+  activeTab: PrdAppTab;
+  onSelect: (tab: PrdAppTab) => void;
+}) {
+  const iconByTab: Record<PrdAppTab, ReactNode> = {
+    답변하기: <MessageSquare className="w-5 h-5" />,
+    '나의 고민': <FileText className="w-5 h-5" />,
+    마이페이지: <UserRound className="w-5 h-5" />,
+  };
+
+  return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-[#E9EDC9]">
+      <div className="max-w-2xl mx-auto grid grid-cols-3 px-2 py-2">
+        {PRD_APP_TABS.map(tab => {
+          const isActive = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => onSelect(tab)}
+              className={cn(
+                "h-14 rounded-xl text-xs font-bold flex flex-col items-center justify-center gap-1 transition-colors",
+                isActive ? "bg-[#FAEDCD] text-[#5A5A40]" : "text-[#8B8B6B] hover:bg-[#FDFCF8]"
+              )}
+            >
+              {iconByTab[tab]}
+              <span>{tab}</span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+}
 
 function OnboardingForm({ onSubmit, isProcessing, initialGender = '', initialInterests = [] }: { onSubmit: (g: string, i: string[]) => void, isProcessing: boolean, initialGender?: string, initialInterests?: string[] }) {
   const [gender, setGender] = useState<string>(initialGender);
@@ -1306,7 +1323,7 @@ function WriteForm({ type, isProcessing, onSubmit }: { type: 'worry'|'reply', is
         onClick={() => onSubmit(content)}
         className="w-full py-4 bg-[#5A5A40] text-white rounded-xl font-bold shadow-xl hover:bg-[#4A4A30] disabled:opacity-50 transition-all flex items-center justify-center gap-3"
       >
-        {isProcessing ? <><Loader2 className="w-5 h-5 animate-spin" /> 전송 중...</> : <><Send className="w-5 h-5" /> 송출하기</>}
+        {isProcessing ? <><Loader2 className="w-5 h-5 animate-spin" /> 전송 중...</> : <><Send className="w-5 h-5" /> 전달하기</>}
       </button>
     </div>
   );

@@ -84,10 +84,10 @@ export async function sendNewWorryPushesAfterCommit(params: {
         try {
           await params.messaging.send({
             token,
-            notification: { title: '갈피', body: '새로운 사연이 도착했습니다.' },
+    notification: { title: '갈피', body: '새로운 고민이 도착했습니다.' },
             data: {
               title: '갈피',
-              body: '새로운 사연이 도착했습니다.',
+      body: '새로운 고민이 도착했습니다.',
               url: '/',
             },
           });
