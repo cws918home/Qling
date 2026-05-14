@@ -161,3 +161,29 @@ test('reply route returns firebase unavailable when Admin db is absent', async (
     },
   });
 });
+
+test('reply route maps unexpected service throws to canonical 500', async () => {
+  const handlers: Array<(req: unknown, res: unknown, next: () => void) => unknown> = [];
+  const app = {
+    post(_path: string, ...routeHandlers: typeof handlers) {
+      handlers.push(...routeHandlers);
+    },
+  };
+
+  registerReplyRoutes(app as never, {
+    auth: { verifyIdToken: async () => ({ uid: 'recipient' }) } as never,
+    db: createDb({}) as never,
+    messaging: null,
+    moderationProvider: async () => ({ status: 'approved' }),
+    service: {
+      publishReplyForDelivery: async () => { throw new Error('unexpected'); },
+    } as never,
+  });
+
+  const res = createRes();
+  const req = { headers: { authorization: 'Bearer token' }, params: { deliveryId: 'd1' }, body: { content: 'reply' } };
+  await handlers[0](req as never, res as never, () => undefined);
+  await handlers[1](req as never, res as never, () => undefined);
+  assert.equal(res.statusCode, 500);
+  assert.equal((res.body as { error: { code: string } }).error.code, 'transaction_aborted');
+});

@@ -1,22 +1,32 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Qling
 
-# Run and deploy your AI Studio app
+https://qling-hyu-hangyeol.onrender.com/
 
-This contains everything you need to run your app locally.
+Qling is an Express/Vite/Firebase PWA for anonymous worry publication, human replies, feedback, rematching, and internal operational jobs.
 
-View your app in AI Studio: https://ai.studio/apps/5b923681-2d77-477b-ae6d-a04fc4c79fb2
+## Local Setup
 
-## Run Locally
+```sh
+npm install
+npm run dev
+```
 
-**Prerequisites:**  Node.js
+## Verification
 
+```sh
+npm test
+npm run lint
+npm run build
+npm run test:rules
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Operational setup, environment variables, emulator details, deployment notes, and scheduled-job examples are documented in `docs/ops.md`.
 
-https://qling-hyu-hangyeol.onrender.com
+## Project Docs
+
+- `docs/PRD.md`
+- `docs/TODO.md`
+- `docs/phase.md`
+- `docs/matching_algorithm.md`
+- `docs/ops.md`
+

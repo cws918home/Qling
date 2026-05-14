@@ -33,6 +33,8 @@ function captureRoutes(options: {
   db?: unknown;
   userData?: Record<string, unknown>;
   verifyIdToken?: () => Promise<{ uid: string }>;
+  createThrows?: boolean;
+  jobThrows?: boolean;
 } = {}) {
   const routes = new Map<string, Array<(req: unknown, res: unknown, next?: () => void) => unknown>>();
   const calls: unknown[] = [];
@@ -50,10 +52,12 @@ function captureRoutes(options: {
     service: {
       createExamplesForUser: async params => {
         calls.push({ name: 'createExamplesForUser', params });
+        if (options.createThrows) throw new Error('create failed');
         return { status: 'created', uid: params.uid, worryIds: [], deliveryIds: [], seedIds: [] };
       },
       createDueExampleFeedbacks: async params => {
         calls.push({ name: 'createDueExampleFeedbacks', params });
+        if (options.jobThrows) throw new Error('job failed');
         return { status: 'completed', checkedCount: 0, completedCount: 0, skippedCount: 0, failedCount: 0, results: [] };
       },
     },
@@ -153,4 +157,24 @@ test('POST /api/internal/create-example-feedbacks validates exact body matrix', 
     assert.equal(res.statusCode, 400);
     assert.equal(calls.length, 0);
   }
+});
+
+test('example routes map service failures to canonical 500', async () => {
+  process.env.INTERNAL_JOB_SECRET = 'secret';
+
+  const create = captureRoutes({ createThrows: true, userData: {} });
+  const createRes = await invoke(create.routes.get('/api/users/me/example-worries')!, {
+    headers: { authorization: 'Bearer token' },
+    body: {},
+  });
+  assert.equal(createRes.statusCode, 500);
+  assert.equal((createRes.body as { error: { code: string } }).error.code, 'transaction_aborted');
+
+  const job = captureRoutes({ jobThrows: true });
+  const jobRes = await invoke(job.routes.get('/api/internal/create-example-feedbacks')!, {
+    headers: { authorization: 'Bearer secret' },
+    body: {},
+  });
+  assert.equal(jobRes.statusCode, 500);
+  assert.equal((jobRes.body as { error: { code: string } }).error.code, 'transaction_aborted');
 });

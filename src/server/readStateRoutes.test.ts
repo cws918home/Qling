@@ -198,3 +198,29 @@ test('read-state routes return firebase unavailable when Admin db is absent', as
     });
   }
 });
+
+test('read-state routes map unexpected service throws to canonical 500', async () => {
+  const routes = new Map<string, Array<(req: unknown, res: unknown, next: () => void) => unknown>>();
+  registerReadStateRoutes({
+    post(path: string, ...handlers: Array<(req: unknown, res: unknown, next: () => void) => unknown>) {
+      routes.set(path, handlers);
+    },
+  } as never, {
+    auth: { verifyIdToken: async () => ({ uid: 'user1' }) } as never,
+    db: createDb({}) as never,
+    service: {
+      markDeliveryRead: async () => { throw new Error('delivery failed'); },
+      markRepliesForWorryRead: async () => { throw new Error('replies failed'); },
+    } as never,
+  });
+
+  for (const path of ['/api/deliveries/:deliveryId/read', '/api/worries/:worryId/replies/read']) {
+    const handlers = routes.get(path) ?? [];
+    const res = createRes();
+    const req = { headers: { authorization: 'Bearer token' }, params: { deliveryId: 'd1', worryId: 'w1' }, body: {} };
+    await handlers[0](req as never, res as never, () => undefined);
+    await handlers[1](req as never, res as never, () => undefined);
+    assert.equal(res.statusCode, 500);
+    assert.equal((res.body as { error: { code: string } }).error.code, 'transaction_aborted');
+  }
+});

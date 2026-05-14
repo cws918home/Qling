@@ -1,41 +1,65 @@
-role:
-고민 게시자
-고민 답변자
-LLM
+# Qling Matching Algorithm
 
-LLM이 게시자의 고민을 읽고 적절한 고민 답변자를 찾아야 함.
-    - LLM이 게시자의 고민을 읽고 카테고리 목록 중 N개(반드시 1개 이상)를 선택하여 리턴
-    - 고민 답변자들의 관심 분야 카테고리와 LLM이 선택한 카테고리 사이의 교집합 연산
-    - 교집합이 많은 그룹에서부터 랜덤 추출하여 총 3명을 샘플링
-    예시 1)
-    - LLM이 4개 카테고리를 추출함.
-    - 모든 다른 사용자들의 관심 분야와 교집합 한 결과 4개 교차 0명, 3개 교차 1명, 2개 교차 2명, 1개 교차 7명.
-    - 4개 교차 그룹에서 0명이므로 스킵
-    - 3개 교차 그룹에서 3명을 랜덤 샘플링 시도. 1명밖에 없으므로 1명이 고정 선택됨.
-    - 2개 교차 그룹에서 나머지 2명을 랜덤 샘플링 시도. 2명 있으므로 2명이 모두 선택되어 총 3명 선택 완료.
-    예시 2)
-    - LLM이 1개 카테고리 추출
-    - 1개 교차 2명, 0개 교차 나머지 N명
-    - 1개 교차 2명 그룹에서 3명 랜덤 샘플링 시도 -> 2명 선택
-    - 나머지 1명을 선택해야 하나 더이상 교집합 그룹이 없음. -> 나머지 1명분의 답변을 LLM이 생성
-    - 즉, LLM 답변 또한 사용자에게 전달되나 사용자는 이것이 AI 답변인지 확인할 길이 없다.
-    - DB에는 LLM 답변임을 구분할 수 있도록 저장한다.
-    예시 3)
-    - LLM이 3개 카테고리 추출
-    - 3개 교차 5명, 2개 교차 2명, 1개 교차 0명
-    - 3개 교차 5명 그룹에서 3명 랜덤 샘플링
-    예시 4)
-    LLM이 두 명 치 답변을 해야하는 경우
-    - LLM이 2개 카테고리 추출
-    - 2개 교차 1명, 1개 교차 0명
-    - 2개 교차 1명에게 고민 전달
-    - LLM이 고민 답변
-    - 남는 한 자리는 나머지 유저들 중 한 명에게 완전 랜덤 전송
-    예시 5)
-    LLM이 세 명 치 답변을 해야하는 경우
-    - LLM이 1개 카테고리 추출
-    - 1개 교차 0명
-    - LLM이 고민 답변
-    - 남는 두 자리는 나머지 유저들 중 두 명에게 완전 랜덤 전송
+This document describes the implemented PRD matching policy. `docs/PRD.md` remains the product source of truth; this file is the operational summary for engineers.
 
-LLM 답변의 경우 너무 즉각적이면 부자연스러우므로 고민 게시 후 5~15분(랜덤) 간격을 두고 전송
+## Initial Publication
+
+Publishing a non-example worry creates exactly 5 human deliveries:
+
+- 4 matched slots.
+- 1 random slot.
+- 0 AI replies at publication time.
+
+Eligible recipients must satisfy all of these constraints:
+
+- Not the worry author.
+- Not deleted or inactive.
+- Has a valid profile with gender and interests.
+- `activeDeliveryCount < 10`.
+- Has not previously received, passed, or replied to the same worry.
+- Push token is not required.
+
+Matched slots rank eligible users by:
+
+1. Category overlap with the worry matching categories, descending.
+2. `helpedCount`, descending.
+3. Same gender as the author before other genders.
+4. Random tie breaker for otherwise equal candidates.
+
+The random slot uses the same eligibility constraints but ignores category overlap, `helpedCount`, and gender ranking. It is selected from users not already selected for the matched slots.
+
+If fewer than 5 eligible users exist, publication fails with a clear server error. The server writes no partial worry, delivery batch, delivery, counter, moderation, or push state for that failed publication.
+
+## Pass Replacement
+
+Passing an active delivery is a server-owned mutation. It marks the delivery passed, decrements the passer's `activeDeliveryCount`, and attempts one immediate replacement when an eligible recipient exists.
+
+Pass replacement does not create Round 1 or Round 2 rematch batches. It is separate from the scheduled additive rematch job.
+
+## Scheduled Rematch
+
+The internal rematch job runs after the configured 8-hour delay and is additive:
+
+- Round 0 is the initial publication batch.
+- Round 1 may be created from Round 0.
+- Round 2 may be created from Round 1.
+- There is no Round 3.
+- Historical earlier batches do not branch into independent rematches.
+- Existing active deliveries remain answerable.
+- Human deliveries never exceed the worry's cap of 15.
+
+Rematch keeps the same recipient eligibility constraints as initial publication, including no duplicate same-worry delivery and `activeDeliveryCount < 10`.
+
+Replacement batch sizing is based on the previous round source batch. If the source batch's random-slot recipient has already answered, replacement slots are matched-only. If that random-slot recipient has not answered, the replacement batch includes one random slot when capacity allows.
+
+## AI Fallback
+
+AI fallback is not part of initial publication or human rematching. It is a separate 24-hour internal job.
+
+The AI fallback job may create one AI reply only when:
+
+- The human delivery cap has been exhausted.
+- The worry has zero human replies.
+- No AI reply already exists.
+
+AI replies are moderated before save and are stored as AI-generated replies internally.

@@ -118,28 +118,6 @@ interface UserProfile {
   exampleDeliveryIds?: string[];
 }
 
-interface Letter {
-  id: string;
-  senderId: string;
-  receiverId: string; 
-  originalContent: string;
-  refinedContent: string;
-  type: 'worry' | 'reply';
-  categories?: string[]; // Multiple categories
-  category?: string;     // Backward compatibility
-  replyTo?: string;             
-  replyToContent?: string;      
-  createdAt: Timestamp;
-  isRead: boolean;
-  feedback?: 'helpful' | 'not_helpful' | null;
-  publisherComment?: string;
-  publicationGroupId?: string;
-  isAiGenerated?: boolean;
-  matchOverlapCount?: number;
-  matchSelectionType?: 'matched' | 'random_fallback' | 'ai' | 'ai_safety_fallback';
-  matchCategoriesSnapshot?: string[];
-}
-
 async function createExampleWorriesForCurrentUser(user: FirebaseUser) {
   const token = await user.getIdToken();
   const response = await fetch('/api/users/me/example-worries', {

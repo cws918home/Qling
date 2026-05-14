@@ -143,3 +143,22 @@ test('rematch route maps firestore unavailable and service failure', async () =>
   assert.equal(failingRes.statusCode, 500);
   assert.equal((failingRes.body as { error: { code: string } }).error.code, 'transaction_aborted');
 });
+
+test('rematch route maps lock busy to established 409 result body', async () => {
+  process.env.INTERNAL_JOB_SECRET = 'secret';
+  const route = captureRoute({
+    serviceResult: {
+      status: 'lock_busy',
+      runId: 'run1',
+      dueCount: 0,
+      processedCount: 0,
+      createdDeliveryCount: 0,
+      results: [],
+      dryRun: false,
+    },
+  });
+  const res = await invoke(route, { headers: { authorization: 'Bearer secret' }, body: {} });
+
+  assert.equal(res.statusCode, 409);
+  assert.equal((res.body as { status: string }).status, 'lock_busy');
+});

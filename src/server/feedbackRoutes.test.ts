@@ -151,3 +151,46 @@ test('feedback route returns firebase unavailable when Admin db is absent', asyn
     },
   });
 });
+
+test('feedback route maps validation moderation ownership conflict provider and server responses', async () => {
+  const cases = [
+    [{ status: 'validation_error', code: 'invalid_feedback', message: 'bad' }, 400],
+    [{ status: 'rejected', reasonCode: 'spam_promotion', userMessage: 'blocked' }, 200],
+    [{ status: 'forbidden', code: 'not_worry_author', message: 'no' }, 403],
+    [{ status: 'not_found', code: 'reply_missing', message: 'missing' }, 404],
+    [{ status: 'conflict', code: 'feedback_exists', message: 'exists' }, 409],
+    [{ status: 'provider_error', code: 'provider_error', message: 'down' }, 502],
+    [{ status: 'server_error', code: 'transaction_aborted', message: 'failed' }, 500],
+  ] as const;
+
+  for (const [result, statusCode] of cases) {
+    const route = captureRoute({ userData: {}, result });
+    const res = createRes();
+    const req = { headers: { authorization: 'Bearer token' }, params: { replyId: 'reply1' }, body: { type: 'like' } };
+    await route.handlers[0](req as never, res as never, () => undefined);
+    await route.handlers[1](req as never, res as never, () => undefined);
+    assert.equal(res.statusCode, statusCode);
+    assert.equal(Boolean((res.body as { error?: unknown }).error), statusCode >= 400);
+  }
+});
+
+test('feedback route maps unexpected submit throws to canonical 500', async () => {
+  const handlers: Array<(req: unknown, res: unknown, next: () => void) => unknown> = [];
+  registerFeedbackRoutes({
+    post(_path: string, ...routeHandlers: typeof handlers) {
+      handlers.push(...routeHandlers);
+    },
+  } as never, {
+    auth: { verifyIdToken: async () => ({ uid: 'publisher' }) } as never,
+    db: createDb({}) as never,
+    moderationProvider: async () => ({ status: 'approved' }),
+    submit: async () => { throw new Error('unexpected'); },
+  });
+
+  const res = createRes();
+  const req = { headers: { authorization: 'Bearer token' }, params: { replyId: 'reply1' }, body: { type: 'like' } };
+  await handlers[0](req as never, res as never, () => undefined);
+  await handlers[1](req as never, res as never, () => undefined);
+  assert.equal(res.statusCode, 500);
+  assert.equal((res.body as { error: { code: string } }).error.code, 'transaction_aborted');
+});

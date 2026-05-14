@@ -70,7 +70,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.49 Firestore rules invariant for feedback is enforced: publisher can read own feedback, replier can read only likes and like comments, and clients cannot write feedback directly.
 - [x] TODO-1.50 Firestore rules invariant for hidden/admin-only data is enforced: users cannot read moderation logs, push logs, operational logs, hidden content, or admin-only feedback comments.
 - [x] TODO-1.51 Firestore rules invariant for legacy removal is enforced: final rules deny legacy `letters` runtime reads/writes/deletes.
-- [ ] TODO-1.52 `App.tsx` does not own matching, moderation interpretation, Firestore transaction rules, delivery status transitions, helpedCount changes, push dispatch, AI fallback, example scheduling, deletion blocking, or legacy migration decisions.
+- [x] TODO-1.52 `App.tsx` does not own matching, moderation interpretation, Firestore transaction rules, delivery status transitions, helpedCount changes, push dispatch, AI fallback, example scheduling, deletion blocking, or legacy migration decisions.
 - [x] TODO-1.53 `App.tsx` is limited to view composition plus calls to service hooks/API wrappers for PRD behavior.
 
 ### Architecture Safeguard: UI Extraction Before the Navigation Slice
@@ -91,9 +91,9 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 
 ### Architecture Safeguard: Deep Modules and Interface Guardrails
 
-- [ ] TODO-1.58 Do not create a new adapter/interface merely because a function call crosses a file boundary.
-- [ ] TODO-1.59 Introduce a seam only when it hides an external dependency, enables deterministic tests, or owns a meaningful policy boundary.
-- [ ] TODO-1.60 Prefer one deep module with a small public interface over many shallow wrappers.
+- [x] TODO-1.58 Do not create a new adapter/interface merely because a function call crosses a file boundary.
+- [x] TODO-1.59 Introduce a seam only when it hides an external dependency, enables deterministic tests, or owns a meaningful policy boundary.
+- [x] TODO-1.60 Prefer one deep module with a small public interface over many shallow wrappers.
 - [x] TODO-1.61 Apply deep-module guardrails to `worryPublication`, `moderation`, and `answerFeed`.
 - [x] TODO-1.62 Apply deep-module guardrails to `replyPublication`.
 - [x] TODO-1.63 Apply deep-module guardrails to `replyMailbox` / `myWorries`.
@@ -102,10 +102,10 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.66 Apply deep-module guardrails to `aiFallback`.
 - [x] TODO-1.67 Apply deep-module guardrails to `exampleWorries`.
 - [x] TODO-1.68 Apply deep-module guardrails to `userAccount`.
-- [ ] TODO-1.69 Each slice includes a deletion test or equivalent observable-behavior removal check:
+- [x] TODO-1.69 Each slice includes a deletion test or equivalent observable-behavior removal check:
   - Deleting the new module removes a real PRD behavior.
   - Deleting a wrapper is not the only observable effect.
-- [ ] TODO-1.70 Tests should focus on observable PRD behavior, not implementation details.
+- [x] TODO-1.70 Tests should focus on observable PRD behavior, not implementation details.
 
 ## 2. Final Firestore Data Model
 
@@ -652,11 +652,11 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 17: Documentation and operational setup
 
-- [ ] TODO-5.144 Goal: operational docs match final PRD implementation.
-- [ ] TODO-5.145 Update: `docs/matching_algorithm.md`, `README.md` or `docs/ops.md`, `.env` documentation for Firebase Admin/provider/internal job secret, local test commands, emulator/rules test setup, deploy notes for scheduled jobs.
-- [ ] TODO-5.146 Tests/checks: docs mention all internal endpoints and required env vars.
-- [ ] TODO-5.147 Explicit non-goals: broad product docs beyond implementation needs.
-- [ ] TODO-5.148 Deletion test: a developer can implement/deploy using PRD + codebase + this TODO + ops docs.
+- [x] TODO-5.144 Goal: operational docs match final PRD implementation.
+- [x] TODO-5.145 Update: `docs/matching_algorithm.md`, `README.md` or `docs/ops.md`, `.env` documentation for Firebase Admin/provider/internal job secret, local test commands, emulator/rules test setup, deploy notes for scheduled jobs.
+- [x] TODO-5.146 Tests/checks: docs mention all internal endpoints and required env vars.
+- [x] TODO-5.147 Explicit non-goals: broad product docs beyond implementation needs.
+- [x] TODO-5.148 Deletion test: a developer can implement/deploy using PRD + codebase + this TODO + ops docs.
 
 ## 6. Matching Policy Detail
 
@@ -788,7 +788,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.24 Feedback API rejects missing/invalid auth and ignores body-supplied uid.
 - [x] TODO-9.25 Account deletion API rejects missing/invalid auth and ignores body-supplied uid.
 - [x] TODO-9.26 Deleted users are blocked from all user endpoints; users with a missing `deleted` field are not blocked before Phase 14.
-- [ ] TODO-9.27 API responses use correct status/error shape for validation, ownership, conflicts, and provider failures.
+- [x] TODO-9.27 API responses use correct status/error shape for validation, ownership, conflicts, and provider failures.
 - [x] TODO-9.28 Rematch internal job requires internal auth.
 - [x] TODO-9.29 AI fallback internal job requires internal auth.
 - [x] TODO-9.30 Example feedback internal job requires internal auth.
@@ -923,7 +923,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-11.11 UI regressions due to `App.tsx` size:
   - Risk: navigation changes break unrelated flows.
   - Mitigation: extract feature components only around real screens/hooks; keep server behavior covered by tests.
-- [ ] TODO-11.12 Test brittleness:
+- [x] TODO-11.12 Test brittleness:
   - Risk: random matching and timestamps make flaky tests.
   - Mitigation: inject clock/random/id factories; test observable invariants.
 - [x] TODO-11.13 Strict initial 5-recipient publication:
