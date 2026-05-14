@@ -220,6 +220,7 @@ describe('profile and token transition', () => {
     await seed('users/author', safeProfile('author'));
     await assertFails(dbFor('author').doc('users/author').update({ helpedCount: 1 }));
     await assertFails(dbFor('author').doc('users/author').update({ activeDeliveryCount: 1 }));
+    await assertFails(dbFor('author').doc('users/author').update({ deleted: true }));
     await assertFails(dbFor('author').doc('users/author').update({ deletedAt: new Date() }));
     await assertFails(dbFor('author').doc('users/author').update({ onboardingCompletedAt: new Date() }));
     await assertFails(dbFor('author').doc('users/author').update({ exampleWorriesCreatedAt: new Date() }));
@@ -247,6 +248,8 @@ describe('profile and token transition', () => {
     await assertFails(dbFor('author').doc('users/author').update({ helpedCount: 3 }));
     await assertFails(dbFor('author').doc('users/author').set({ activeDeliveryCount: 2 }, { merge: true }));
     await assertFails(dbFor('author').doc('users/author').set({ helpedCount: 3 }, { merge: true }));
+    await assertFails(dbFor('author').doc('users/author').set({ deleted: true }, { merge: true }));
+    await assertFails(dbFor('author').doc('users/author').set({ deletedAt: new Date() }, { merge: true }));
     await seed('users/recipient', safeProfile('recipient'));
     await assertFails(dbFor('recipient').doc('users/recipient').set({ activeDeliveryCount: 1 }, { merge: true }));
     await assertFails(dbFor('recipient').doc('users/recipient').set({ helpedCount: 1 }, { merge: true }));
@@ -323,9 +326,12 @@ describe('profile and token transition', () => {
 describe('deleted transition', () => {
   test('deleted true user cannot update allowed surfaces', async () => {
     await seed('users/deletedUser', { ...safeProfile('deletedUser'), deleted: true });
+    await seed('users/deletedUser/fcmTokens/token-1', tokenDoc);
     await assertFails(dbFor('deletedUser').doc('users/deletedUser').get());
     await assertFails(dbFor('deletedUser').doc('users/deletedUser').update({ lastActive: new Date() }));
     await assertFails(dbFor('deletedUser').doc('users/deletedUser/fcmTokens/token-1').set(tokenDoc));
+    await assertFails(dbFor('deletedUser').doc('users/deletedUser/fcmTokens/token-1').update({ updatedAt: new Date() }));
+    await assertFails(dbFor('deletedUser').doc('users/deletedUser/fcmTokens/token-1').delete());
   });
 
   test('missing deleted does not block transition user', async () => {

@@ -77,6 +77,7 @@ import {
   useHomeWorryFeed,
   type HomeWorryFeedLetter,
 } from './services/homeWorryFeed';
+import { deleteMyAccountViaApi } from './services/userAccount/client';
 import {
   PRD_APP_TABS,
   backRouteFromMyReplyDetail,
@@ -173,6 +174,7 @@ export default function App() {
   const [selectedReply, setSelectedReply] = useState<ReplyReadModelItem | null>(null);
   
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [worryDraft, setWorryDraft] = useState('');
   const [replyDrafts, setReplyDrafts] = useState<DraftMap>({});
@@ -309,6 +311,32 @@ export default function App() {
   const handleSignOut = async () => {
     await resetPushRegistrationOnSignOut();
     await signOut(auth);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    setIsProcessing(true);
+    try {
+      const result = await deleteMyAccountViaApi({ user });
+      if (result.status === 'failed') {
+        setFilterAlert(result.reason);
+        return;
+      }
+
+      setIsDeleteConfirmOpen(false);
+      try {
+        await resetPushRegistrationOnSignOut();
+      } catch (cleanupError) {
+        console.error('Local push cleanup after account deletion failed:', cleanupError);
+      }
+      await signOut(auth);
+    } catch (deleteError) {
+      console.error('Account deletion failed:', deleteError);
+      setFilterAlert('계정 삭제 처리 중 문제가 발생했습니다.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // Presence Updater
@@ -584,6 +612,42 @@ export default function App() {
             </motion.div>
           </motion.div>
         )}
+        {isDeleteConfirmOpen && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+              className="bg-white rounded-2xl p-6 shadow-2xl max-w-sm w-full text-center space-y-6"
+            >
+              <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto text-red-500">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div className="space-y-2">
+                <p className="font-bold text-lg text-gray-800">계정을 삭제할까요?</p>
+                <p className="text-sm text-[#8B8B6B] leading-relaxed">삭제 후에는 이 계정으로 고민 쓰기, 답장, 패스, 피드백을 사용할 수 없습니다.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setIsDeleteConfirmOpen(false)}
+                  disabled={isProcessing}
+                  className="py-3 bg-[#FDFCF8] border border-[#E9EDC9] text-[#5A5A40] rounded-xl font-bold transition-all disabled:opacity-50"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleDeleteAccount}
+                  disabled={isProcessing}
+                  className="py-3 bg-red-500 text-white rounded-xl font-bold transition-all hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  삭제
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Header (hidden before the authenticated shell) */}
@@ -842,12 +906,11 @@ export default function App() {
                     <span className="font-bold text-sm">로그아웃</span>
                   </button>
                   <button
-                    disabled
-                    title="계정 삭제는 아직 준비 중입니다."
-                    className="w-full p-4 rounded-xl bg-gray-50 border border-gray-200 text-left flex items-center gap-3 opacity-70 cursor-not-allowed"
+                    onClick={() => setIsDeleteConfirmOpen(true)}
+                    className="w-full p-4 rounded-xl bg-red-50 border border-red-100 text-left flex items-center gap-3"
                   >
-                    <Trash2 className="w-5 h-5 text-red-400" />
-                    <span className="font-bold text-sm text-red-500">계정 삭제 준비 중</span>
+                    <Trash2 className="w-5 h-5 text-red-500" />
+                    <span className="font-bold text-sm text-red-600">계정 삭제</span>
                   </button>
                 </div>
               </div>

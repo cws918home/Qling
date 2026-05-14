@@ -20,10 +20,11 @@ test('pass replacement selection excludes pass-specific users and normal ineligi
       { uid: 'bot_1', gender: 'female', interests: ['career'] },
       { uid: 'overLimit', activeDeliveryCount: 10, gender: 'female', interests: ['career'] },
       { uid: 'eligible', gender: 'female', interests: ['career'], activeDeliveryCount: 9 },
+      { uid: 'missingDeleted', gender: 'female', interests: ['career'], activeDeliveryCount: 0 },
     ],
   });
 
-  assert.deepEqual(selected.map(candidate => candidate.uid), ['eligible']);
+  assert.deepEqual(selected.map(candidate => candidate.uid), ['eligible', 'missingDeleted']);
 });
 
 test('pass replacement ranks matched candidates by overlap helped count gender and random tie breaker', () => {

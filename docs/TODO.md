@@ -26,7 +26,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.6 Rematch job mutation boundary is server-owned: rematch runs are performed only by authenticated internal endpoints or server jobs.
 - [x] TODO-1.7 AI fallback job mutation boundary is server-owned: AI fallback runs are performed only by authenticated internal endpoints or server jobs.
 - [x] TODO-1.8 Example feedback job mutation boundary is server-owned: example creation and delayed example feedback are performed only by authenticated server endpoints or internal jobs.
-- [ ] TODO-1.9 Account deletion mutation boundary is server-owned: delete requests use authenticated user identity, soft-delete the user, remove tokens, and block future user actions.
+- [x] TODO-1.9 Account deletion mutation boundary is server-owned: delete requests use authenticated user identity, soft-delete the user, remove tokens, and block future user actions.
 - [ ] TODO-1.10 Final source-of-truth mutation boundary is closed: after legacy removal, the browser cannot create or mutate `worries`, `deliveries`, `replies`, `feedbacks`, `moderationLogs`, `pushLogs`, operational job collections, or legacy `letters`.
 - [x] TODO-1.11 Answer feed read path reads active `deliveries` for the signed-in recipient plus enough worry display data, with any legacy fallback isolated behind an explicitly named adapter.
 - [x] TODO-1.12 My worries and reply mailbox read paths read `worries` authored by the signed-in user, `replies` for those worries, and replies written by the signed-in user, with legacy fallback isolated behind an explicitly named adapter.
@@ -39,7 +39,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.19 Firestore ownership for AI fallback operational collections is enforced.
 - [x] TODO-1.20 Firestore ownership for example operational collections is enforced.
 - [ ] TODO-1.21 Final Firestore ownership is enforced: legacy `letters` runtime access is removed or fully denied.
-- [ ] TODO-1.22 Server invariant for auth/deleted-user blocking is enforced for all user endpoints. Compatibility rule: until Phase 14 backfills/sets deletion state, a missing `deleted` field means "not deleted"; only `deleted === true` or another final explicit inactive/deleted marker blocks activity and matching.
+- [x] TODO-1.22 Server invariant for auth/deleted-user blocking is enforced for all user endpoints. Compatibility rule: until Phase 14 backfills/sets deletion state, a missing `deleted` field means "not deleted"; only `deleted === true` or another final explicit inactive/deleted marker blocks activity and matching.
 - [x] TODO-1.23 Server invariant for worry content validation is enforced: trim, non-empty, max 1000.
 - [x] TODO-1.24 Server invariant for reply content validation is enforced: trim, non-empty, max 1000.
 - [x] TODO-1.25 Server invariant for feedback comment validation is enforced: trim, non-empty when submitted, max 1000.
@@ -101,7 +101,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.65 Apply deep-module guardrails to `pass` / `rematch`.
 - [x] TODO-1.66 Apply deep-module guardrails to `aiFallback`.
 - [x] TODO-1.67 Apply deep-module guardrails to `exampleWorries`.
-- [ ] TODO-1.68 Apply deep-module guardrails to `userAccount`.
+- [x] TODO-1.68 Apply deep-module guardrails to `userAccount`.
 - [ ] TODO-1.69 Each slice includes a deletion test or equivalent observable-behavior removal check:
   - Deleting the new module removes a real PRD behavior.
   - Deleting a wrapper is not the only observable effect.
@@ -113,16 +113,16 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 ### `users/{uid}`
 
-- [ ] TODO-2.1 Core profile fields: `uid`, `gender: 'male' | 'female'`, `interests`, `helpedCount`, `activeDeliveryCount`, `createdAt`, `updatedAt`, `lastActive`, and profile activity fields (`lastSeenAt`).
+- [x] TODO-2.1 Core profile fields: `uid`, `gender: 'male' | 'female'`, `interests`, `helpedCount`, `activeDeliveryCount`, `createdAt`, `updatedAt`, `lastActive`, and profile activity fields (`lastSeenAt`).
 - [x] TODO-2.2 Example/onboarding fields: `onboardingCompletedAt`, `exampleWorriesCreatedAt`, `exampleWorrySeedIds`.
 - [x] TODO-2.3 Notification setting fields: `notificationPermission`, `isInstalledPWA`.
-- [ ] TODO-2.4 Account deletion fields: `deleted`, `deletedAt`.
-- [ ] TODO-2.5 Client-writable fields during transition: own `gender`, `interests`, `lastActive`, `notificationPermission`, `isInstalledPWA`.
-- [ ] TODO-2.6 Server-owned fields: `helpedCount`, `activeDeliveryCount`, `deleted`, `deletedAt`, example creation state, and any counters.
-- [ ] TODO-2.7 Source of truth: user profile and matching eligibility.
-- [ ] TODO-2.8 Read access: own document only for clients; server can query all eligible users.
-- [ ] TODO-2.9 Lifecycle: soft deleted only; content remains.
-- [ ] TODO-2.10 Replaces legacy use: profile matching fields currently queried by the browser.
+- [x] TODO-2.4 Account deletion fields: `deleted`, `deletedAt`.
+- [x] TODO-2.5 Client-writable fields during transition: own `gender`, `interests`, `lastActive`, `notificationPermission`, `isInstalledPWA`.
+- [x] TODO-2.6 Server-owned fields: `helpedCount`, `activeDeliveryCount`, `deleted`, `deletedAt`, example creation state, and any counters.
+- [x] TODO-2.7 Source of truth: user profile and matching eligibility.
+- [x] TODO-2.8 Read access: own document only for clients; server can query all eligible users.
+- [x] TODO-2.9 Lifecycle: soft deleted only; content remains.
+- [x] TODO-2.10 Replaces legacy use: profile matching fields currently queried by the browser.
 
 ### `users/{uid}/fcmTokens/{tokenId}`
 
@@ -318,13 +318,13 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Account Deletion: `POST /api/users/me/delete`
 
-- [ ] TODO-3.46 Request body: `{ confirm: true }`.
-- [ ] TODO-3.47 Auth: signed-in user.
-- [ ] TODO-3.48 Validation: confirmation required.
-- [ ] TODO-3.49 Transaction/batch: set `users/{uid}.deleted = true`, `deletedAt`, `updatedAt`; remove push tokens; keep existing content.
-- [ ] TODO-3.50 Response: `200 { status: 'deleted' }`.
-- [ ] TODO-3.51 Idempotency: already deleted returns `200`.
-- [ ] TODO-3.52 Tests: tokens removed, future endpoints blocked, matching excludes `deleted === true` users, missing `deleted` remains eligible before deletion, existing content preserved.
+- [x] TODO-3.46 Request body: `{ confirm: true }`.
+- [x] TODO-3.47 Auth: signed-in user.
+- [x] TODO-3.48 Validation: confirmation required.
+- [x] TODO-3.49 Transaction/batch: set `users/{uid}.deleted = true`, `deletedAt`, `updatedAt`; remove push tokens; keep existing content.
+- [x] TODO-3.50 Response: `200 { status: 'deleted' }`.
+- [x] TODO-3.51 Idempotency: already deleted returns `200`.
+- [x] TODO-3.52 Tests: tokens removed, future endpoints blocked, matching excludes `deleted === true` users, missing `deleted` remains eligible before deletion, existing content preserved.
 
 ### Internal Jobs
 
@@ -419,11 +419,11 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### `userAccount`
 
-- [ ] TODO-4.55 Purpose: profile writes, activity blocking, soft deletion, push token cleanup.
-- [ ] TODO-4.56 Public interfaces: `updateMyProfile`, `deleteMyAccount`, `assertActiveUser`.
-- [ ] TODO-4.57 Files: `src/services/userAccount/*`, `src/services/pushRegistration/*`, `server.ts`.
-- [ ] TODO-4.58 Tests: soft delete, matching exclusion, endpoint blocking.
-- [ ] TODO-4.59 Deletion test: account deletion is isolated from content modules.
+- [x] TODO-4.55 Purpose: profile writes, activity blocking, soft deletion, push token cleanup.
+- [x] TODO-4.56 Public interfaces: `updateMyProfile`, `deleteMyAccount`, `assertActiveUser`.
+- [x] TODO-4.57 Files: `src/services/userAccount/*`, `src/services/pushRegistration/*`, `server.ts`.
+- [x] TODO-4.58 Tests: soft delete, matching exclusion, endpoint blocking.
+- [x] TODO-4.59 Deletion test: account deletion is isolated from content modules.
 
 ## 5. Implementation Slices
 
@@ -618,15 +618,15 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 14: Account deletion and inactive users
 
-- [ ] TODO-5.119 Goal: soft delete and block future activity.
-- [ ] TODO-5.120 Files: `src/services/userAccount/*`, `server.ts`, My Page UI.
-- [ ] TODO-5.121 Data/API: `POST /api/users/me/delete`, `users.deleted`, push token cleanup.
-- [ ] TODO-5.122 Behavior: keep existing content, exclude from matching and notifications, block app activity.
-- [ ] TODO-5.123 Rules: deleted users cannot write profile/token docs if rules can detect deleted state.
-- [ ] TODO-5.124 Tests: deletion idempotency, endpoint block, matching exclusion, token removal.
-- [ ] TODO-5.125 Manual verification: deleted account cannot publish/reply/pass/feedback.
-- [ ] TODO-5.126 Explicit non-goals: physical data erasure.
-- [ ] TODO-5.127 Deletion test: removing userAccount module leaves no supported deletion path.
+- [x] TODO-5.119 Goal: soft delete and block future activity.
+- [x] TODO-5.120 Files: `src/services/userAccount/*`, `server.ts`, My Page UI.
+- [x] TODO-5.121 Data/API: `POST /api/users/me/delete`, `users.deleted`, push token cleanup.
+- [x] TODO-5.122 Behavior: keep existing content, exclude from matching and notifications, block app activity.
+- [x] TODO-5.123 Rules: deleted users cannot write profile/token docs if rules can detect deleted state.
+- [x] TODO-5.124 Tests: deletion idempotency, endpoint block, matching exclusion, token removal.
+- [x] TODO-5.125 Manual verification: deleted account cannot publish/reply/pass/feedback.
+- [x] TODO-5.126 Explicit non-goals: physical data erasure.
+- [x] TODO-5.127 Deletion test: removing userAccount module leaves no supported deletion path.
 
 ### Slice 15: Admin hiding and internal logs
 
@@ -777,7 +777,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.16 Pass transitions own active delivery to passed, removes it from the passer's feed, decrements passer `activeDeliveryCount` exactly once, and exposes no pass signal to the author.
 - [ ] TODO-9.17 Admin/system hide of an active delivery decrements recipient `activeDeliveryCount` exactly once.
 - [x] TODO-9.18 Feedback creates deterministic doc and increments helpedCount once.
-- [ ] TODO-9.19 Account deletion soft deletes and removes tokens.
+- [x] TODO-9.19 Account deletion soft deletes and removes tokens.
 
 ### API Tests
 
@@ -786,8 +786,8 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.22 Read-state APIs reject missing/invalid auth and ignore body-supplied uid.
 - [x] TODO-9.23 Pass API rejects missing/invalid auth, ignores body-supplied uid, rejects passing someone else's delivery, and rejects answered/hidden non-passable deliveries.
 - [x] TODO-9.24 Feedback API rejects missing/invalid auth and ignores body-supplied uid.
-- [ ] TODO-9.25 Account deletion API rejects missing/invalid auth and ignores body-supplied uid.
-- [ ] TODO-9.26 Deleted users are blocked from all user endpoints; users with a missing `deleted` field are not blocked before Phase 14.
+- [x] TODO-9.25 Account deletion API rejects missing/invalid auth and ignores body-supplied uid.
+- [x] TODO-9.26 Deleted users are blocked from all user endpoints; users with a missing `deleted` field are not blocked before Phase 14.
 - [ ] TODO-9.27 API responses use correct status/error shape for validation, ownership, conflicts, and provider failures.
 - [x] TODO-9.28 Rematch internal job requires internal auth.
 - [x] TODO-9.29 AI fallback internal job requires internal auth.
@@ -874,7 +874,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.93 Additive rematch manual simulation, including old active deliveries remaining answerable.
 - [x] TODO-9.94 AI fallback manual simulation, including old active deliveries remaining answerable.
 - [x] TODO-9.95 Notification permission granted/denied behavior.
-- [ ] TODO-9.96 Account deletion blocks future activity.
+- [x] TODO-9.96 Account deletion blocks future activity.
 
 ## 10. Final Verification Checklist
 

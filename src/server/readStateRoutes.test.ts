@@ -131,6 +131,27 @@ test('read-state routes reject missing invalid and deleted auth before service c
     () => undefined
   );
   assert.equal(deletedRes.statusCode, 403);
+  assert.equal(deleted.repliesParams(), null);
+
+  const deletedDeliveryRes = createRes();
+  await (deleted.routes.get('/api/deliveries/:deliveryId/read') ?? [])[0](
+    { headers: { authorization: 'Bearer token' }, params: {}, body: {} } as never,
+    deletedDeliveryRes as never,
+    () => undefined
+  );
+  assert.equal(deletedDeliveryRes.statusCode, 403);
+  assert.equal(deleted.deliveryParams(), null);
+
+  const active = captureRoutes({ userData: {} });
+  const activeRes = createRes();
+  let nextCalled = false;
+  await (active.routes.get('/api/deliveries/:deliveryId/read') ?? [])[0](
+    { headers: { authorization: 'Bearer token' }, params: {}, body: {} } as never,
+    activeRes as never,
+    () => { nextCalled = true; }
+  );
+  assert.equal(nextCalled, true);
+  assert.equal(active.deliveryParams(), null);
 });
 
 test('read-state routes map service errors', async () => {

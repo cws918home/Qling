@@ -130,6 +130,25 @@ test('pass route maps auth and service errors', async () => {
   }
 });
 
+test('pass route blocks deleted user before service call and allows missing deleted field', async () => {
+  const deleted = captureRoute({ status: 'passed', deliveryId: 'delivery1', replacementStatus: 'shortfall' }, {
+    userData: { deleted: true },
+  });
+  const deletedRes = createRes();
+  await deleted.handlers[0]({ headers: { authorization: 'Bearer token' }, params: {}, body: {} } as never, deletedRes as never, () => undefined);
+  assert.equal(deletedRes.statusCode, 403);
+  assert.equal(deleted.capturedParams(), null);
+
+  const active = captureRoute({ status: 'passed', deliveryId: 'delivery1', replacementStatus: 'shortfall' }, {
+    userData: {},
+  });
+  const activeRes = createRes();
+  let nextCalled = false;
+  await active.handlers[0]({ headers: { authorization: 'Bearer token' }, params: {}, body: {} } as never, activeRes as never, () => { nextCalled = true; });
+  assert.equal(nextCalled, true);
+  assert.equal(active.capturedParams(), null);
+});
+
 test('pass route returns firebase unavailable when Admin db is absent', async () => {
   const handlers: Array<(req: unknown, res: unknown) => unknown> = [];
   registerPassRoutes({

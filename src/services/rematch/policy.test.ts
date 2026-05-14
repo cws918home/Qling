@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   calculateTargetCount,
   chooseNextRematchSource,
+  selectRematchRecipients,
 } from './policy';
 import type { RematchScan } from './types';
 
@@ -145,4 +146,20 @@ test('Round 1 source rejects non-initial reason and later-round batches', () => 
       now,
     }), { status: 'skip', reason: 'no_source_batch' });
   }
+});
+
+test('selectRematchRecipients excludes deleted users and allows missing deleted field', () => {
+  const selected = selectRematchRecipients({
+    scan: scan({
+      candidates: [
+        { uid: 'deleted', deleted: true, gender: 'female', interests: ['career'] },
+        { uid: 'missingDeleted', gender: 'female', interests: ['career'] },
+      ],
+    }),
+    targetCount: 2,
+    includeRandom: false,
+    random: () => 0,
+  });
+
+  assert.deepEqual(selected.map(candidate => candidate.uid), ['missingDeleted']);
 });

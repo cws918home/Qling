@@ -23,6 +23,7 @@ import { registerRematchRoutes } from "./src/server/rematchRoutes";
 import { registerAiFallbackRoutes } from "./src/server/aiFallbackRoutes";
 import { registerExampleWorryRoutes } from "./src/server/exampleWorryRoutes";
 import { registerLegacyNotificationRoutes } from "./src/server/legacyNotificationRoutes";
+import { registerUserAccountRoutes } from "./src/server/userAccountRoutes";
 
 // Read client config to get database ID
 const clientConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
@@ -169,6 +170,10 @@ async function startServer() {
       db,
       auth: getAuth(),
     });
+    registerUserAccountRoutes(app, {
+      db,
+      auth: getAuth(),
+    });
   } else {
     app.post('/api/worries/publish', (_req, res) => {
       res.status(500).json({
@@ -227,6 +232,10 @@ async function startServer() {
       messaging: null,
     });
     registerExampleWorryRoutes(app, {
+      db: null,
+      auth: {} as never,
+    });
+    registerUserAccountRoutes(app, {
       db: null,
       auth: {} as never,
     });
