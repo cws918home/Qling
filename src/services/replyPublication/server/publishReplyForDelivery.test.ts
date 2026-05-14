@@ -24,6 +24,7 @@ function createFakeDb(options: {
       return {
         doc(uid?: string) {
           return {
+            get: async () => ({ exists: true, data: () => ({}) }),
             collection(collectionName: string) {
               assert.equal(collectionName, 'fcmTokens');
               const tokenDocs = uid ? (options.tokenDocsByUid?.[uid] ?? []) : [];
@@ -33,6 +34,7 @@ function createFakeDb(options: {
                   docs: tokenDocs.map(tokenDoc => ({
                     id: tokenDoc.id,
                     data: () => ({ token: tokenDoc.token }),
+                    ref: { delete: async () => undefined },
                   })),
                 }),
               };

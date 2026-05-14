@@ -152,6 +152,14 @@ export function createPushRegistrationLifecycle<TRegistration>({
       }
 
       confirmedTokenKeys.add(sessionKey);
+      await adapters.writeTokenDoc({
+        uid: confirmationUser.uid,
+        token: assessment.currentToken,
+        permission,
+        installedPWA: adapters.isInstalledPWA(),
+        instanceId: storedMetadata.instanceId ?? adapters.getOrCreateInstanceId(),
+        existingTokenDoc: tokenDocSnap,
+      });
       adapters.log('FCM: confirmCurrentTokenDocIfNeeded confirmed token doc.', {
         uid: confirmationUser.uid,
         tokenPreview: getTokenPreview(assessment.currentToken),

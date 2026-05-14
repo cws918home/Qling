@@ -72,10 +72,9 @@ test('received and given initial-load state are independent', () => {
     [{ type: 'modified', reply: reply('given-later', { publisherComment: '고마워요' }) }]
   ));
 
-  assert.equal(delivered.length, 2);
+  assert.equal(delivered.length, 1);
   assert.deepEqual(delivered.map(notification => notification.title), [
     `📻 갈피`,
-    `💌 따뜻한 코멘트 도착`,
   ]);
 });
 

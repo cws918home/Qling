@@ -115,7 +115,7 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 - [ ] TODO-2.1 Core profile fields: `uid`, `gender: 'male' | 'female'`, `interests`, `helpedCount`, `activeDeliveryCount`, `createdAt`, `updatedAt`, `lastActive`, and profile activity fields (`lastSeenAt`).
 - [x] TODO-2.2 Example/onboarding fields: `onboardingCompletedAt`, `exampleWorriesCreatedAt`, `exampleWorrySeedIds`.
-- [ ] TODO-2.3 Notification setting fields: `notificationPermission`, `isInstalledPWA`.
+- [x] TODO-2.3 Notification setting fields: `notificationPermission`, `isInstalledPWA`.
 - [ ] TODO-2.4 Account deletion fields: `deleted`, `deletedAt`.
 - [ ] TODO-2.5 Client-writable fields during transition: own `gender`, `interests`, `lastActive`, `notificationPermission`, `isInstalledPWA`.
 - [ ] TODO-2.6 Server-owned fields: `helpedCount`, `activeDeliveryCount`, `deleted`, `deletedAt`, example creation state, and any counters.
@@ -126,10 +126,10 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 
 ### `users/{uid}/fcmTokens/{tokenId}`
 
-- [ ] TODO-2.11 Fields: `token`, `platform`, `userAgent`, `instanceId`, `notificationPermission`, `isInstalledPWA`, `createdAt`, `updatedAt`, `lastSeenAt`.
-- [ ] TODO-2.12 Source of truth: push destinations for the user.
-- [ ] TODO-2.13 Read/write access: own user during transition; invalid token deletion by server.
-- [ ] TODO-2.14 Lifecycle: delete on invalid token or account deletion.
+- [x] TODO-2.11 Fields: `token`, `platform`, `userAgent`, `instanceId`, `notificationPermission`, `isInstalledPWA`, `createdAt`, `updatedAt`, `lastSeenAt`.
+- [x] TODO-2.12 Source of truth: push destinations for the user.
+- [x] TODO-2.13 Read/write access: own user during transition; invalid token deletion by server.
+- [x] TODO-2.14 Lifecycle: delete on invalid token or account deletion.
 
 ### `worries/{worryId}`
 
@@ -217,9 +217,9 @@ Use server timestamps for all `createdAt`/`updatedAt` fields. Use `hiddenAt`/`hi
 ### `pushLogs/{pushLogId}`
 
 - [x] TODO-2.66 New-worry push log fields: `kind: 'new_worry'`, `targetUid`, `sourceId`, `sourceType: 'worry' | 'delivery'`, `status: 'sent' | 'failed' | 'skipped_no_token'`, `tokenDocId`, `tokenSummary`, `errorCode`, `errorMessage`, `createdAt`.
-- [ ] TODO-2.67 New-reply push log fields: `kind: 'new_reply'` plus common push log fields.
-- [ ] TODO-2.68 Reply-liked push log fields: `kind: 'reply_liked'`, `sourceType: 'reply' | 'feedback'`, plus common push log fields.
-- [ ] TODO-2.69 Push hardening status fields: `status: 'invalid_token_deleted' | 'skipped_deleted_user'`.
+- [x] TODO-2.67 New-reply push log fields: `kind: 'new_reply'` plus common push log fields.
+- [x] TODO-2.68 Reply-liked push log fields: `kind: 'reply_liked'`, `sourceType: 'reply' | 'feedback'`, plus common push log fields.
+- [x] TODO-2.69 Push hardening status fields: `status: 'invalid_token_deleted' | 'skipped_deleted_user'`.
 - [x] TODO-2.70 Source of truth: push attempt audit.
 - [x] TODO-2.71 Read/write access: server/admin only.
 - [x] TODO-2.72 Lifecycle: operational log; optional TTL later.
@@ -606,15 +606,15 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 13: Notifications
 
-- [ ] TODO-5.110 Goal: PRD notification kinds only, with durable logs.
-- [ ] TODO-5.111 Files: extract `server.ts` push helper to `src/services/notifications/*`, update `src/services/pushRegistration/*`, service worker files.
-- [ ] TODO-5.112 Kinds: new worry, new reply, reply liked.
-- [ ] TODO-5.113 Exclusions: no comment notification, no dislike notification.
-- [ ] TODO-5.114 Behavior: invalid token cleanup; push failure logs and does not roll back core state; foreground duplication policy documented and tested where possible.
-- [ ] TODO-5.115 Tests: pushLogs statuses, invalid token deletion, no rollback, no comment push.
-- [ ] TODO-5.116 Manual verification: grant/deny notification permission, trigger each kind.
-- [ ] TODO-5.117 Explicit non-goals: notification settings beyond PRD.
-- [ ] TODO-5.118 Deletion test: deleting notification service leaves core mutations passing with push warnings/logs.
+- [x] TODO-5.110 Goal: PRD notification kinds only, with durable logs.
+- [x] TODO-5.111 Files: extract `server.ts` push helper to `src/services/notifications/*`, update `src/services/pushRegistration/*`, service worker files.
+- [x] TODO-5.112 Kinds: new worry, new reply, reply liked.
+- [x] TODO-5.113 Exclusions: no comment notification, no dislike notification.
+- [x] TODO-5.114 Behavior: invalid token cleanup; push failure logs and does not roll back core state; foreground duplication policy documented and tested where possible.
+- [x] TODO-5.115 Tests: pushLogs statuses, invalid token deletion, no rollback, no comment push.
+- [x] TODO-5.116 Manual verification: grant/deny notification permission, trigger each kind.
+- [x] TODO-5.117 Explicit non-goals: notification settings beyond PRD.
+- [x] TODO-5.118 Deletion test: deleting notification service leaves core mutations passing with push warnings/logs.
 
 ### Slice 14: Account deletion and inactive users
 
@@ -873,7 +873,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.92 Pass manual simulation, including immediate replacement success and no-eligible-recipient shortfall.
 - [x] TODO-9.93 Additive rematch manual simulation, including old active deliveries remaining answerable.
 - [x] TODO-9.94 AI fallback manual simulation, including old active deliveries remaining answerable.
-- [ ] TODO-9.95 Notification permission granted/denied behavior.
+- [x] TODO-9.95 Notification permission granted/denied behavior.
 - [ ] TODO-9.96 Account deletion blocks future activity.
 
 ## 10. Final Verification Checklist
@@ -914,7 +914,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [ ] TODO-11.8 Legacy `letters` compatibility causing duplicate data:
   - Risk: users see both new and old versions.
   - Mitigation: one-way new writes, isolated fallback, reset strategy, Slice 16 hard removal.
-- [ ] TODO-11.9 Notification failure ambiguity:
+- [x] TODO-11.9 Notification failure ambiguity:
   - Risk: users think delivery failed when only push failed.
   - Mitigation: core transaction commits before push, pushLogs, UI success based on core state.
 - [x] TODO-11.10 Moderation provider malformed responses:

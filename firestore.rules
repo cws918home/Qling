@@ -75,6 +75,24 @@ service cloud.firestore {
         && !request.resource.data.keys().hasAny(forbiddenUserKeys());
     }
 
+    function safeTokenKeys() {
+      return [
+        'token',
+        'platform',
+        'userAgent',
+        'instanceId',
+        'notificationPermission',
+        'isInstalledPWA',
+        'createdAt',
+        'updatedAt',
+        'lastSeenAt'
+      ];
+    }
+
+    function hasOnlySafeTokenKeys() {
+      return request.resource.data.keys().hasOnly(safeTokenKeys());
+    }
+
     function uidMatchesPath(uid) {
       return !('uid' in request.resource.data) || request.resource.data.uid == uid;
     }
@@ -167,7 +185,8 @@ service cloud.firestore {
       allow delete: if false;
 
       match /fcmTokens/{tokenId} {
-        allow read, create, update, delete: if isSelf(uid) && isNotDeletedSelf();
+        allow read, delete: if isSelf(uid) && isNotDeletedSelf();
+        allow create, update: if isSelf(uid) && isNotDeletedSelf() && hasOnlySafeTokenKeys();
       }
 
       match /deliveryReadStates/{deliveryId} {

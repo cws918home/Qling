@@ -30,6 +30,7 @@ const tokenDoc = {
   isInstalledPWA: false,
   createdAt: new Date(),
   updatedAt: new Date(),
+  lastSeenAt: new Date(),
 };
 
 const replyLetter = {
@@ -281,8 +282,32 @@ describe('profile and token transition', () => {
     const tokenRef = dbFor('author').doc('users/author/fcmTokens/token-1');
     await assertSucceeds(tokenRef.set(tokenDoc));
     await assertSucceeds(tokenRef.get());
-    await assertSucceeds(tokenRef.update({ updatedAt: new Date() }));
+    await assertSucceeds(tokenRef.update({ updatedAt: new Date(), lastSeenAt: new Date() }));
     await assertSucceeds(tokenRef.delete());
+  });
+
+  test('owner token writes are limited to safe token fields', async () => {
+    await seed('users/author', safeProfile('author'));
+    await assertFails(dbFor('author').doc('users/author/fcmTokens/token-1').set({
+      ...tokenDoc,
+      deleted: true,
+    }));
+  });
+
+  test('owner can update only safe notification profile fields and not server-owned fields', async () => {
+    await seed('users/author', safeProfile('author'));
+    await assertSucceeds(dbFor('author').doc('users/author').update({
+      notificationPermission: 'denied',
+      isInstalledPWA: true,
+    }));
+    await assertFails(dbFor('author').doc('users/author').update({
+      notificationPermission: 'granted',
+      deleted: true,
+    }));
+    await assertFails(dbFor('author').doc('users/author').update({
+      isInstalledPWA: false,
+      deletedAt: new Date(),
+    }));
   });
 
   test('other and unauthenticated users cannot use token surface', async () => {

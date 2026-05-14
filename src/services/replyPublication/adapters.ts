@@ -52,15 +52,8 @@ export async function notifyNewReplyViaHttp(payload: ReplyNotificationPayload) {
 }
 
 export async function notifyNewCommentViaHttp(payload: CommentNotificationPayload) {
-  const response = await fetch('/api/notify-new-comment', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(`notify-new-comment HTTP ${response.status}`);
-  }
+  void payload;
+  throw new Error('comment notifications are disabled');
 }
 
 export const createReplyPublicationAdapters = (db: Firestore) => ({

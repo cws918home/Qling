@@ -19,6 +19,7 @@ function pushDbWithToken() {
       return {
         doc() {
           return {
+            get: async () => ({ exists: true, data: () => ({}) }),
             collection() {
               return {
                 async get() {
@@ -27,6 +28,7 @@ function pushDbWithToken() {
                     docs: [{
                       id: 'token1',
                       data: () => ({ token: 'token1' }),
+                      ref: { delete: async () => undefined },
                     }],
                   };
                 },
@@ -82,6 +84,8 @@ test('passDelivery returns success and records push warning when replacement pus
 
   assert.equal(result.status, 'passed');
   assert.equal(result.replacementStatus, 'created');
+  assert.equal(db.logs[0]?.kind, 'new_worry');
+  assert.equal(db.logs[0]?.sourceReason, 'pass_replacement');
   assert.equal(db.logs[0]?.status, 'failed');
   assert.deepEqual(markParams, {
     attemptId: 'delivery1',
@@ -124,6 +128,7 @@ test('passDelivery tries ranked candidates until one commits or writes shortfall
     db: {
       collection: (name: string) => ({
         doc: () => ({
+          get: async () => ({ exists: true, data: () => ({}) }),
           collection: () => ({ get: async () => ({ empty: true, docs: [] }) }),
         }),
         add: async () => ({ id: `${name}-log` }),

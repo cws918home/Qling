@@ -18,6 +18,7 @@ function createPushDb(tokensByUid: Record<string, Array<{ id: string; token?: st
       return {
         doc(uid: string) {
           return {
+            get: async () => ({ exists: true, data: () => ({}) }),
             collection(collectionName: string) {
               assert.equal(collectionName, 'fcmTokens');
               return {
@@ -25,10 +26,11 @@ function createPushDb(tokensByUid: Record<string, Array<{ id: string; token?: st
                   const tokenDocs = tokensByUid[uid] ?? [];
                   return {
                     empty: tokenDocs.length === 0,
-                    docs: tokenDocs.map(tokenDoc => ({
-                      id: tokenDoc.id,
-                      data: () => tokenDoc.token ? { token: tokenDoc.token } : {},
-                    })),
+                  docs: tokenDocs.map(tokenDoc => ({
+                    id: tokenDoc.id,
+                    data: () => tokenDoc.token ? { token: tokenDoc.token } : {},
+                    ref: { delete: async () => undefined },
+                  })),
                   };
                 },
               };

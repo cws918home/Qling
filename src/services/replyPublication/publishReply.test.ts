@@ -207,7 +207,7 @@ test('publishPublisherComment skips notification for bot reply authors', async (
   assert.equal(calls.notifyNewComment.length, 0);
 });
 
-test('publishPublisherComment attempts notification for human reply authors', async () => {
+test('publishPublisherComment does not notify human reply authors', async () => {
   const { adapters, calls } = createAdapters();
 
   const result = await publishPublisherComment({
@@ -218,10 +218,10 @@ test('publishPublisherComment attempts notification for human reply authors', as
   });
 
   assert.deepEqual(result, { type: 'published' });
-  assert.deepEqual(calls.notifyNewComment, [{ receiverUid: 'human-1' }]);
+  assert.deepEqual(calls.notifyNewComment, []);
 });
 
-test('publishPublisherComment returns published when human notification fails after the comment is updated', async () => {
+test('publishPublisherComment leaves comment notification disabled even when an adapter exists', async () => {
   const notifyError = new Error('notify failed');
   const { adapters, calls } = createAdapters({
     notifyNewComment: async payload => {
@@ -239,7 +239,9 @@ test('publishPublisherComment returns published when human notification fails af
 
   assert.deepEqual(result, { type: 'published' });
   assert.equal(calls.updatePublisherComment.length, 1);
-  assert.deepEqual(calls.logNotificationFailure, [notifyError]);
+  assert.deepEqual(calls.notifyNewComment, []);
+  assert.deepEqual(calls.logNotificationFailure, []);
+  assert.equal(notifyError.message, 'notify failed');
 });
 
 test('publishPublisherComment returns failed when moderation throws', async () => {

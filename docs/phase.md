@@ -594,6 +594,19 @@ Consolidate notification behavior after all PRD notification-producing paths exi
 - Comment and dislike notifications are absent.
 - Push failure never rolls back publication, reply, or feedback.
 
+### Phase 13 Evidence
+
+- `src/services/notifications/index.ts` exposes only `sendNewWorryNotificationAfterCommit`, `sendNewReplyNotificationAfterCommit`, `sendReplyLikedNotificationAfterCommit`, and the server-only `deleteAllPushTokensForUser` helper. It reads `users/{uid}` before token lookup, skips `deleted === true`, reads destinations only from `users/{uid}/fcmTokens/*`, writes the shared push log schema, deletes invalid token docs at runtime, and never throws into core mutation paths.
+- `src/services/notifications/notifications.test.ts` covers `new_worry`, `new_reply`, `reply_liked`, missing messaging, no token docs, deleted target users, invalid-token deletion, generic failure preservation, multiple token docs, pass replacement `sourceReason: 'pass_replacement'`, impossible non-PRD public exports, and `deleteAllPushTokensForUser`.
+- `src/services/worryPublication/server/publishWorry.test.ts`, `src/services/replyPublication/server/publishReplyForDelivery.test.ts`, `src/services/deliveries/passDelivery.test.ts`, and `src/services/replyFeedback/serverFeedback.test.ts` prove push failure/unavailability does not roll back worry publication, reply publication, pass replacement, or reply feedback success.
+- `src/services/pushRegistration/adapters.ts` writes token docs with exactly `token`, `platform`, `userAgent`, `instanceId`, `notificationPermission`, `isInstalledPWA`, `createdAt`, `updatedAt`, and `lastSeenAt`; it also syncs `notificationPermission` and `isInstalledPWA` to `users/{uid}`. `src/services/pushRegistration/internalLifecycle.test.ts` covers createdAt preservation, updatedAt/lastSeenAt refresh, profile field sync, and granted/denied/default manual-equivalent permission behavior.
+- `server.ts` no longer has a local `sendPushNotification` helper or scalar `users/{uid}.fcmToken` fallback. `src/server/legacyNotificationRoutes.ts` returns non-success for legacy notification routes, and `src/server/legacyNotificationRoutes.test.ts` proves comment/dislike notification routes cannot send.
+- `src/services/replyPublication/publishPublisherComment.ts`, `src/services/replyMailbox/policy.ts`, and related tests hard-disable comment notification attempts. Reply feedback tests prove comment-only like updates, dislikes, and repeated likes do not send or log push attempts.
+- `src/services/notifications/FOREGROUND_POLICY.md` documents best-effort server push, `pushLogs` audit, foreground read-model source-of-truth, duplicate-toast avoidance, and permission-denied/no-token not being delivery failure.
+- `firestore.rules` and `src/firestore.rules.test.ts` prove clients cannot read/write `pushLogs`, current users can manage only own token docs, current users can write only safe notification profile fields, and clients cannot mutate server-owned `helpedCount`, `activeDeliveryCount`, `deleted`, or `deletedAt`.
+- Commands passed before checking TODOs: `npm test`, `npm run lint`, `npm run build`, and `npm run test:rules`.
+- Phase 13 completes token lifecycle capability and invalid-token runtime deletion. Phase 14 will call the already-tested `deleteAllPushTokensForUser` helper from the account deletion endpoint; Phase 13 does not wire it into account deletion runtime behavior or rules.
+
 ### Explicit Non-Goals / Deferred Work
 
 - Notification settings beyond the PRD are not introduced.

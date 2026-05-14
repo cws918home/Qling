@@ -22,6 +22,7 @@ import { registerFeedbackRoutes } from "./src/server/feedbackRoutes";
 import { registerRematchRoutes } from "./src/server/rematchRoutes";
 import { registerAiFallbackRoutes } from "./src/server/aiFallbackRoutes";
 import { registerExampleWorryRoutes } from "./src/server/exampleWorryRoutes";
+import { registerLegacyNotificationRoutes } from "./src/server/legacyNotificationRoutes";
 
 // Read client config to get database ID
 const clientConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
@@ -55,166 +56,6 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
 
 const db = getApps().length > 0 ? getFirestore(firestoreDatabaseId) : null;
 const messaging = getApps().length > 0 ? getMessaging() : null;
-const INVALID_PUSH_TOKEN_ERROR_CODES = new Set([
-  'messaging/invalid-registration-token',
-  'messaging/registration-token-not-registered',
-]);
-const LEGACY_FALLBACK_INSTANCE_ID = 'legacy-scalar-fallback';
-
-function summarizeToken(token: string) {
-  return token.length <= 18
-    ? token
-    : `${token.slice(0, 12)}...${token.slice(-6)}`;
-}
-
-function isInvalidPushTokenError(err: unknown): err is Error & { code?: string } {
-  return err instanceof Error
-    && typeof (err as { code?: string }).code === 'string'
-    && INVALID_PUSH_TOKEN_ERROR_CODES.has((err as { code?: string }).code as string);
-}
-
-async function sendPushNotification(uid: string, title: string, body: string) {
-  if (!db || !messaging) {
-    console.warn("Skipping notification: Firebase Admin not initialized.");
-    return;
-  }
-
-  try {
-    console.log(`Attempting to send notification to UID: ${uid}...`);
-    const userRef = db.collection('users').doc(uid);
-    const tokenCollectionSnapshot = await userRef.collection('fcmTokens').get();
-
-    if (!tokenCollectionSnapshot.empty) {
-      for (const tokenDoc of tokenCollectionSnapshot.docs) {
-        const token = typeof tokenDoc.data().token === 'string'
-          ? tokenDoc.data().token
-          : decodeURIComponent(tokenDoc.id);
-
-        if (!token) {
-          console.warn(`[Push] UID ${uid}: skipping empty token doc ${tokenDoc.id}.`);
-          continue;
-        }
-
-        try {
-          await messaging.send({
-            token,
-            notification: { title, body },
-            data: {
-              title,
-              body,
-              url: '/',
-            },
-            android: {
-              priority: 'high',
-              notification: {
-                channelId: 'galpi-main',
-                priority: 'max',
-              },
-            },
-            webpush: {
-              headers: {
-                Urgency: 'high',
-              },
-              fcmOptions: { link: '/' },
-              notification: {
-                icon: '/pwa-192x192.png',
-                badge: '/pwa-192x192.png',
-                tag: 'galpi-notification',
-                renotify: true,
-                requireInteraction: true,
-              },
-            },
-          });
-
-          console.log(`[Push] UID ${uid}: delivered via token doc ${tokenDoc.id} (${summarizeToken(token)}).`);
-        } catch (err) {
-          console.error(`[Push] UID ${uid}: failed for token doc ${tokenDoc.id} (${summarizeToken(token)}).`, err);
-
-          if (isInvalidPushTokenError(err)) {
-            await tokenDoc.ref.delete();
-            console.warn(`[Push] UID ${uid}: deleted invalid token doc ${tokenDoc.id}.`);
-          }
-        }
-      }
-
-      return;
-    }
-
-    const userDoc = await userRef.get();
-    if (!userDoc.exists) {
-      console.warn(`User ${uid} not found in Firestore (Database: ${firestoreDatabaseId})`);
-      return;
-    }
-
-    const legacyToken = userDoc.data()?.fcmToken;
-
-    if (!legacyToken) {
-      console.warn(`User ${uid} has no push token docs and no legacy scalar fallback token.`);
-      return;
-    }
-
-    try {
-      await messaging.send({
-        token: legacyToken,
-        notification: { title, body },
-        data: {
-          title,
-          body,
-          url: '/',
-        },
-        android: {
-          priority: 'high',
-          notification: {
-            channelId: 'galpi-main',
-            priority: 'max',
-          },
-        },
-        webpush: {
-          headers: {
-            Urgency: 'high',
-          },
-          fcmOptions: { link: '/' },
-          notification: {
-            icon: '/pwa-192x192.png',
-            badge: '/pwa-192x192.png',
-            tag: 'galpi-notification',
-            renotify: true,
-            requireInteraction: true,
-          },
-        },
-      });
-
-      console.log(`[Push] UID ${uid}: delivered via legacy scalar fallback (${summarizeToken(legacyToken)}).`);
-
-      await userRef.collection('fcmTokens').doc(encodeURIComponent(legacyToken)).set({
-        token: legacyToken,
-        platform: 'web',
-        userAgent: null,
-        createdAt: FieldValue.serverTimestamp(),
-        updatedAt: FieldValue.serverTimestamp(),
-        notificationPermission: 'unknown',
-        isInstalledPWA: false,
-        instanceId: LEGACY_FALLBACK_INSTANCE_ID,
-      }, { merge: true });
-
-      // TODO: remove users/{uid}.fcmToken once the migration window is complete.
-    } catch (err) {
-      console.error(`[Push] UID ${uid}: legacy scalar fallback delivery failed (${summarizeToken(legacyToken)}).`, err);
-
-      if (isInvalidPushTokenError(err)) {
-        await Promise.all([
-          userRef.collection('fcmTokens').doc(encodeURIComponent(legacyToken)).delete().catch(() => undefined),
-          userRef.update({
-            fcmToken: FieldValue.delete(),
-          }),
-        ]);
-        console.warn(`[Push] UID ${uid}: deleted invalid legacy scalar token.`);
-      }
-    }
-  } catch (err) {
-    console.error(`❌ Failed to send notification to ${uid}:`, err);
-  }
-}
 
 async function fetchFromOpenRouter(systemInstruction: string, userContent: string) {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -466,33 +307,7 @@ Return JSON: { "content": "Your reply here" }`;
     }
   });
 
-  app.post("/api/notify-new-worry", async (req, res) => {
-    const { receiverUids } = req.body;
-    if (receiverUids && Array.isArray(receiverUids)) {
-      for (const uid of receiverUids) {
-        if (!uid.startsWith('bot_')) {
-          await sendPushNotification(uid, "📻 갈피", "새로운 사연이 도착했습니다.");
-        }
-      }
-    }
-    res.json({ status: "ok" });
-  });
-
-  app.post("/api/notify-new-reply", async (req, res) => {
-    const { receiverUid } = req.body;
-    if (receiverUid && !receiverUid.startsWith('bot_')) {
-      await sendPushNotification(receiverUid, "📻 갈피", "보낸 사연에 답장이 도착했습니다.");
-    }
-    res.json({ status: "ok" });
-  });
-
-  app.post("/api/notify-new-comment", async (req, res) => {
-    const { receiverUid } = req.body;
-    if (receiverUid && !receiverUid.startsWith('bot_')) {
-      await sendPushNotification(receiverUid, "📻 갈피", "남겨주신 답장에 코멘트가 달렸습니다.");
-    }
-    res.json({ status: "ok" });
-  });
+  registerLegacyNotificationRoutes(app);
 
   app.post("/api/schedule-bot-reply", async (req, res) => {
     const { worryId, worryContent, receiverId, botInfo } = req.body;
@@ -538,8 +353,7 @@ Return JSON: { "content": "Your reply here" }`;
 
         console.log(`[Bot] Delayed reply from ${botInfo.uid} saved.`);
 
-        // Notify the user
-        await sendPushNotification(receiverId, "📻 갈피", "보낸 사연에 답장이 도착했습니다.");
+        console.log(`[Bot] Legacy delayed reply notification skipped; PRD notifications are sent by server-owned reply flows.`);
       } catch (err) {
         console.error(`[Bot] Delayed reply failed for ${botInfo.uid}:`, err);
       }

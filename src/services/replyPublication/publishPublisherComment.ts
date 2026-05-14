@@ -25,13 +25,7 @@ export async function publishPublisherComment(params: {
     return { type: 'failed', error };
   }
 
-  if (!replierId.startsWith('bot_')) {
-    try {
-      await adapters.notifyNewComment({ receiverUid: replierId });
-    } catch (error) {
-      adapters.logNotificationFailure(error);
-    }
-  }
+  void replierId;
 
   return { type: 'published' };
 }
