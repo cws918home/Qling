@@ -16,6 +16,10 @@ export interface SubmitReplyFeedbackOnServerParams {
 
 export interface ReplyFeedbackRepository {
   createModerationLogId(): string;
+  saveRejectedCommentModeration(params: {
+    moderationLogId: string;
+    moderationLog: Record<string, unknown>;
+  }): Promise<{ moderationLogId: string }>;
   saveFeedback(params: {
     publisherUid: string;
     replyId: string;
@@ -106,6 +110,10 @@ export async function submitReplyFeedbackOnServer(params: SubmitReplyFeedbackOnS
 
     if (moderation.body.status === 'rejected') {
       const copy = getModerationRejectionCopy(moderation.body.reason);
+      const committed = await repository.saveRejectedCommentModeration({
+        moderationLogId: commentModerationLogId,
+        moderationLog,
+      });
       return {
         status: 'rejected',
         code: 'comment_rejected',
@@ -113,7 +121,7 @@ export async function submitReplyFeedbackOnServer(params: SubmitReplyFeedbackOnS
         reasonCode: copy.reasonCode,
         userMessage: copy.userMessage,
         helpMessage: copy.helpMessage ?? undefined,
-        moderationLogId: commentModerationLogId,
+        moderationLogId: committed.moderationLogId,
       };
     }
   }

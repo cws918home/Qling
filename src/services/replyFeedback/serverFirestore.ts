@@ -24,6 +24,13 @@ export function createReplyFeedbackRepository(params: { db: Firestore }): ReplyF
       return db.collection('moderationLogs').doc().id;
     },
 
+    async saveRejectedCommentModeration(input) {
+      await db.collection('moderationLogs')
+        .doc(input.moderationLogId)
+        .set(withoutUndefined(input.moderationLog));
+      return { moderationLogId: input.moderationLogId };
+    },
+
     async saveFeedback(input) {
       return db.runTransaction(async transaction => {
         const replyRef = db.collection('replies').doc(input.replyId);

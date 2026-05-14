@@ -4,9 +4,14 @@ import { submitReplyFeedbackOnServer, type ReplyFeedbackRepository } from './ser
 
 function createRepository() {
   const calls: unknown[] = [];
+  const rejectedModerationLogs: Array<{ moderationLogId: string; moderationLog: Record<string, unknown> }> = [];
   let existing: Record<string, unknown> | null = null;
   const repository: ReplyFeedbackRepository = {
     createModerationLogId: () => 'mod-feedback-1',
+    async saveRejectedCommentModeration(params) {
+      rejectedModerationLogs.push(params);
+      return { moderationLogId: params.moderationLogId };
+    },
     async saveFeedback(params) {
       calls.push(params);
       if (existing) {
@@ -42,7 +47,7 @@ function createRepository() {
       };
     },
   };
-  return { repository, calls };
+  return { repository, calls, rejectedModerationLogs };
 }
 
 test('initial like without comment stores exact absent-comment shape inputs', async () => {
@@ -139,12 +144,18 @@ test('feedback comment validation rejects too long and allows short content', as
   assert.equal(shortRepo.calls.length, 1);
 });
 
-test('rejected feedback comment creates no feedback state and returns canonical copy', async () => {
-  const { repository, calls } = createRepository();
+test('rejected feedback comment persists moderation log only and returns canonical copy', async () => {
+  const { repository, calls, rejectedModerationLogs } = createRepository();
+  const pushCalls: unknown[] = [];
   const result = await submitReplyFeedbackOnServer({
     db: {} as never,
     repository,
     moderationProvider: async () => ({ status: 'rejected', reason: 'self harm' }),
+    pushService: {
+      async sendReplyLiked(params) {
+        pushCalls.push(params);
+      },
+    },
     publisherUid: 'publisher',
     replyId: 'reply-1',
     type: 'like',
@@ -156,7 +167,26 @@ test('rejected feedback comment creates no feedback state and returns canonical 
   assert.equal(result.reasonCode, 'self_harm_suicide');
   assert.equal(result.userMessage, '자해나 자살 위험 표현이 포함되어 전송할 수 없습니다.');
   assert.equal(result.helpMessage?.length > 0, true);
+  assert.equal(result.moderationLogId, 'mod-feedback-1');
+  assert.equal(rejectedModerationLogs.length, 1);
+  assert.equal(rejectedModerationLogs[0].moderationLogId, 'mod-feedback-1');
+  assert.deepEqual(rejectedModerationLogs[0].moderationLog, {
+    targetType: 'feedback_comment',
+    targetId: 'reply-1',
+    uid: 'publisher',
+    originalContent: 'comment',
+    status: 'rejected',
+    reasonCode: 'self_harm_suicide',
+    userMessage: '자해나 자살 위험 표현이 포함되어 전송할 수 없습니다.',
+    helpMessage: result.helpMessage,
+    rawProviderResponse: { status: 'rejected', reason: 'self harm' },
+    provider: 'feedback_comment',
+    model: 'configured-provider',
+    createdAt: rejectedModerationLogs[0].moderationLog.createdAt,
+    updatedAt: rejectedModerationLogs[0].moderationLog.updatedAt,
+  });
   assert.deepEqual(calls, []);
+  assert.deepEqual(pushCalls, []);
 });
 
 test('provider failure creates no feedback state', async () => {
