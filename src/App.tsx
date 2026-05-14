@@ -550,7 +550,7 @@ export default function App() {
         showRejectionAlert(result);
         return;
       }
-      setSelectedReply(prev => prev ? { ...prev, feedback: result.feedback } : null);
+      setSelectedReply(prev => prev ? { ...prev, feedback: result.feedback ?? feedbackType } : null);
       setView(prev => routeAfterFeedbackPublish(prev));
     } catch (e) {
       console.error(e);
