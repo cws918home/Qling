@@ -708,12 +708,11 @@ describe('Phase 4 mailbox manual-equivalent read paths', () => {
   });
 });
 
-// Removing only the legacy letters allow block should fail only this suite, not
-// the PRD source-of-truth suite above. The app runtime uses a named Firestore
-// database, but this SDK version validates the same rules text against the
-// default emulator database.
-describe('legacy letters transition', () => {
-  test('legacy worry create and legacy delete denied', async () => {
+// Final legacy removal keeps seeds only to prove old documents are denied.
+// The app runtime uses a named Firestore database, but this SDK version
+// validates the same rules text against the default emulator database.
+describe('legacy letters final denial', () => {
+  test('legacy worry create and delete are denied', async () => {
     await seedBaseUsers();
     await seed('letters/legacy-worry', {
       senderId: 'author',
@@ -732,17 +731,13 @@ describe('legacy letters transition', () => {
     await assertFails(dbFor('author').doc('letters/legacy-worry').delete());
   });
 
-  test('legacy reply create allowed only for sender with expected fields', async () => {
+  test('legacy reply create is denied', async () => {
     await seedBaseUsers();
-    await assertSucceeds(dbFor('recipient').collection('letters').add(replyLetter));
+    await assertFails(dbFor('recipient').collection('letters').add(replyLetter));
     await assertFails(dbFor('other').collection('letters').add(replyLetter));
-    await assertFails(dbFor('recipient').collection('letters').add({
-      ...replyLetter,
-      arbitrary: true,
-    }));
   });
 
-  test('legacy worry reads allow own sent own received and public fallback', async () => {
+  test('legacy worry reads are denied for own sent received and public fallback', async () => {
     await seedBaseUsers();
     await seed('letters/sent-worry', {
       senderId: 'author',
@@ -758,13 +753,13 @@ describe('legacy letters transition', () => {
       originalContent: 'public',
       refinedContent: 'public',
     });
-    await assertSucceeds(dbFor('author').doc('letters/sent-worry').get());
-    await assertSucceeds(dbFor('recipient').doc('letters/sent-worry').get());
-    await assertSucceeds(dbFor('author').doc('letters/public-worry').get());
+    await assertFails(dbFor('author').doc('letters/sent-worry').get());
+    await assertFails(dbFor('recipient').doc('letters/sent-worry').get());
+    await assertFails(dbFor('author').doc('letters/public-worry').get());
     await assertFails(dbFor('other').doc('letters/sent-worry').get());
   });
 
-  test('legacy runtime query shapes are allowed without broad letters reads', async () => {
+  test('legacy runtime query shapes are denied', async () => {
     await seedBaseUsers();
     await seed('letters/received-worry', {
       senderId: 'author',
@@ -785,53 +780,41 @@ describe('legacy letters transition', () => {
     await seed('letters/reply1', replyLetter);
 
     const recipientLetters = dbFor('recipient').collection('letters');
-    await assertSucceeds(recipientLetters.where('type', '==', 'worry').where('receiverId', '==', 'recipient').get());
-    await assertSucceeds(recipientLetters.where('type', '==', 'worry').where('receiverId', '==', 'public').get());
-    await assertSucceeds(recipientLetters.where('type', '==', 'reply').where('senderId', '==', 'recipient').get());
-    await assertSucceeds(dbFor('author').collection('letters').where('type', '==', 'reply').where('receiverId', '==', 'author').get());
-    await assertSucceeds(dbFor('author').collection('letters').where('type', '==', 'worry').where('senderId', '==', 'author').get());
+    await assertFails(recipientLetters.where('type', '==', 'worry').where('receiverId', '==', 'recipient').get());
+    await assertFails(recipientLetters.where('type', '==', 'worry').where('receiverId', '==', 'public').get());
+    await assertFails(recipientLetters.where('type', '==', 'reply').where('senderId', '==', 'recipient').get());
+    await assertFails(dbFor('author').collection('letters').where('type', '==', 'reply').where('receiverId', '==', 'author').get());
+    await assertFails(dbFor('author').collection('letters').where('type', '==', 'worry').where('senderId', '==', 'author').get());
     await assertFails(recipientLetters.where('type', '==', 'worry').get());
   });
 
-  test('own sent and received legacy reply reads allowed', async () => {
+  test('legacy reply reads are denied', async () => {
     await seedBaseUsers();
     await seed('letters/reply1', replyLetter);
-    await assertSucceeds(dbFor('recipient').doc('letters/reply1').get());
-    await assertSucceeds(dbFor('author').doc('letters/reply1').get());
+    await assertFails(dbFor('recipient').doc('letters/reply1').get());
+    await assertFails(dbFor('author').doc('letters/reply1').get());
     await assertFails(dbFor('other').doc('letters/reply1').get());
   });
 
-  test('isRead update allowed only for recipient and exact changed key', async () => {
+  test('legacy isRead update is denied', async () => {
     await seedBaseUsers();
     await seed('letters/reply1', replyLetter);
-    await assertSucceeds(dbFor('author').doc('letters/reply1').update({ isRead: true }));
+    await assertFails(dbFor('author').doc('letters/reply1').update({ isRead: true }));
     await assertFails(dbFor('recipient').doc('letters/reply1').update({ isRead: true }));
-    await assertFails(dbFor('author').doc('letters/reply1').update({
-      isRead: true,
-      refinedContent: 'edited',
-    }));
   });
 
-  test('publisherComment update allowed only for receiver and exact changed key', async () => {
+  test('legacy publisherComment update is denied', async () => {
     await seedBaseUsers();
     await seed('letters/reply1', replyLetter);
-    await assertSucceeds(dbFor('author').doc('letters/reply1').update({ publisherComment: 'thanks' }));
+    await assertFails(dbFor('author').doc('letters/reply1').update({ publisherComment: 'thanks' }));
     await assertFails(dbFor('recipient').doc('letters/reply1').update({ publisherComment: 'thanks' }));
-    await assertFails(dbFor('author').doc('letters/reply1').update({
-      publisherComment: 'thanks',
-      refinedContent: 'edited',
-    }));
   });
 
-  test('feedback update allowed only as legacy compatibility and exact changed key', async () => {
+  test('legacy feedback update is denied', async () => {
     await seedBaseUsers();
     await seed('letters/reply1', replyLetter);
-    await assertSucceeds(dbFor('author').doc('letters/reply1').update({ feedback: 'helpful' }));
+    await assertFails(dbFor('author').doc('letters/reply1').update({ feedback: 'helpful' }));
     await assertFails(dbFor('recipient').doc('letters/reply1').update({ feedback: 'helpful' }));
-    await assertFails(dbFor('author').doc('letters/reply1').update({
-      feedback: 'helpful',
-      helpedCount: 1,
-    }));
   });
 
   test('arbitrary legacy update denied', async () => {

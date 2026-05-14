@@ -6,7 +6,7 @@ export type CommentVisibility = 'replier' | 'admin_only' | 'none';
 export interface ReplyFeedbackTarget {
   id: string;
   senderId: string;
-  source?: 'prd_replies' | 'legacy_letters';
+  source?: 'prd_replies';
   isAiGenerated?: boolean;
 }
 
@@ -20,11 +20,6 @@ export interface SubmitReplyFeedbackResult {
   userMessage?: string;
   helpMessage?: string;
   moderationLogId?: string;
-}
-
-export interface ReplyFeedbackPersistence {
-  saveReplyFeedback(replyId: string, feedbackType: LegacyReplyFeedback): Promise<void>;
-  incrementHelpedCount(replierId: string): Promise<void>;
 }
 
 export interface SubmitReplyFeedbackInput {

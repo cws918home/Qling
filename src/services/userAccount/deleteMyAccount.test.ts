@@ -26,7 +26,6 @@ function createRepository(options: {
     feedbacks: [{ id: 'feedback-1' }],
     moderationLogs: [{ id: 'moderation-1' }],
     pushLogs: [{ id: 'push-1' }],
-    letters: [{ id: 'letter-1' }],
   };
   const calls: string[] = [];
 

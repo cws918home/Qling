@@ -15,7 +15,7 @@ export interface HomeWorryFeedLetter {
   categories?: string[];
   category?: string;
   createdAt?: HomeWorryFeedTimestamp | null;
-  source?: 'prd_delivery' | 'legacy_letters';
+  source?: 'prd_delivery';
   deliveryId?: string;
   worryId?: string;
   authorUid?: string;

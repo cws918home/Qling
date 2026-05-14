@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import {
   adaptPrdAnswerFeedItemToHomeWorryFeedLetter,
   selectActivePrdAnswerFeedItems,
-  selectAnswerFeedWithLegacyFallback,
 } from './prdPolicy';
 import type { HomeWorryFeedLetter } from './types';
 
@@ -271,41 +270,8 @@ test('adapter preserves PRD identity fields for reply form compatibility', () =>
   assert.equal(letter.hasUnread, true);
 });
 
-test('PRD items suppress legacy fallback items', () => {
-  const prd = [{ id: 'prd', source: 'prd_delivery' }] as HomeWorryFeedLetter[];
-  const legacy = [{ id: 'legacy', source: 'legacy_letters' }] as HomeWorryFeedLetter[];
-
-  assert.deepEqual(selectAnswerFeedWithLegacyFallback({
-    prdFeedWorries: prd,
-    legacyFeedWorries: legacy,
-  }), prd);
-});
-
-test('legacy fallback appears only when no PRD delivery items exist', () => {
-  const legacy = [{ id: 'legacy', source: 'legacy_letters' }] as HomeWorryFeedLetter[];
-
-  assert.deepEqual(selectAnswerFeedWithLegacyFallback({
-    prdFeedWorries: [],
-    legacyFeedWorries: legacy,
-  }), legacy);
-});
-
-test('PRD delivery feed works without legacy fallback', () => {
+test('PRD delivery feed works without fallback composition', () => {
   const prd = [{ id: 'prd', source: 'prd_delivery' }] as HomeWorryFeedLetter[];
 
-  assert.deepEqual(selectAnswerFeedWithLegacyFallback({
-    prdFeedWorries: prd,
-    legacyFeedWorries: [],
-  }), prd);
-});
-
-test('legacy fallback items are explicitly marked', () => {
-  const legacy = [{ id: 'legacy', source: 'legacy_letters' }] as HomeWorryFeedLetter[];
-
-  const selected = selectAnswerFeedWithLegacyFallback({
-    prdFeedWorries: [],
-    legacyFeedWorries: legacy,
-  });
-
-  assert.equal(selected[0].source, 'legacy_letters');
+  assert.deepEqual(prd.map(item => item.source), ['prd_delivery']);
 });

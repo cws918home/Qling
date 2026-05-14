@@ -107,12 +107,3 @@ export function adaptPrdAnswerFeedItemToHomeWorryFeedLetter(
     hasUnread: item.hasUnread,
   };
 }
-
-export function selectAnswerFeedWithLegacyFallback(params: {
-  prdFeedWorries: HomeWorryFeedLetter[];
-  legacyFeedWorries: HomeWorryFeedLetter[];
-}): HomeWorryFeedLetter[] {
-  return params.prdFeedWorries.length > 0
-    ? params.prdFeedWorries
-    : params.legacyFeedWorries;
-}

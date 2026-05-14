@@ -27,18 +27,18 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.7 AI fallback job mutation boundary is server-owned: AI fallback runs are performed only by authenticated internal endpoints or server jobs.
 - [x] TODO-1.8 Example feedback job mutation boundary is server-owned: example creation and delayed example feedback are performed only by authenticated server endpoints or internal jobs.
 - [x] TODO-1.9 Account deletion mutation boundary is server-owned: delete requests use authenticated user identity, soft-delete the user, remove tokens, and block future user actions.
-- [ ] TODO-1.10 Final source-of-truth mutation boundary is closed: after legacy removal, the browser cannot create or mutate `worries`, `deliveries`, `replies`, `feedbacks`, `moderationLogs`, `pushLogs`, operational job collections, or legacy `letters`.
+- [x] TODO-1.10 Final source-of-truth mutation boundary is closed: after legacy removal, the browser cannot create or mutate `worries`, `deliveries`, `replies`, `feedbacks`, `moderationLogs`, `pushLogs`, operational job collections, or legacy `letters`.
 - [x] TODO-1.11 Answer feed read path reads active `deliveries` for the signed-in recipient plus enough worry display data, with any legacy fallback isolated behind an explicitly named adapter.
 - [x] TODO-1.12 My worries and reply mailbox read paths read `worries` authored by the signed-in user, `replies` for those worries, and replies written by the signed-in user, with legacy fallback isolated behind an explicitly named adapter.
 - [x] TODO-1.13 My page read path reads own profile, own written replies, and like/comment state visible to the replier.
-- [ ] TODO-1.14 Temporary legacy read fallbacks are removed from runtime code.
+- [x] TODO-1.14 Temporary legacy read fallbacks are removed from runtime code.
 - [x] TODO-1.15 Firestore ownership for initial PRD collections is enforced: `worries`, `deliveries`, `moderationLogs`, `pushLogs`, and initial `deliveryBatches` are server-owned; clients keep only narrow profile/token writes and temporary legacy reads.
 - [x] TODO-1.16 Firestore ownership for replies is enforced: `replies` are server-owned and legacy reply write paths are not needed for PRD replies.
 - [x] TODO-1.17 Firestore ownership for feedback is enforced: `feedbacks` and helpedCount changes are server-owned.
 - [x] TODO-1.18 Firestore ownership for rematch operational collections is enforced.
 - [x] TODO-1.19 Firestore ownership for AI fallback operational collections is enforced.
 - [x] TODO-1.20 Firestore ownership for example operational collections is enforced.
-- [ ] TODO-1.21 Final Firestore ownership is enforced: legacy `letters` runtime access is removed or fully denied.
+- [x] TODO-1.21 Final Firestore ownership is enforced: legacy `letters` runtime access is removed or fully denied.
 - [x] TODO-1.22 Server invariant for auth/deleted-user blocking is enforced for all user endpoints. Compatibility rule: until Phase 14 backfills/sets deletion state, a missing `deleted` field means "not deleted"; only `deleted === true` or another final explicit inactive/deleted marker blocks activity and matching.
 - [x] TODO-1.23 Server invariant for worry content validation is enforced: trim, non-empty, max 1000.
 - [x] TODO-1.24 Server invariant for reply content validation is enforced: trim, non-empty, max 1000.
@@ -69,7 +69,7 @@ Recommended default where this TODO makes a choice: prefer server-owned mutation
 - [x] TODO-1.48 Firestore rules invariant for replies is enforced: users can read only permitted reply surfaces and cannot write replies directly.
 - [x] TODO-1.49 Firestore rules invariant for feedback is enforced: publisher can read own feedback, replier can read only likes and like comments, and clients cannot write feedback directly.
 - [x] TODO-1.50 Firestore rules invariant for hidden/admin-only data is enforced: users cannot read moderation logs, push logs, operational logs, hidden content, or admin-only feedback comments.
-- [ ] TODO-1.51 Firestore rules invariant for legacy removal is enforced: final rules deny legacy `letters` runtime reads/writes/deletes.
+- [x] TODO-1.51 Firestore rules invariant for legacy removal is enforced: final rules deny legacy `letters` runtime reads/writes/deletes.
 - [ ] TODO-1.52 `App.tsx` does not own matching, moderation interpretation, Firestore transaction rules, delivery status transitions, helpedCount changes, push dispatch, AI fallback, example scheduling, deletion blocking, or legacy migration decisions.
 - [x] TODO-1.53 `App.tsx` is limited to view composition plus calls to service hooks/API wrappers for PRD behavior.
 
@@ -642,13 +642,13 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ### Slice 16: Legacy `letters` removal
 
-- [ ] TODO-5.137 Goal: remove old data model and close rules.
-- [ ] TODO-5.138 Remove: `receiverId === 'public'`, `deleteLetter`, `letters` worry fallback, `letters` reply fallback, old bot schedule endpoint, old comment notification endpoint, client Firestore adapters that create/update `letters`.
-- [ ] TODO-5.139 Rules: deny all `letters` reads/writes/deletes or remove match block.
-- [ ] TODO-5.140 Tests: no imports/reference to `letters` outside migration tests; final rules hardening.
-- [ ] TODO-5.141 Manual verification: app works with only PRD collections.
-- [ ] TODO-5.142 Explicit non-goals: historical data migration if reset strategy is chosen.
-- [ ] TODO-5.143 Deletion test: `rg "letters"` should show only documented archival/migration notes or zero runtime references.
+- [x] TODO-5.137 Goal: remove old data model and close rules.
+- [x] TODO-5.138 Remove: `receiverId === 'public'`, `deleteLetter`, `letters` worry fallback, `letters` reply fallback, old bot schedule endpoint, old comment notification endpoint, client Firestore adapters that create/update `letters`.
+- [x] TODO-5.139 Rules: deny all `letters` reads/writes/deletes or remove match block.
+- [x] TODO-5.140 Tests: no imports/reference to `letters` outside migration tests; final rules hardening.
+- [x] TODO-5.141 Manual verification: app works with only PRD collections.
+- [x] TODO-5.142 Explicit non-goals: historical data migration if reset strategy is chosen.
+- [x] TODO-5.143 Deletion test: `rg "letters"` should show only documented archival/migration notes or zero runtime references.
 
 ### Slice 17: Documentation and operational setup
 
@@ -733,7 +733,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-7.12 AI fallback operational collection rules: `aiFallbackRuns` client reads/writes denied when introduced.
 - [x] TODO-7.13 Example operational collection rules: `exampleWorrySeeds` and scheduled/example feedback jobs client reads/writes denied when introduced.
 - [x] TODO-7.14 Legacy `letters` transition rules: deny worry create and delete while preserving only minimum legacy read/reply paths needed during migration.
-- [ ] TODO-7.15 Legacy `letters` final rules: deny all runtime reads/writes/deletes or remove the match block after runtime code no longer depends on `letters`.
+- [x] TODO-7.15 Legacy `letters` final rules: deny all runtime reads/writes/deletes or remove the match block after runtime code no longer depends on `letters`.
 - [x] TODO-7.16 Firestore rules limitation:
   - Recipient reading worry via delivery existence is easiest with deterministic delivery IDs.
   - Do not store broad `recipientUids` on worry solely for rules unless needed; it risks leaking delivery audience and complicating updates.
@@ -748,9 +748,9 @@ All error responses should use `{ error: { code: string, message: string, detail
   - Affected files: `homeWorryFeed`, `replyMailbox`, migration/ops docs.
 - [x] TODO-8.2 During transition: new worries write only to `worries`/`deliveries`; feed adapters read new data first and legacy `letters` second.
 - [x] TODO-8.3 Avoid duplicate worries: if any backfill is attempted, exclude legacy `letters` with `publicationGroupId` known to have a matching `worries` doc; if no backfill, new publications should not duplicate.
-- [ ] TODO-8.4 Remove old bot replies: stop `/api/schedule-bot-reply`; ignore/archive `letters` replies where `senderId` starts with `bot_`.
-- [ ] TODO-8.5 Remove public worries: remove `receiverId === 'public'` inclusion; optionally export/delete legacy public test docs outside app runtime.
-- [ ] TODO-8.6 Verify no legacy write path remains with `rg "collection\\([^)]*'letters'|doc\\([^)]*'letters'|letters" src server.ts firestore.rules`.
+- [x] TODO-8.4 Remove old bot replies: stop `/api/schedule-bot-reply`; ignore/archive `letters` replies where `senderId` starts with `bot_`.
+- [x] TODO-8.5 Remove public worries: remove `receiverId === 'public'` inclusion; optionally export/delete legacy public test docs outside app runtime.
+- [x] TODO-8.6 Verify no legacy write path remains with `rg "collection\\([^)]*'letters'|doc\\([^)]*'letters'|letters" src server.ts firestore.rules`.
 
 ## 9. Test Plan
 
@@ -804,7 +804,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-9.37 Recipient can read own delivery and allowed worry surface.
 - [x] TODO-9.38 Non-recipient cannot read other delivery/worry.
 - [x] TODO-9.39 Replier cannot read dislike feedback/comment.
-- [ ] TODO-9.40 Legacy `letters` writes denied in final state.
+- [x] TODO-9.40 Legacy `letters` writes denied in final state.
 
 ### Read Model Tests
 
@@ -911,7 +911,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 - [x] TODO-11.7 AI fallback with late human replies:
   - Risk: fallback job may create AI after an original recipient answers late unless it checks current reply state at execution time.
   - Mitigation: query/transactionally verify zero human replies immediately before saving AI reply; disliked human replies still count as human replies.
-- [ ] TODO-11.8 Legacy `letters` compatibility causing duplicate data:
+- [x] TODO-11.8 Legacy `letters` compatibility causing duplicate data:
   - Risk: users see both new and old versions.
   - Mitigation: one-way new writes, isolated fallback, reset strategy, Slice 16 hard removal.
 - [x] TODO-11.9 Notification failure ambiguity:

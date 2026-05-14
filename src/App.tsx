@@ -48,10 +48,6 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { cn } from './lib/utils';
-import { generateAIReply } from './services/llmClient';
-import {
-  publishPublisherCommentWithProductionAdapters,
-} from './services/replyPublication/production';
 import { publishReplyViaApi } from './services/replyPublication/apiClient';
 import {
   markDeliveryReadWithServer,
@@ -1178,7 +1174,6 @@ export default function App() {
                           <p className="text-xs text-[#8B8B6B] mb-4">내 고민을 들어준 분에게 감사 인사나 추가 코멘트를 남길 수 있습니다.</p>
                           <CommentForm 
                             replyId={selectedReply.id} 
-                            replierId={selectedReply.senderId}
                             value={getDraft(feedbackCommentDrafts, selectedReply.id)}
                             onChange={content => setFeedbackCommentDrafts(prev => setDraft(prev, selectedReply.id, content))}
                             onCommentAdded={(c) => setSelectedReply({...selectedReply, publisherComment: c})} 
@@ -1472,7 +1467,6 @@ function Tabs({ tabs, render }: { tabs: {id: string, label: string}[], render: (
 
 function CommentForm({
   replyId,
-  replierId,
   value,
   onChange,
   onCommentAdded,
@@ -1480,7 +1474,6 @@ function CommentForm({
   onError,
 }: {
   replyId: string;
-  replierId: string;
   value: string;
   onChange: (content: string) => void;
   onCommentAdded: (c: string) => void;
@@ -1505,25 +1498,8 @@ function CommentForm({
         return;
       }
 
-      const result = await publishPublisherCommentWithProductionAdapters({
-        replyId,
-        replierId,
-        content: value,
-      });
-
-      if (result.type === 'rejected') {
-        onError?.("부적절한 표현이 감지되었습니다. 내용을 수정해주세요.");
-        return;
-      }
-
-      if (result.type === 'failed') {
-        console.error(result.error);
-        onError?.("전송 실패");
-        return;
-      }
-
-      onCommentAdded(value.trim());
-      onChange('');
+      void replyId;
+      onError?.("이 답장에는 코멘트를 남길 수 없습니다.");
     } catch (e) {
       console.error(e);
       onError?.("전송 실패");

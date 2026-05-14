@@ -1,10 +1,7 @@
 export { useHomeWorryFeed } from './useHomeWorryFeed';
 export { usePrdAnswerFeed } from './usePrdAnswerFeed';
-export { useLegacyLettersAnswerFeedFallback } from './useLegacyLettersAnswerFeedFallback';
-export { useAnswerFeedWithLegacyFallback } from './useAnswerFeedWithLegacyFallback';
 export {
   adaptPrdAnswerFeedItemToHomeWorryFeedLetter,
-  selectAnswerFeedWithLegacyFallback,
   selectActivePrdAnswerFeedItems,
 } from './prdPolicy';
 export type {

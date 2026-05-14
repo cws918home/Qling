@@ -5,13 +5,12 @@ import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
+import { getFirestore } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 import { getMessaging } from "firebase-admin/messaging";
 import fs from "fs";
 import {
   processSimpleModerationResponse,
-  processWorryModerationResponse,
 } from "./src/server/moderationResponses";
 import { moderateAndInferWorryCategories } from "./src/server/moderationProvider";
 import { registerWorryRoutes } from "./src/server/worryRoutes";
@@ -22,7 +21,6 @@ import { registerFeedbackRoutes } from "./src/server/feedbackRoutes";
 import { registerRematchRoutes } from "./src/server/rematchRoutes";
 import { registerAiFallbackRoutes } from "./src/server/aiFallbackRoutes";
 import { registerExampleWorryRoutes } from "./src/server/exampleWorryRoutes";
-import { registerLegacyNotificationRoutes } from "./src/server/legacyNotificationRoutes";
 import { registerUserAccountRoutes } from "./src/server/userAccountRoutes";
 import { registerAdminHidingRoutes } from "./src/server/adminHidingRoutes";
 
@@ -247,134 +245,6 @@ async function startServer() {
       db: null,
     });
   }
-
-  // API Route for Processing Worries (Filtering + Category Inference)
-  app.post("/api/process-worry", async (req, res) => {
-    try {
-      const result = await processWorryModerationResponse(
-        req.body?.content,
-        moderateAndInferWorryCategories
-      );
-      res.status(result.statusCode).json(result.body);
-    } catch (error: any) {
-      console.error("Worry processing backend/system exception:", error?.message || error);
-      res.status(502).json({ error: "Worry moderation provider failure" });
-    }
-  });
-
-  // API Route for generating an AI reply (for bots)
-  app.post("/api/generate-ai-reply", async (req, res) => {
-    try {
-      const { worryContent, botInfo } = req.body;
-      const systemInstruction = `You are a warm, empathetic person who just received an anonymous worry. 
-Your persona: ${botInfo.gender === 'female' ? 'A kind sister/older woman' : 'A supportive brother/older man'}. 
-Interests: ${botInfo.interests.join(', ')}.
-Task: Write a comforting, personal reply to the worry. Keep it between 2-4 sentences. Use a warm, polite Korean tone (해요체). 
-Do NOT use professional counselor jargon. Sound like a real person.
-Return JSON: { "content": "Your reply here" }`;
-
-      const resultObj = await fetchFromOpenRouter(systemInstruction, worryContent);
-      res.json(resultObj);
-    } catch (error: any) {
-      console.error("AI Reply Generation Error:", error?.message || error);
-      res.status(500).json({ error: "Internal Server Error" });
-    }
-  });
-
-  // API Route for Processing Replies (Filtering only)
-  app.post("/api/process-reply", async (req, res) => {
-    try {
-      const { content } = req.body;
-
-      const systemInstruction = `You are a moderator for a Korean anonymous worry-sharing app.
-1. Check if the reply is inappropriate, abusive, violent, or unhelpful spam.
-2. Return JSON exactly like this:
-   - If bad: { "status": "rejected", "reason": "부적절한 표현이 감지되었습니다." }
-   - If good: { "status": "approved" }`;
-
-      const result = await processSimpleModerationResponse(content, replyContent =>
-        fetchFromOpenRouter(systemInstruction, replyContent)
-      );
-      res.status(result.statusCode).json(result.body);
-    } catch (error: any) {
-      console.error("Reply Filter Error:", error?.message || error);
-      res.status(502).json({ error: "Reply moderation provider failure" });
-    }
-  });
-
-  // API Route for Processing Comments (Filtering only)
-  app.post("/api/process-comment", async (req, res) => {
-    try {
-      const { content } = req.body;
-
-      const systemInstruction = `You are a moderator for a Korean anonymous worry-sharing app.
-1. Check if the comment left by the publisher is inappropriate, abusive, violent, or spam.
-2. Return JSON exactly like this:
-   - If bad: { "status": "rejected", "reason": "부적절한 표현이 감지되었습니다." }
-   - If good: { "status": "approved" }`;
-
-      const result = await processSimpleModerationResponse(content, commentContent =>
-        fetchFromOpenRouter(systemInstruction, commentContent)
-      );
-      res.status(result.statusCode).json(result.body);
-    } catch (error: any) {
-      console.error("Comment Filter Error:", error?.message || error);
-      res.status(502).json({ error: "Comment moderation provider failure" });
-    }
-  });
-
-  registerLegacyNotificationRoutes(app);
-
-  app.post("/api/schedule-bot-reply", async (req, res) => {
-    const { worryId, worryContent, receiverId, botInfo } = req.body;
-    
-    // Send immediate response to client
-    res.json({ status: "scheduled" });
-
-    // Calculate a random delay between 4 and 8 minutes
-    const minMinutes = 4;
-    const maxMinutes = 8;
-    const delayMs = (Math.floor(Math.random() * (maxMinutes - minMinutes + 1)) + minMinutes) * 60 * 1000;
-    
-    console.log(`[Bot] Scheduling reply from ${botInfo.uid} in ${delayMs / 1000 / 60} minutes.`);
-
-    setTimeout(async () => {
-      if (!db) return;
-      try {
-        console.log(`[Bot] Generating delayed reply for ${receiverId}...`);
-        
-        const systemInstruction = `You are a warm, empathetic person who just received an anonymous worry. 
-Your persona: ${botInfo.gender === 'female' ? 'A kind sister/older woman' : 'A supportive brother/older man'}. 
-Interests: ${botInfo.interests.join(', ')}.
-Task: Write a comforting, personal reply to the worry. Keep it between 2-4 sentences. Use a warm, polite Korean tone (해요체). 
-Do NOT use professional counselor jargon. Sound like a real person.
-Return JSON: { "content": "Your reply here" }`;
-
-        const resultObj = await fetchFromOpenRouter(systemInstruction, worryContent);
-        const replyText = resultObj?.content || "당신의 고민을 잘 읽었어요. 마음이 따뜻해지는 밤 되시길 바랄게요.";
-
-        // Save reply to Firestore
-        await db.collection('letters').add({
-          senderId: botInfo.uid,
-          receiverId: receiverId,
-          originalContent: replyText,
-          refinedContent: replyText,
-          type: 'reply',
-          replyTo: worryId,
-          replyToContent: worryContent,
-          createdAt: FieldValue.serverTimestamp(),
-          isRead: false,
-          feedback: null
-        });
-
-        console.log(`[Bot] Delayed reply from ${botInfo.uid} saved.`);
-
-        console.log(`[Bot] Legacy delayed reply notification skipped; PRD notifications are sent by server-owned reply flows.`);
-      } catch (err) {
-        console.error(`[Bot] Delayed reply failed for ${botInfo.uid}:`, err);
-      }
-    }, delayMs);
-  });
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== "production") {

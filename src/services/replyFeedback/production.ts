@@ -1,10 +1,7 @@
-import { db } from '../../firebase';
-import { createFirestoreReplyFeedbackPersistence } from './firestoreAdapters';
 import { createReplyFeedbackApiClient } from './apiClient';
 import { submitReplyFeedback } from './submitReplyFeedback';
 import type { ReplyFeedback, ReplyFeedbackTarget } from './types';
 
-const productionPersistence = createFirestoreReplyFeedbackPersistence(db);
 const productionApiClient = createReplyFeedbackApiClient({
   getIdToken: async () => {
     const { auth } = await import('../../firebase');
@@ -19,7 +16,6 @@ export function submitReplyFeedbackWithProductionAdapters(params: {
 }) {
   return submitReplyFeedback({
     ...params,
-    persistence: productionPersistence,
     apiClient: productionApiClient,
   });
 }

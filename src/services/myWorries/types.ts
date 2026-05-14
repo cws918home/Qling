@@ -64,24 +64,6 @@ export interface ReplyReadStateDoc {
   readByAuthorAt?: unknown;
 }
 
-export interface LegacyLettersReplyDoc {
-  id: string;
-  senderId?: string;
-  receiverId?: string;
-  originalContent?: string;
-  refinedContent?: string;
-  type?: string;
-  replyTo?: string;
-  replyToContent?: string;
-  createdAt?: TimestampLike | null;
-  isRead?: boolean;
-  feedback?: 'helpful' | 'not_helpful' | null;
-  publisherComment?: string;
-  deliveryId?: string;
-  migratedReplyId?: string;
-  isAiGenerated?: boolean;
-}
-
 export interface ReplyReadModelItem {
   id: string;
   deliveryId?: string;
@@ -91,7 +73,7 @@ export interface ReplyReadModelItem {
   content: string;
   status?: string;
   createdAt: TimestampLike | null;
-  source: 'prd_replies' | 'legacy_letters';
+  source: 'prd_replies';
   senderId: string;
   receiverId: string;
   originalContent: string;

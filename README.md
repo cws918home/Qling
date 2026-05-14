@@ -19,4 +19,4 @@ View your app in AI Studio: https://ai.studio/apps/5b923681-2d77-477b-ae6d-a04fc
 3. Run the app:
    `npm run dev`
 
-https://midnight-radio-dmmo.onrender.com
+https://qling-hyu-hangyeol.onrender.com

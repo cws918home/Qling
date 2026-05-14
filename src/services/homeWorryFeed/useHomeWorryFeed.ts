@@ -1,4 +1,4 @@
-import { useAnswerFeedWithLegacyFallback } from './useAnswerFeedWithLegacyFallback';
+import { usePrdAnswerFeed } from './usePrdAnswerFeed';
 import type {
   HomeWorryFeedLetter,
   HomeWorryFeedProfile,
@@ -7,5 +7,6 @@ import type {
 export function useHomeWorryFeed(params: {
   profile: HomeWorryFeedProfile | null;
 }): { feedWorries: HomeWorryFeedLetter[] } {
-  return useAnswerFeedWithLegacyFallback(params);
+  const { prdFeedWorries } = usePrdAnswerFeed(params);
+  return { feedWorries: prdFeedWorries };
 }

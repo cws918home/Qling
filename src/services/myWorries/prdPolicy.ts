@@ -1,5 +1,4 @@
 import type {
-  LegacyLettersReplyDoc,
   PrdFeedbackDoc,
   MyWorryListItem,
   PrdReplyDoc,
@@ -161,61 +160,10 @@ export function adaptPrdReplies(
   }));
 }
 
-export function adaptLegacyLettersReplies(replies: LegacyLettersReplyDoc[]): ReplyReadModelItem[] {
-  return sortNewestFirst(replies.flatMap(reply => {
-    if (reply.type !== 'reply') return [];
-    if (!reply.senderId || !reply.receiverId) return [];
-
-    const content = reply.refinedContent ?? reply.originalContent;
-    if (typeof content !== 'string') return [];
-
-    return [{
-      id: reply.id,
-      deliveryId: reply.deliveryId,
-      worryId: reply.replyTo,
-      replierUid: reply.senderId,
-      authorUid: reply.receiverId,
-      content,
-      createdAt: reply.createdAt ?? null,
-      source: 'legacy_letters' as const,
-      senderId: reply.senderId,
-      receiverId: reply.receiverId,
-      originalContent: reply.originalContent ?? content,
-      refinedContent: content,
-      replyTo: reply.replyTo,
-      replyToContent: reply.replyToContent,
-      isRead: reply.isRead ?? false,
-      feedback: reply.feedback,
-      publisherComment: reply.publisherComment,
-      isAiGenerated: reply.isAiGenerated,
-    }];
-  }));
-}
-
-function reliableSharedIdentity(item: ReplyReadModelItem): string | null {
-  if (item.deliveryId) return `delivery:${item.deliveryId}`;
-  return null;
-}
-
 export function composeReplyReadModel(params: {
   prdReplies: ReplyReadModelItem[];
-  legacyLettersReplies?: ReplyReadModelItem[];
-  suppressedPrdReplyDeliveryIds?: Set<string>;
   mode: ReplyReadModelMode;
 }): ReplyReadModelItem[] {
   void params.mode;
-
-  const prdIdentities = new Set<string>([
-    ...[...(params.suppressedPrdReplyDeliveryIds ?? new Set<string>())].map(deliveryId => `delivery:${deliveryId}`),
-    ...params.prdReplies
-      .map(reliableSharedIdentity)
-      .filter((identity): identity is string => identity !== null),
-  ]);
-  const legacyReplies = params.legacyLettersReplies ?? [];
-  const nonDuplicateLegacyReplies = legacyReplies.filter(reply => {
-    const identity = reliableSharedIdentity(reply);
-    return !identity || !prdIdentities.has(identity);
-  });
-
-  return sortNewestFirst([...params.prdReplies, ...nonDuplicateLegacyReplies]);
+  return sortNewestFirst(params.prdReplies);
 }

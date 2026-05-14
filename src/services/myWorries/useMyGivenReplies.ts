@@ -11,10 +11,8 @@ import {
 import { db } from '../../firebase';
 import {
   composeReplyReadModel,
-  isHiddenReply,
   selectMyGivenReplies,
 } from './prdPolicy';
-import { useLegacyLettersReplyFallback } from './useLegacyLettersReplyFallback';
 import type { PrdFeedbackDoc, PrdReplyDoc, ReplyReadModelItem } from './types';
 
 function toPrdReplyDocs(snapshot: QuerySnapshot<DocumentData>): PrdReplyDoc[] {
@@ -31,13 +29,7 @@ export function useMyGivenReplies(params: {
 }) {
   const { user, firestore = db } = params;
   const [prdReplies, setPrdReplies] = useState<ReplyReadModelItem[]>([]);
-  const [suppressedPrdReplyDeliveryIds, setSuppressedPrdReplyDeliveryIds] = useState(new Set<string>());
   const [feedbacksByReplyId, setFeedbacksByReplyId] = useState(new Map<string, PrdFeedbackDoc>());
-  const { legacyLettersReplies } = useLegacyLettersReplyFallback({
-    user,
-    mode: 'given_by_me',
-    firestore,
-  });
 
   useEffect(() => {
     if (!user) {
@@ -53,11 +45,6 @@ export function useMyGivenReplies(params: {
       ),
       snapshot => {
         const docs = toPrdReplyDocs(snapshot);
-        setSuppressedPrdReplyDeliveryIds(new Set(
-          docs
-            .filter(reply => isHiddenReply(reply) && typeof reply.deliveryId === 'string')
-            .map(reply => reply.deliveryId as string)
-        ));
         setPrdReplies(selectMyGivenReplies({
           replies: docs,
           userUid: user.uid,
@@ -102,11 +89,9 @@ export function useMyGivenReplies(params: {
   const myGivenReplies = useMemo(
     () => composeReplyReadModel({
       prdReplies,
-      legacyLettersReplies,
-      suppressedPrdReplyDeliveryIds,
       mode: 'given_by_me',
     }),
-    [legacyLettersReplies, prdReplies, suppressedPrdReplyDeliveryIds]
+    [prdReplies]
   );
 
   return { myGivenReplies };

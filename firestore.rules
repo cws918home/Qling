@@ -112,71 +112,6 @@ service cloud.firestore {
       return !('deleted' in resource.data) || resource.data.deleted != true;
     }
 
-    function legacyReplyCreateKeys() {
-      return [
-        'senderId',
-        'receiverId',
-        'originalContent',
-        'refinedContent',
-        'type',
-        'replyTo',
-        'replyToContent',
-        'createdAt',
-        'isRead',
-        'feedback',
-        'isAiGenerated'
-      ];
-    }
-
-    function isOwnLegacyLetterRead() {
-      return signedIn()
-        && (
-          resource.data.senderId == request.auth.uid
-          || resource.data.receiverId == request.auth.uid
-          || (resource.data.type == 'worry' && resource.data.receiverId == 'public')
-        );
-    }
-
-    function isLegacyReplyCreate() {
-      return isNotDeletedSelf()
-        && request.resource.data.type == 'reply'
-        && request.resource.data.senderId == request.auth.uid
-        && request.resource.data.keys().hasOnly(legacyReplyCreateKeys())
-        && request.resource.data.isRead == false
-        && request.resource.data.feedback == null;
-    }
-
-    function changesOnly(keys) {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
-    }
-
-    function isReplyReceiver() {
-      return signedIn()
-        && resource.data.type == 'reply'
-        && resource.data.receiverId == request.auth.uid;
-    }
-
-    function isReadUpdate() {
-      return isNotDeletedSelf()
-        && isReplyReceiver()
-        && changesOnly(['isRead'])
-        && request.resource.data.isRead == true;
-    }
-
-    function publisherCommentUpdate() {
-      return isNotDeletedSelf()
-        && isReplyReceiver()
-        && changesOnly(['publisherComment'])
-        && request.resource.data.publisherComment is string;
-    }
-
-    function feedbackUpdate() {
-      return isNotDeletedSelf()
-        && isReplyReceiver()
-        && changesOnly(['feedback'])
-        && request.resource.data.feedback in ['helpful', 'not_helpful'];
-    }
-
     function noReplyDislikeLeak() {
       return !resource.data.keys().hasAny([
         'dislikedAt',
@@ -296,13 +231,6 @@ service cloud.firestore {
           )
         );
       allow create, update, delete: if false;
-    }
-
-    match /letters/{letterId} {
-      allow read: if isOwnLegacyLetterRead();
-      allow create: if isLegacyReplyCreate();
-      allow update: if isReadUpdate() || publisherCommentUpdate() || feedbackUpdate();
-      allow delete: if false;
     }
 
     match /test/connection {

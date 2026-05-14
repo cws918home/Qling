@@ -1,14 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
-  adaptLegacyLettersReplies,
   composeReplyReadModel,
   selectMyGivenReplies,
   selectMyWorries,
   selectRepliesForWorry,
 } from './prdPolicy';
 import type {
-  LegacyLettersReplyDoc,
   PrdReplyDoc,
   PrdWorryDoc,
   ReplyReadModelItem,
@@ -231,73 +229,6 @@ test('composed read model works without legacy fallback output', () => {
 
   assert.deepEqual(selected.map(reply => reply.id), ['prd-only']);
   assert.deepEqual(selected.map(reply => reply.source), ['prd_replies']);
-});
-
-test('PRD and legacy replies coexist when no reliable shared identity proves duplication', () => {
-  const prdReplies = [replyItem({ id: 'prd', deliveryId: 'delivery-1', source: 'prd_replies' })];
-  const legacyLettersReplies = [replyItem({ id: 'legacy', source: 'legacy_letters' })];
-
-  const selected = composeReplyReadModel({
-    prdReplies,
-    legacyLettersReplies,
-    mode: 'received_for_worry',
-  });
-
-  assert.deepEqual(selected.map(reply => reply.id), ['prd', 'legacy']);
-  assert.deepEqual(selected.map(reply => reply.source), ['prd_replies', 'legacy_letters']);
-});
-
-test('conservative dedupe removes legacy only when deliveryId is shared', () => {
-  const prdReplies = [replyItem({ id: 'prd', deliveryId: 'delivery-1', source: 'prd_replies' })];
-  const legacyLettersReplies = [
-    replyItem({ id: 'duplicate-legacy', deliveryId: 'delivery-1', source: 'legacy_letters' }),
-    replyItem({ id: 'unrelated-legacy', source: 'legacy_letters' }),
-  ];
-
-  const selected = composeReplyReadModel({
-    prdReplies,
-    legacyLettersReplies,
-    mode: 'given_by_me',
-  });
-
-  assert.deepEqual(selected.map(reply => reply.id), ['prd', 'unrelated-legacy']);
-  assert.deepEqual(selected.map(reply => reply.source), ['prd_replies', 'legacy_letters']);
-});
-
-test('legacy fallback does not reintroduce hidden PRD reply content when delivery identity is known', () => {
-  const legacyLettersReplies = [
-    replyItem({ id: 'legacy-hidden-duplicate', deliveryId: 'delivery-1', source: 'legacy_letters' }),
-    replyItem({ id: 'legacy-unrelated', deliveryId: 'delivery-2', source: 'legacy_letters' }),
-  ];
-
-  const selected = composeReplyReadModel({
-    prdReplies: [],
-    legacyLettersReplies,
-    suppressedPrdReplyDeliveryIds: new Set(['delivery-1']),
-    mode: 'received_for_worry',
-  });
-
-  assert.deepEqual(selected.map(reply => reply.id), ['legacy-unrelated']);
-});
-
-test('legacy adapter source-marks fallback replies', () => {
-  const legacy: LegacyLettersReplyDoc[] = [{
-    id: 'legacy',
-    type: 'reply',
-    senderId: 'replier',
-    receiverId: 'author',
-    refinedContent: 'legacy content',
-    replyTo: 'legacy-worry',
-    createdAt: ts(1),
-    isRead: false,
-  }];
-
-  const selected = adaptLegacyLettersReplies(legacy);
-
-  assert.equal(selected.length, 1);
-  assert.equal(selected[0].id, 'legacy');
-  assert.equal(selected[0].source, 'legacy_letters');
-  assert.equal(selected[0].replyTo, 'legacy-worry');
 });
 
 test('example replies remain visible in my given replies', () => {
