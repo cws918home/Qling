@@ -310,6 +310,62 @@ test('late human reply race re-queries current replies and skips without AI fiel
   assert.equal(db.store.get('worries/worry1')?.aiReplyId, undefined);
 });
 
+test('original recipient reply after additive rematch blocks AI fallback', async () => {
+  const db = createFakeFirestore(baseDocs({
+    'deliveryBatches/batch0': {
+      worryId: 'worry1',
+      batchRound: 0,
+      createdAt: new Date('2026-05-11T00:00:00.000Z'),
+      reason: 'initial',
+    },
+    'deliveryBatches/worry1_rematch_1': {
+      worryId: 'worry1',
+      batchRound: 1,
+      sourceBatchId: 'batch0',
+      sourceBatchRound: 0,
+      createdAt: new Date('2026-05-11T08:00:00.000Z'),
+      reason: 'rematch_timeout',
+    },
+    'deliveries/d0': {
+      worryId: 'worry1',
+      recipientUid: 'original-recipient',
+      status: 'active',
+      batchId: 'batch0',
+      batchRound: 0,
+      isAiRecipient: false,
+    },
+    'deliveries/rematch-d1': {
+      worryId: 'worry1',
+      recipientUid: 'rematch-recipient',
+      status: 'active',
+      batchId: 'worry1_rematch_1',
+      batchRound: 1,
+      isAiRecipient: false,
+    },
+    'replies/original-recipient-reply': {
+      deliveryId: 'd0',
+      worryId: 'worry1',
+      authorUid: 'author',
+      replierUid: 'original-recipient',
+      content: 'original recipient after rematch',
+      status: 'active',
+      isAiGenerated: false,
+    },
+  }));
+  const result = await createAiFallbackRepository({ db: db as never }).commitApprovedReply({
+    runId: 'run1',
+    now,
+    candidate: candidate(),
+    content: '답장',
+    moderationLog: moderationLog(),
+  });
+
+  assert.equal(result.status, 'skipped');
+  assert.equal(result.reason, 'human_reply_exists');
+  assert.equal(db.store.has('replies/worry1_ai'), false);
+  assert.equal(db.store.get('worries/worry1')?.hasAiReply, undefined);
+});
+
 test('disliked and hidden-from-publisher stored human replies still block fallback', async () => {
   for (const reply of [
     { feedbackType: 'dislike' },

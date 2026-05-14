@@ -878,15 +878,15 @@ All error responses should use `{ error: { code: string, message: string, detail
 
 ## 10. Final Verification Checklist
 
-- [ ] TODO-10.1 Run `npm test`.
-- [ ] TODO-10.2 Run `npm run lint`.
-- [ ] TODO-10.3 Run `npm run build`.
-- [ ] TODO-10.4 Run Firestore rules tests. Recommended command to add: `npm run test:rules`.
-- [ ] TODO-10.5 Manual happy paths: onboarding, example creation, publish worry, receive delivery, read, reply, author read, like.
-- [ ] TODO-10.6 Manual rejection paths: empty/overlong worry/reply/comment and moderation rejection preserve draft.
-- [ ] TODO-10.7 Manual pass/additive rematch/AI fallback simulations, including immediate pass replacement success, pass replacement shortfall, and original recipient answering after rematch.
-- [ ] TODO-10.8 Security verification: no client source-of-truth writes, no other-user reads, deleted user blocked.
-- [ ] TODO-10.9 Legacy path removal verification: no runtime `letters` writes, no public worry feed, old bot schedule endpoint removed, final rules deny `letters`.
+- [x] TODO-10.1 Run `npm test`.
+- [x] TODO-10.2 Run `npm run lint`.
+- [x] TODO-10.3 Run `npm run build`.
+- [x] TODO-10.4 Run Firestore rules tests. Recommended command to add: `npm run test:rules`.
+- [x] TODO-10.5 Manual happy paths: onboarding, example creation, publish worry, receive delivery, read, reply, author read, like.
+- [x] TODO-10.6 Manual rejection paths: empty/overlong worry/reply/comment and moderation rejection preserve draft.
+- [x] TODO-10.7 Manual pass/additive rematch/AI fallback simulations, including immediate pass replacement success, pass replacement shortfall, and original recipient answering after rematch.
+- [x] TODO-10.8 Security verification: no client source-of-truth writes, no other-user reads, deleted user blocked.
+- [x] TODO-10.9 Legacy path removal verification: no runtime `letters` writes, no public worry feed, old bot schedule endpoint removed, final rules deny `letters`.
 
 ## 11. Risk Register
 
