@@ -74,7 +74,7 @@ test('received and given initial-load state are independent', () => {
 
   assert.equal(delivered.length, 1);
   assert.deepEqual(delivered.map(notification => notification.title), [
-    `📻 갈피`,
+    `📻 Qling`,
   ]);
 });
 

@@ -94,6 +94,21 @@ test('my worries excludes hidden worries and hidden replies from unread counts',
   assert.equal(selected[0].unreadReplyCount, 1);
 });
 
+test('my worries excludes legacy or mismatched author identity fields', () => {
+  const selected = selectMyWorries({
+    userUid: 'me',
+    worries: [
+      { id: 'legacy-uid', uid: 'me', content: 'legacy uid content' } as never,
+      { id: 'legacy-sender', senderId: 'me', content: 'legacy sender content' } as never,
+      { id: 'wrong-author', authorUid: 'other', content: 'wrong author content' },
+      { id: 'missing-content', authorUid: 'me' },
+      { id: 'canonical', authorUid: 'me', content: 'canonical content' },
+    ],
+  });
+
+  assert.deepEqual(selected.map(worry => worry.id), ['canonical']);
+});
+
 test('received replies are selected by worryId and authorUid', () => {
   const replies: PrdReplyDoc[] = [
     prdReply({ id: 'include', worryId: 'w1', authorUid: 'author', replierUid: 'r1' }),

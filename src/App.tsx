@@ -96,6 +96,7 @@ import {
 } from './services/appShell/prdNavigationPolicy';
 import { CONTENT_MAX_LENGTH, validateDraftContent } from './services/validation/content';
 import { clearDraft, getDraft, setDraft, type DraftMap } from './services/drafts/contentDrafts';
+import { withAuthProfileUid } from './services/authProfile/profileIdentity';
 
 // --- Constants ---
 const CATEGORIES = WORRY_CATEGORIES;
@@ -221,13 +222,13 @@ export default function App() {
           
           if (userSnap.exists()) {
             const userData = userSnap.data() as UserProfile;
-            setProfile(userData);
+            setProfile(withAuthProfileUid(userData, currentUser.uid));
             setView(prev => routeAfterAuthProfileLoad(prev));
             if (!userData.exampleWorriesCreatedAt) {
               void createExampleWorriesForCurrentUser(currentUser)
                 .then(async () => {
                   const refreshed = await getDoc(userRef);
-                  if (refreshed.exists()) setProfile(refreshed.data() as UserProfile);
+                  if (refreshed.exists()) setProfile(withAuthProfileUid(refreshed.data() as UserProfile, currentUser.uid));
                 })
                 .catch(err => {
                   console.error('Example worry retry failed:', err);
@@ -259,7 +260,7 @@ export default function App() {
     const unsubMessaging = onMessage(messaging, (payload) => {
       console.log("Foreground Message received:", payload);
       if (Notification.permission === 'granted') {
-        new Notification(payload.notification?.title || "갈피", {
+        new Notification(payload.notification?.title || "Qling", {
           body: payload.notification?.body,
           icon: '/pwa-192x192.png'
         });
@@ -357,7 +358,7 @@ export default function App() {
       await createExampleWorriesForCurrentUser(user);
       const savedProfile = await getDoc(userRef);
       const profileData = savedProfile.exists()
-        ? savedProfile.data()
+        ? withAuthProfileUid(savedProfile.data(), user.uid)
         : { ...newProfileData, lastActive: now };
 
       // 3. Update local state after server-owned state is present.
@@ -628,7 +629,7 @@ export default function App() {
         <header className="fixed top-0 left-0 right-0 bg-[#FDFCF8]/80 backdrop-blur-md z-50 border-b border-[#E9EDC9]/50">
           <div className="max-w-2xl mx-auto px-6 h-16 flex items-center justify-between">
             <button onClick={() => setView('답변하기')} className="text-xl font-serif font-bold tracking-tight text-[#D4A373] flex items-center gap-2">
-              <Radio className="w-5 h-5" /> 갈피
+              <Radio className="w-5 h-5" /> Qling
             </button>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E9EDC9]/50 rounded-full text-[10px] sm:text-xs font-bold text-[#A3B18A]">
@@ -653,7 +654,7 @@ export default function App() {
                 <div className="w-24 h-24 bg-[#FAEDCD] rounded-full flex items-center justify-center mx-auto shadow-md">
                   <Radio className="w-12 h-12 text-[#D4A373]" />
                 </div>
-                <h1 className="text-4xl font-serif font-bold text-[#5A5A40]">Galpi</h1>
+                <h1 className="text-4xl font-serif font-bold text-[#5A5A40]">Qling</h1>
                 <p className="text-[#8B8B6B]">나의 이야기가 밤하늘을 타고<br/>누군가에게 닿는 시간</p>
               </div>
 
@@ -847,7 +848,7 @@ export default function App() {
                   <button 
                     onClick={() => {
                       if (navigator.share) {
-                        navigator.share({ title: '갈피', text: '익명으로 고민을 나누고 답장을 주고받는 앱', url: window.location.origin });
+                        navigator.share({ title: 'Qling', text: '익명으로 고민을 나누고 답장을 주고받는 앱', url: window.location.origin });
                       } else {
                         navigator.clipboard.writeText(window.location.origin);
                         alert("링크가 복사되었습니다!");

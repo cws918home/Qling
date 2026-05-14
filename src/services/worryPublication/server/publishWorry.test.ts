@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { selectActivePrdAnswerFeedItems } from '../../homeWorryFeed/prdPolicy';
+import { selectMyWorries } from '../../myWorries/prdPolicy';
 import { publishWorryOnServer } from './publishWorry';
 import type {
   InitialWorryPublicationRepository,
@@ -144,6 +146,69 @@ test('happy path creates canonical worry batch deliveries and moderation log', a
   assert.equal(repo.commits, 1);
   assert.equal(repo.lastCommit?.batch.matchedCount, 4);
   assert.equal(repo.lastCommit?.batch.randomCount, 1);
+  assert.equal(repo.lastCommit?.worry.authorUid, 'author');
+  assert.equal(repo.lastCommit?.worry.content, '고민');
+  assert.equal(repo.lastCommit?.deliveries.every(delivery => (
+    delivery.recipientUid
+    && delivery.authorUid === 'author'
+    && delivery.worryId === 'worry1'
+    && delivery.status === 'active'
+    && delivery.answeredAt === null
+  )), true);
+});
+
+test('published canonical shape appears in my worries and active answer feed read models', async () => {
+  repo = createFakeRepository(['a', 'b', 'c', 'd', 'e'].map(uid => candidate(uid)));
+  const result = await publishWorryOnServer({
+    db: createFakeDb() as never,
+    messaging: null,
+    author: { uid: 'author', gender: 'female', interests: ['취업'] },
+    content: 'read model content',
+    moderationProvider: async () => ({ status: 'approved', categories: ['취업'] }),
+    repository: repo,
+  });
+
+  assert.equal(result.status, 'published');
+  assert.ok(repo.lastCommit);
+
+  const worry = repo.lastCommit.worry;
+  const delivery = repo.lastCommit.deliveries[0];
+  const myWorries = selectMyWorries({
+    userUid: 'author',
+    worries: [worry],
+  });
+  const answerFeedItems = selectActivePrdAnswerFeedItems({
+    profileUid: delivery.recipientUid,
+    deliveries: [delivery],
+    worriesById: new Map([[worry.id, worry]]),
+  });
+
+  assert.deepEqual(myWorries.map(item => ({
+    id: item.id,
+    authorUid: item.authorUid,
+    content: item.content,
+    source: item.source,
+  })), [{
+    id: 'worry1',
+    authorUid: 'author',
+    content: 'read model content',
+    source: 'prd_worries',
+  }]);
+  assert.deepEqual(answerFeedItems.map(item => ({
+    deliveryId: item.deliveryId,
+    worryId: item.worryId,
+    authorUid: item.authorUid,
+    recipientUid: item.recipientUid,
+    originalContent: item.originalContent,
+    status: item.status,
+  })), [{
+    deliveryId: delivery.id,
+    worryId: 'worry1',
+    authorUid: 'author',
+    recipientUid: delivery.recipientUid,
+    originalContent: 'read model content',
+    status: 'active',
+  }]);
 });
 
 test('rejected moderation creates moderation log only with generated target id', async () => {

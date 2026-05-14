@@ -30,7 +30,7 @@ test('received later added change emits the new-reply notification', () => {
   });
 
   assert.deepEqual(notifications, [{
-    title: `📻 갈피`,
+    title: `📻 Qling`,
     options: {
       body: "누군가 내 고민에 답변을 보냈어요. 지금 확인해보세요.",
       icon: '/pwa-192x192.png',

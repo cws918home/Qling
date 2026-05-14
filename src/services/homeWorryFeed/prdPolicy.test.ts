@@ -130,6 +130,41 @@ test('non-recipient, answered, passed, and hidden deliveries do not appear', () 
   assert.deepEqual(items, []);
 });
 
+test('missing or mismatched profile uid makes active delivery selection empty', () => {
+  const delivery = {
+    id: 'delivery1',
+    worryId: 'worry1',
+    authorUid: 'author',
+    recipientUid: 'recipient',
+    status: 'active',
+  };
+  const worriesById = new Map([['worry1', { id: 'worry1', content: 'content' }]]);
+
+  assert.deepEqual(selectActivePrdAnswerFeedItems({
+    profileUid: '',
+    deliveries: [delivery],
+    worriesById,
+  }), []);
+  assert.deepEqual(selectActivePrdAnswerFeedItems({
+    profileUid: 'other-recipient',
+    deliveries: [delivery],
+    worriesById,
+  }), []);
+});
+
+test('missing or mismatched recipientUid makes active delivery selection empty', () => {
+  const worriesById = new Map([['worry1', { id: 'worry1', content: 'content' }]]);
+
+  assert.deepEqual(selectActivePrdAnswerFeedItems({
+    profileUid: 'recipient',
+    deliveries: [
+      { id: 'missing-recipient', worryId: 'worry1', authorUid: 'author', status: 'active' },
+      { id: 'wrong-recipient', worryId: 'worry1', authorUid: 'author', recipientUid: 'other', status: 'active' },
+    ],
+    worriesById,
+  }), []);
+});
+
 test('delivery status hidden is excluded from answer feed', () => {
   const items = selectActivePrdAnswerFeedItems({
     profileUid: 'recipient',

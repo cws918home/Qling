@@ -148,7 +148,7 @@ async function sendPrdNotificationAfterCommit(params: {
           data: { title: params.title, body: params.body, url: '/' },
           android: {
             priority: 'high',
-            notification: { channelId: 'galpi-main', priority: 'max' },
+            notification: { channelId: 'qling-main', priority: 'max' },
           },
           webpush: {
             headers: { Urgency: 'high' },
@@ -156,7 +156,7 @@ async function sendPrdNotificationAfterCommit(params: {
             notification: {
               icon: '/pwa-192x192.png',
               badge: '/pwa-192x192.png',
-              tag: `galpi-${params.kind}`,
+              tag: `qling-${params.kind}`,
               renotify: true,
               requireInteraction: true,
             },
@@ -221,7 +221,7 @@ export async function sendNewWorryNotificationAfterCommit(params: {
   return sendPrdNotificationAfterCommit({
     ...params,
     kind: 'new_worry',
-    title: '갈피',
+    title: 'Qling',
     body: '새로운 고민이 도착했습니다.',
   });
 }
@@ -237,7 +237,7 @@ export async function sendNewReplyNotificationAfterCommit(params: {
     ...params,
     kind: 'new_reply',
     sourceType: params.sourceType ?? 'reply',
-    title: '갈피',
+    title: 'Qling',
     body: '보낸 고민에 답장이 도착했습니다.',
   });
 }
@@ -252,7 +252,7 @@ export async function sendReplyLikedNotificationAfterCommit(params: {
   return sendPrdNotificationAfterCommit({
     ...params,
     kind: 'reply_liked',
-    title: '갈피',
+    title: 'Qling',
     body: '내 답장이 위로가 되었다는 답신이 왔어요.',
   });
 }
