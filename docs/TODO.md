@@ -420,7 +420,7 @@ All error responses should use `{ error: { code: string, message: string, detail
 ### `userAccount`
 
 - [x] TODO-4.55 Purpose: profile writes, activity blocking, soft deletion, push token cleanup.
-- [x] TODO-4.56 Public interfaces: `updateMyProfile`, `deleteMyAccount`, `assertActiveUser`.
+- [x] TODO-4.56 Define `userAccount` public interface around implemented account lifecycle boundaries, currently `deleteMyAccount` and its result types; do not add speculative `updateMyProfile` or `assertActiveUser` interfaces until profile writes or active-user assertion are actually server-owned by this module.
 - [x] TODO-4.57 Files: `src/services/userAccount/*`, `src/services/pushRegistration/*`, `server.ts`.
 - [x] TODO-4.58 Tests: soft delete, matching exclusion, endpoint blocking.
 - [x] TODO-4.59 Deletion test: account deletion is isolated from content modules.
