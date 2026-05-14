@@ -7,6 +7,7 @@ export interface MyWorryListItem {
   authorUid: string;
   content: string;
   status?: string;
+  hiddenAt?: unknown;
   categories: string[];
   createdAt: TimestampLike | null;
   humanReplyCount?: number;
@@ -20,6 +21,7 @@ export interface PrdWorryDoc {
   authorUid?: string;
   content?: string;
   status?: string;
+  hiddenAt?: unknown;
   rawCategories?: unknown;
   validCategories?: unknown;
   matchingCategories?: unknown;
@@ -36,6 +38,7 @@ export interface PrdReplyDoc {
   replierUid?: string;
   content?: string;
   status?: string;
+  hiddenAt?: unknown;
   createdAt?: TimestampLike | null;
   isAiGenerated?: boolean;
   isExampleReply?: boolean;

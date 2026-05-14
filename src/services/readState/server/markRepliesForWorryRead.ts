@@ -55,6 +55,9 @@ export async function markRepliesForWorryRead(params: {
       if (error.message === 'reply_not_for_worry_author') {
         return { status: 'forbidden', code: 'reply_not_for_worry_author', message: '요청한 답장을 읽을 수 없습니다.' };
       }
+      if (error.message === 'worry_hidden') {
+        return { status: 'conflict', code: 'worry_hidden', message: '숨김 처리된 고민입니다.' };
+      }
     }
 
     return {

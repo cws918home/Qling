@@ -62,7 +62,11 @@ export function useMyWorries(params: {
       }
     );
     const unsubscribeReplies = onSnapshot(
-      query(collection(firestore, 'replies'), where('authorUid', '==', user.uid)),
+      query(
+        collection(firestore, 'replies'),
+        where('authorUid', '==', user.uid),
+        where('status', '==', 'active')
+      ),
       snapshot => {
         latestReplies = toPrdReplyDocs(snapshot);
         recompute();

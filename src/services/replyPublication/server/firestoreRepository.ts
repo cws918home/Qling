@@ -81,6 +81,10 @@ export function createReplyPublicationRepository(params: {
         if (!worryDoc.exists) {
           throw buildError('worry_missing');
         }
+        const worry = snapshotData(worryDoc);
+        if (worry.status === 'hidden' || worry.hiddenAt) {
+          throw buildError('worry_hidden');
+        }
 
         if (replyDoc.exists) {
           const reply = snapshotData(replyDoc) as ReplyWriteModel;
@@ -104,7 +108,7 @@ export function createReplyPublicationRepository(params: {
         }
 
         const timestamp = serverTimestamp();
-        const isExampleReply = delivery.isExample === true || (worryDoc.data() ?? {}).isExample === true;
+        const isExampleReply = delivery.isExample === true || worry.isExample === true;
         const reply: ReplyWriteModel = {
           id: deliveryId,
           deliveryId,

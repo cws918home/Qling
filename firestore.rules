@@ -29,7 +29,8 @@ service cloud.firestore {
       let delivery = get(/databases/$(database)/documents/deliveries/$(deliveryIdFor(worryId, request.auth.uid)));
       return signedIn()
         && delivery.data.worryId == worryId
-        && delivery.data.recipientUid == request.auth.uid;
+        && delivery.data.recipientUid == request.auth.uid
+        && !isHidden(delivery.data);
     }
 
     function isWorryAuthor(worryId) {
@@ -40,6 +41,16 @@ service cloud.firestore {
     function isDeliveryRecipient(deliveryId) {
       return signedIn()
         && resource.data.recipientUid == request.auth.uid;
+    }
+
+    function isHidden(data) {
+      return ('status' in data && data.status == 'hidden')
+        || ('hiddenAt' in data && data.hiddenAt != null);
+    }
+
+    function deliveryWorryIsVisible() {
+      let worry = get(/databases/$(database)/documents/worries/$(resource.data.worryId));
+      return !isHidden(worry.data);
     }
 
     function safeUserKeys() {
@@ -202,6 +213,7 @@ service cloud.firestore {
 
     match /worries/{worryId} {
       allow read: if isNotDeletedSelf()
+        && !isHidden(resource.data)
         && (
           resource.data.authorUid == request.auth.uid
           || hasDeliveryForWorry(worryId)
@@ -210,7 +222,10 @@ service cloud.firestore {
     }
 
     match /deliveries/{deliveryId} {
-      allow read: if isNotDeletedSelf() && isDeliveryRecipient(deliveryId);
+      allow read: if isNotDeletedSelf()
+        && isDeliveryRecipient(deliveryId)
+        && !isHidden(resource.data)
+        && deliveryWorryIsVisible();
       allow create, update, delete: if false;
     }
 
@@ -251,8 +266,18 @@ service cloud.firestore {
     }
 
     match /replies/{replyId} {
-      allow read: if isNotDeletedSelf()
+      allow get: if isNotDeletedSelf()
         && noReplyDislikeLeak()
+        && !isHidden(resource.data)
+        && ('worryId' in resource.data)
+        && !isHidden(get(/databases/$(database)/documents/worries/$(resource.data.worryId)).data)
+        && (
+          resource.data.replierUid == request.auth.uid
+          || resource.data.authorUid == request.auth.uid
+        );
+      allow list: if isNotDeletedSelf()
+        && noReplyDislikeLeak()
+        && resource.data.status == 'active'
         && (
           resource.data.replierUid == request.auth.uid
           || resource.data.authorUid == request.auth.uid

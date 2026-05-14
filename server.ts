@@ -24,6 +24,7 @@ import { registerAiFallbackRoutes } from "./src/server/aiFallbackRoutes";
 import { registerExampleWorryRoutes } from "./src/server/exampleWorryRoutes";
 import { registerLegacyNotificationRoutes } from "./src/server/legacyNotificationRoutes";
 import { registerUserAccountRoutes } from "./src/server/userAccountRoutes";
+import { registerAdminHidingRoutes } from "./src/server/adminHidingRoutes";
 
 // Read client config to get database ID
 const clientConfigPath = path.join(process.cwd(), 'firebase-applet-config.json');
@@ -174,6 +175,9 @@ async function startServer() {
       db,
       auth: getAuth(),
     });
+    registerAdminHidingRoutes(app, {
+      db,
+    });
   } else {
     app.post('/api/worries/publish', (_req, res) => {
       res.status(500).json({
@@ -238,6 +242,9 @@ async function startServer() {
     registerUserAccountRoutes(app, {
       db: null,
       auth: {} as never,
+    });
+    registerAdminHidingRoutes(app, {
+      db: null,
     });
   }
 

@@ -55,6 +55,11 @@ function sendRepliesReadResult(res: express.Response, result: ServerMarkRepliesF
     return;
   }
 
+  if (result.status === 'conflict') {
+    res.status(409).json({ error: { code: result.code, message: result.message } });
+    return;
+  }
+
   res.status(500).json({ error: { code: result.code, message: result.message, details: result.details } });
 }
 

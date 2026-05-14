@@ -45,10 +45,12 @@ export function createReplyFeedbackRepository(params: { db: Firestore }): ReplyF
           : null;
 
         if (!worryId || !deliveryId || !replierUid) throw buildError('invalid_reply');
+        if (reply.status === 'hidden' || reply.hiddenAt) throw buildError('invalid_reply');
 
         const worryRef = db.collection('worries').doc(worryId);
         const worryDoc = await transaction.get(worryRef);
         const worry = dataOrThrow(worryDoc, 'worry_missing');
+        if (worry.status === 'hidden' || worry.hiddenAt) throw buildError('invalid_reply');
 
         if (worry.authorUid !== input.publisherUid) throw buildError('not_worry_publisher');
         if (reply.authorUid !== input.publisherUid) throw buildError('reply_worry_mismatch');

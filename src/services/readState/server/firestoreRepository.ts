@@ -91,6 +91,9 @@ export function createReadStateRepository(params: {
         if (worry.authorUid !== authorUid) {
           throw buildError('not_worry_author');
         }
+        if (worry.status === 'hidden' || worry.hiddenAt) {
+          throw buildError('worry_hidden');
+        }
 
         const requestedReplyIds = replyIds
           ? [...new Set(replyIds)]
@@ -117,9 +120,7 @@ export function createReadStateRepository(params: {
             throw buildError('reply_not_for_worry_author');
           }
 
-          if (!requestedReplyIds && (reply.status === 'hidden' || reply.hiddenAt)) {
-            continue;
-          }
+          if (reply.status === 'hidden' || reply.hiddenAt) continue;
 
           replyIdsToMark.push(replyDoc.id);
         }

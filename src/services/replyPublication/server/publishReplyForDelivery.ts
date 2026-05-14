@@ -36,6 +36,9 @@ function mapTransactionError(error: unknown): ServerPublishReplyResult {
   if (code === 'delivery_hidden') {
     return { status: 'conflict', code, message: '숨겨진 전달에는 답장할 수 없습니다.' };
   }
+  if (code === 'worry_hidden') {
+    return { status: 'conflict', code: 'delivery_hidden', message: '숨겨진 고민에는 답장할 수 없습니다.' };
+  }
   if (code === 'delivery_not_active' || code === 'duplicate_reply') {
     return { status: 'conflict', code, message: '이미 처리된 전달입니다.' };
   }

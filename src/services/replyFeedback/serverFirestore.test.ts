@@ -147,6 +147,26 @@ test('initial dislike with comment stores admin-only comment fields', async () =
   assert.equal(store['feedbacks/reply1'].commentModerationLogId, 'mod3');
 });
 
+test('hidden reply and hidden worry cannot receive feedback', async () => {
+  await assert.rejects(() => save({
+    ...baseStore,
+    'replies/reply1': {
+      ...baseStore['replies/reply1'],
+      status: 'hidden',
+      hiddenAt: {},
+    },
+  }, { type: 'like' }), /invalid_reply/);
+
+  await assert.rejects(() => save({
+    ...baseStore,
+    'worries/worry1': {
+      ...baseStore['worries/worry1'],
+      status: 'hidden',
+      hiddenAt: {},
+    },
+  }, { type: 'like' }), /invalid_reply/);
+});
+
 test('exact idempotency accepts repeated same like and rejects overwrite', async () => {
   const first = await save(baseStore, { type: 'like', comment: 'same', commentModerationLogId: 'mod1' });
   const same = await save(first.store, { type: 'like', comment: 'same', commentModerationLogId: 'mod2' });

@@ -471,6 +471,7 @@ describe('server-owned replies rules', () => {
     await seedBaseUsers();
     await seed('users/deletedUser', { ...safeProfile('deletedUser'), deleted: true });
     await seed('users/missingDeletedUser', safeProfile('missingDeletedUser'));
+    await seed('worries/worry1', { authorUid: 'author', content: 'worry' });
     await seed('replies/worry1_recipient', prdReply);
     await seed('replies/worry1_missingDeletedUser', {
       ...prdReply,
@@ -513,6 +514,7 @@ describe('private read-state rules', () => {
     await seedBaseUsers();
     await seed('users/recipient/deliveryReadStates/worry1_recipient', deliveryReadState);
     await seed('users/author/replyReadStates/worry1_recipient', replyReadState);
+    await seed('worries/worry1', { authorUid: 'author', content: 'worry' });
     await seed('deliveries/worry1_recipient', {
       worryId: 'worry1',
       recipientUid: 'recipient',
@@ -547,6 +549,94 @@ describe('private read-state rules', () => {
     await assertSucceeds(dbFor('recipient').doc('deliveries/worry1_recipient').get());
     await assertSucceeds(dbFor('recipient').doc('replies/worry1_recipient').get());
     await assertSucceeds(dbFor('author').doc('replies/worry1_recipient').get());
+  });
+});
+
+describe('hidden content rules', () => {
+  beforeEach(async () => {
+    await seedBaseUsers();
+    await seed('worries/worry1', { authorUid: 'author', content: 'worry', status: 'active' });
+    await seed('deliveries/worry1_recipient', {
+      worryId: 'worry1',
+      recipientUid: 'recipient',
+      authorUid: 'author',
+      status: 'active',
+    });
+    await seed('replies/worry1_recipient', prdReply);
+  });
+
+  test('client cannot read hidden worry as author', async () => {
+    await seed('worries/worry1', {
+      authorUid: 'author',
+      content: 'worry',
+      status: 'hidden',
+      hiddenAt: new Date(),
+      hiddenReason: 'policy',
+      hiddenBy: 'operator',
+    });
+
+    await assertFails(dbFor('author').doc('worries/worry1').get());
+  });
+
+  test('recipient cannot read hidden worry through otherwise-owned delivery', async () => {
+    await seed('worries/worry1', {
+      authorUid: 'author',
+      content: 'worry',
+      status: 'hidden',
+      hiddenAt: new Date(),
+    });
+
+    await assertFails(dbFor('recipient').doc('worries/worry1').get());
+    await assertFails(dbFor('recipient').doc('deliveries/worry1_recipient').get());
+  });
+
+  test('recipient cannot read hidden delivery', async () => {
+    await seed('deliveries/worry1_recipient', {
+      worryId: 'worry1',
+      recipientUid: 'recipient',
+      authorUid: 'author',
+      status: 'hidden',
+      hiddenAt: new Date(),
+      hiddenReason: 'policy',
+      hiddenBy: 'operator',
+    });
+
+    await assertFails(dbFor('recipient').doc('deliveries/worry1_recipient').get());
+  });
+
+  test('worry author and replier cannot read hidden reply', async () => {
+    await seed('replies/worry1_recipient', {
+      ...prdReply,
+      status: 'hidden',
+      hiddenAt: new Date(),
+      hiddenReason: 'policy',
+      hiddenBy: 'operator',
+    });
+
+    await assertFails(dbFor('author').doc('replies/worry1_recipient').get());
+    await assertFails(dbFor('recipient').doc('replies/worry1_recipient').get());
+  });
+
+  test('clients cannot directly create or update hidden fields on PRD source collections', async () => {
+    await assertFails(dbFor('author').doc('worries/new').set({
+      authorUid: 'author',
+      content: 'worry',
+      status: 'hidden',
+      hiddenAt: new Date(),
+      hiddenReason: 'policy',
+      hiddenBy: 'operator',
+    }));
+    await assertFails(dbFor('author').doc('worries/worry1').update({ hiddenAt: new Date() }));
+    await assertFails(dbFor('recipient').doc('deliveries/worry1_recipient').update({ status: 'hidden' }));
+    await assertFails(dbFor('author').doc('replies/worry1_recipient').update({ hiddenReason: 'policy' }));
+  });
+
+  test('non-hidden allowed reads still pass with hidden rules enabled', async () => {
+    await assertSucceeds(dbFor('author').doc('worries/worry1').get());
+    await assertSucceeds(dbFor('recipient').doc('worries/worry1').get());
+    await assertSucceeds(dbFor('recipient').doc('deliveries/worry1_recipient').get());
+    await assertSucceeds(dbFor('author').doc('replies/worry1_recipient').get());
+    await assertSucceeds(dbFor('recipient').doc('replies/worry1_recipient').get());
   });
 });
 
@@ -598,6 +688,7 @@ describe('Phase 4 mailbox manual-equivalent read paths', () => {
         .collection('replies')
         .where('worryId', '==', 'manual_worry')
         .where('authorUid', '==', 'author')
+        .where('status', '==', 'active')
         .get()
     );
 
@@ -609,6 +700,7 @@ describe('Phase 4 mailbox manual-equivalent read paths', () => {
       dbFor('recipient')
         .collection('replies')
         .where('replierUid', '==', 'recipient')
+        .where('status', '==', 'active')
         .get()
     );
 
@@ -809,6 +901,7 @@ describe('reply feedback transition', () => {
 
   test('does not leak dislike summary through replier-readable reply document', async () => {
     await seedBaseUsers();
+    await seed('worries/worry1', { authorUid: 'author', content: 'worry' });
     await seed('replies/like-reply', {
       ...prdReply,
       feedbackType: 'like',

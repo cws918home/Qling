@@ -11,6 +11,7 @@ import {
 import { db } from '../../firebase';
 import {
   composeReplyReadModel,
+  isHiddenReply,
   selectRepliesForWorry,
 } from './prdPolicy';
 import { useLegacyLettersReplyFallback } from './useLegacyLettersReplyFallback';
@@ -36,6 +37,7 @@ export function useRepliesForWorry(params: {
 }) {
   const { user, worryId, firestore = db } = params;
   const [prdReplies, setPrdReplies] = useState<ReplyReadModelItem[]>([]);
+  const [suppressedPrdReplyDeliveryIds, setSuppressedPrdReplyDeliveryIds] = useState(new Set<string>());
   const [readStatesByReplyId, setReadStatesByReplyId] = useState(new Map<string, ReplyReadStateDoc>());
   const [feedbacksByReplyId, setFeedbacksByReplyId] = useState(new Map<string, PrdFeedbackDoc>());
   const { legacyLettersReplies } = useLegacyLettersReplyFallback({
@@ -55,11 +57,18 @@ export function useRepliesForWorry(params: {
       query(
         collection(firestore, 'replies'),
         where('worryId', '==', worryId),
-        where('authorUid', '==', user.uid)
+        where('authorUid', '==', user.uid),
+        where('status', '==', 'active')
       ),
       snapshot => {
+        const docs = toPrdReplyDocs(snapshot);
+        setSuppressedPrdReplyDeliveryIds(new Set(
+          docs
+            .filter(reply => isHiddenReply(reply) && typeof reply.deliveryId === 'string')
+            .map(reply => reply.deliveryId as string)
+        ));
         setPrdReplies(selectRepliesForWorry({
-          replies: toPrdReplyDocs(snapshot),
+          replies: docs,
           userUid: user.uid,
           worryId,
           readStatesByReplyId,
@@ -126,9 +135,10 @@ export function useRepliesForWorry(params: {
     () => composeReplyReadModel({
       prdReplies,
       legacyLettersReplies,
+      suppressedPrdReplyDeliveryIds,
       mode: 'received_for_worry',
     }),
-    [legacyLettersReplies, prdReplies]
+    [legacyLettersReplies, prdReplies, suppressedPrdReplyDeliveryIds]
   );
 
   return { repliesForWorry };

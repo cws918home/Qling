@@ -78,6 +78,24 @@ test('my worries computes unread reply count from private read-state docs', () =
   assert.equal(w2?.hasUnreadReplies, true);
 });
 
+test('my worries excludes hidden worries and hidden replies from unread counts', () => {
+  const worries: PrdWorryDoc[] = [
+    { id: 'visible', authorUid: 'me', content: 'visible worry' },
+    { id: 'hidden-status', authorUid: 'me', content: 'hidden worry', status: 'hidden' },
+    { id: 'hidden-at', authorUid: 'me', content: 'hidden at worry', hiddenAt: {} },
+  ];
+  const replies: PrdReplyDoc[] = [
+    prdReply({ id: 'visible-reply', worryId: 'visible', authorUid: 'me' }),
+    prdReply({ id: 'hidden-reply', worryId: 'visible', authorUid: 'me', status: 'hidden' }),
+    prdReply({ id: 'hidden-at-reply', worryId: 'visible', authorUid: 'me', hiddenAt: {} }),
+  ];
+
+  const selected = selectMyWorries({ worries, userUid: 'me', replies });
+
+  assert.deepEqual(selected.map(worry => worry.id), ['visible']);
+  assert.equal(selected[0].unreadReplyCount, 1);
+});
+
 test('received replies are selected by worryId and authorUid', () => {
   const replies: PrdReplyDoc[] = [
     prdReply({ id: 'include', worryId: 'w1', authorUid: 'author', replierUid: 'r1' }),
@@ -92,6 +110,18 @@ test('received replies are selected by worryId and authorUid', () => {
   assert.equal(selected[0].worryId, 'w1');
   assert.equal(selected[0].authorUid, 'author');
   assert.equal(selected[0].hasUnread, false);
+});
+
+test('replies for worry excludes hidden replies', () => {
+  const replies: PrdReplyDoc[] = [
+    prdReply({ id: 'visible', worryId: 'w1', authorUid: 'author', replierUid: 'r1' }),
+    prdReply({ id: 'hidden-status', worryId: 'w1', authorUid: 'author', replierUid: 'r2', status: 'hidden' }),
+    prdReply({ id: 'hidden-at', worryId: 'w1', authorUid: 'author', replierUid: 'r3', hiddenAt: {} }),
+  ];
+
+  const selected = selectRepliesForWorry({ replies, userUid: 'author', worryId: 'w1' });
+
+  assert.deepEqual(selected.map(reply => reply.id), ['visible']);
 });
 
 test('received replies use private author read-state for unread emphasis', () => {
@@ -125,6 +155,34 @@ test('written replies are selected by replierUid', () => {
   assert.equal(selected[0].source, 'prd_replies');
   assert.equal(selected[0].replierUid, 'me');
   assert.equal(selected[0].hasUnread, false);
+});
+
+test('my given replies excludes hidden replies', () => {
+  const replies: PrdReplyDoc[] = [
+    prdReply({ id: 'visible', worryId: 'w1', authorUid: 'author', replierUid: 'me' }),
+    prdReply({ id: 'hidden-status', worryId: 'w1', authorUid: 'author', replierUid: 'me', status: 'hidden' }),
+    prdReply({ id: 'hidden-at', worryId: 'w1', authorUid: 'author', replierUid: 'me', hiddenAt: {} }),
+  ];
+
+  const selected = selectMyGivenReplies({ replies, userUid: 'me' });
+
+  assert.deepEqual(selected.map(reply => reply.id), ['visible']);
+});
+
+test('disliked reply is hidden only from publisher view while admin-hidden reply is hidden everywhere', () => {
+  const disliked = prdReply({ id: 'disliked', worryId: 'w1', authorUid: 'author', replierUid: 'me' });
+  const hidden = prdReply({ id: 'admin-hidden', worryId: 'w1', authorUid: 'author', replierUid: 'me', status: 'hidden' });
+  const feedbacksByReplyId = new Map([['disliked', { id: 'disliked', type: 'dislike' as const }]]);
+
+  assert.deepEqual(
+    selectRepliesForWorry({ replies: [disliked, hidden], userUid: 'author', worryId: 'w1', feedbacksByReplyId })
+      .map(reply => reply.id),
+    []
+  );
+  assert.deepEqual(
+    selectMyGivenReplies({ replies: [disliked, hidden], userUid: 'me', feedbacksByReplyId }).map(reply => reply.id),
+    ['disliked']
+  );
 });
 
 test('AI reply appears to author as a normal reply without visible label', () => {
@@ -204,6 +262,22 @@ test('conservative dedupe removes legacy only when deliveryId is shared', () => 
 
   assert.deepEqual(selected.map(reply => reply.id), ['prd', 'unrelated-legacy']);
   assert.deepEqual(selected.map(reply => reply.source), ['prd_replies', 'legacy_letters']);
+});
+
+test('legacy fallback does not reintroduce hidden PRD reply content when delivery identity is known', () => {
+  const legacyLettersReplies = [
+    replyItem({ id: 'legacy-hidden-duplicate', deliveryId: 'delivery-1', source: 'legacy_letters' }),
+    replyItem({ id: 'legacy-unrelated', deliveryId: 'delivery-2', source: 'legacy_letters' }),
+  ];
+
+  const selected = composeReplyReadModel({
+    prdReplies: [],
+    legacyLettersReplies,
+    suppressedPrdReplyDeliveryIds: new Set(['delivery-1']),
+    mode: 'received_for_worry',
+  });
+
+  assert.deepEqual(selected.map(reply => reply.id), ['legacy-unrelated']);
 });
 
 test('legacy adapter source-marks fallback replies', () => {

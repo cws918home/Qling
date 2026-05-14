@@ -131,6 +131,54 @@ test('non-recipient, answered, passed, and hidden deliveries do not appear', () 
   assert.deepEqual(items, []);
 });
 
+test('delivery status hidden is excluded from answer feed', () => {
+  const items = selectActivePrdAnswerFeedItems({
+    profileUid: 'recipient',
+    deliveries: [
+      { id: 'hidden-status', worryId: 'w1', authorUid: 'a', recipientUid: 'recipient', status: 'hidden' },
+    ],
+    worriesById: new Map([['w1', { id: 'w1', content: 'content' }]]),
+  });
+
+  assert.deepEqual(items, []);
+});
+
+test('delivery hiddenAt is excluded from answer feed', () => {
+  const items = selectActivePrdAnswerFeedItems({
+    profileUid: 'recipient',
+    deliveries: [
+      { id: 'hidden-at', worryId: 'w1', authorUid: 'a', recipientUid: 'recipient', status: 'active', hiddenAt: {} },
+    ],
+    worriesById: new Map([['w1', { id: 'w1', content: 'content' }]]),
+  });
+
+  assert.deepEqual(items, []);
+});
+
+test('worry status hidden is excluded from answer feed', () => {
+  const items = selectActivePrdAnswerFeedItems({
+    profileUid: 'recipient',
+    deliveries: [
+      { id: 'delivery1', worryId: 'w1', authorUid: 'a', recipientUid: 'recipient', status: 'active' },
+    ],
+    worriesById: new Map([['w1', { id: 'w1', content: 'content', status: 'hidden' }]]),
+  });
+
+  assert.deepEqual(items, []);
+});
+
+test('worry hiddenAt is excluded from answer feed', () => {
+  const items = selectActivePrdAnswerFeedItems({
+    profileUid: 'recipient',
+    deliveries: [
+      { id: 'delivery1', worryId: 'w1', authorUid: 'a', recipientUid: 'recipient', status: 'active' },
+    ],
+    worriesById: new Map([['w1', { id: 'w1', content: 'content', hiddenAt: {} }]]),
+  });
+
+  assert.deepEqual(items, []);
+});
+
 test('status answered delivery is excluded even without answeredAt', () => {
   const items = selectActivePrdAnswerFeedItems({
     profileUid: 'recipient',

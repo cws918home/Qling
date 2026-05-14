@@ -24,7 +24,15 @@ function sortNewestFirst<T extends { createdAt?: TimestampLike | null }>(items: 
   return [...items].sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt));
 }
 
-export function selectMyWorries(params: {
+export function isHiddenWorry(worry: Pick<PrdWorryDoc, 'status' | 'hiddenAt'>): boolean {
+  return worry.status === 'hidden' || Boolean(worry.hiddenAt);
+}
+
+export function isHiddenReply(reply: Pick<PrdReplyDoc, 'status' | 'hiddenAt'>): boolean {
+  return reply.status === 'hidden' || Boolean(reply.hiddenAt);
+}
+
+export function selectVisibleMyWorries(params: {
   worries: PrdWorryDoc[];
   userUid: string;
   replies?: PrdReplyDoc[];
@@ -33,13 +41,14 @@ export function selectMyWorries(params: {
   const unreadCounts = new Map<string, number>();
   for (const reply of params.replies ?? []) {
     if (!reply.id || reply.authorUid !== params.userUid || !reply.worryId) continue;
-    if (reply.status === 'hidden') continue;
+    if (isHiddenReply(reply)) continue;
     if (params.readStatesByReplyId?.has(reply.id)) continue;
     unreadCounts.set(reply.worryId, (unreadCounts.get(reply.worryId) ?? 0) + 1);
   }
 
   const selected = params.worries.flatMap(worry => {
     if (worry.authorUid !== params.userUid) return [];
+    if (isHiddenWorry(worry)) return [];
     if (typeof worry.content !== 'string') return [];
 
     const matchingCategories = stringArray(worry.matchingCategories);
@@ -70,7 +79,9 @@ export function selectMyWorries(params: {
   return sortNewestFirst(selected);
 }
 
-export function selectRepliesForWorry(params: {
+export const selectMyWorries = selectVisibleMyWorries;
+
+export function selectVisibleRepliesForWorry(params: {
   replies: PrdReplyDoc[];
   userUid: string;
   worryId: string;
@@ -78,6 +89,7 @@ export function selectRepliesForWorry(params: {
   feedbacksByReplyId?: Map<string, PrdFeedbackDoc>;
 }): ReplyReadModelItem[] {
   const visibleReplies = params.replies.filter(reply => {
+    if (isHiddenReply(reply)) return false;
     if (
     reply.worryId === params.worryId
     && reply.authorUid === params.userUid
@@ -90,17 +102,21 @@ export function selectRepliesForWorry(params: {
   return adaptPrdReplies(visibleReplies, params.readStatesByReplyId, params.feedbacksByReplyId);
 }
 
-export function selectMyGivenReplies(params: {
+export const selectRepliesForWorry = selectVisibleRepliesForWorry;
+
+export function selectVisibleMyGivenReplies(params: {
   replies: PrdReplyDoc[];
   userUid: string;
   feedbacksByReplyId?: Map<string, PrdFeedbackDoc>;
 }): ReplyReadModelItem[] {
   return adaptPrdReplies(
-    params.replies.filter(reply => reply.replierUid === params.userUid),
+    params.replies.filter(reply => reply.replierUid === params.userUid && !isHiddenReply(reply)),
     undefined,
     params.feedbacksByReplyId
   );
 }
+
+export const selectMyGivenReplies = selectVisibleMyGivenReplies;
 
 export function adaptPrdReplies(
   replies: PrdReplyDoc[],
@@ -184,15 +200,17 @@ function reliableSharedIdentity(item: ReplyReadModelItem): string | null {
 export function composeReplyReadModel(params: {
   prdReplies: ReplyReadModelItem[];
   legacyLettersReplies?: ReplyReadModelItem[];
+  suppressedPrdReplyDeliveryIds?: Set<string>;
   mode: ReplyReadModelMode;
 }): ReplyReadModelItem[] {
   void params.mode;
 
-  const prdIdentities = new Set(
-    params.prdReplies
+  const prdIdentities = new Set<string>([
+    ...[...(params.suppressedPrdReplyDeliveryIds ?? new Set<string>())].map(deliveryId => `delivery:${deliveryId}`),
+    ...params.prdReplies
       .map(reliableSharedIdentity)
-      .filter((identity): identity is string => identity !== null)
-  );
+      .filter((identity): identity is string => identity !== null),
+  ]);
   const legacyReplies = params.legacyLettersReplies ?? [];
   const nonDuplicateLegacyReplies = legacyReplies.filter(reply => {
     const identity = reliableSharedIdentity(reply);

@@ -301,6 +301,31 @@ test('normal approved reply does not schedule example feedback job', async () =>
   assert.equal(db.store.get('moderationLogs/mod1')?.targetType, 'reply');
 });
 
+test('hidden worry blocks reply publication without counter decrement', async () => {
+  const db = createFakeFirestore({
+    'deliveries/delivery1': {
+      worryId: 'worry1',
+      authorUid: 'author',
+      recipientUid: 'recipient',
+      status: 'active',
+      answeredAt: null,
+    },
+    'worries/worry1': { authorUid: 'author', status: 'hidden', hiddenAt: {} },
+    'users/recipient': { activeDeliveryCount: 1 },
+  });
+  const repo = createReplyPublicationRepository({ db: db as never });
+
+  await assert.rejects(() => repo.commitApprovedReplyPublication({
+    deliveryId: 'delivery1',
+    replierUid: 'recipient',
+    content: 'reply',
+    moderationLog,
+  }), /worry_hidden/);
+
+  assert.equal(db.store.get('deliveries/delivery1')?.status, 'active');
+  assert.equal(db.store.get('users/recipient')?.activeDeliveryCount, 1);
+});
+
 test('rejected example reply creates moderation log only and no reply or job', async () => {
   const db = createFakeFirestore({
     'deliveries/delivery1': {

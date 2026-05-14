@@ -58,6 +58,7 @@ export type ServerMarkRepliesForWorryReadResult =
   | { status: 'validation_error'; code: 'invalid_reply_ids' | 'invalid_body'; message: string }
   | { status: 'not_found'; code: 'worry_missing' | 'reply_missing'; message: string }
   | { status: 'forbidden'; code: 'not_worry_author' | 'reply_not_for_worry_author'; message: string }
+  | { status: 'conflict'; code: 'worry_hidden'; message: string }
   | { status: 'server_error'; code: 'transaction_aborted' | 'firebase_unavailable'; message: string; details?: unknown };
 
 export interface ReadStateServiceDeps {
