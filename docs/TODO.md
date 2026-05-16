@@ -360,12 +360,12 @@ Phase 2 must not begin until Phase 1 verifies that the current `docs/PRD.md` pro
 
 Phase 3 must constrain `src/App.tsx` before new route and screen work increases its current mix of Firebase, Firestore, route, onboarding, publication, pass, feedback, push/PWA, account, and rendering responsibility.
 
-- [ ] TODO-DESIGN-3.1 Inventory current `src/App.tsx` responsibilities and classify each as app-shell orchestration, route rendering, feature container logic, or presentational screen rendering.
-- [ ] TODO-DESIGN-3.2 Define the app-shell boundary: auth/profile loading, top-level route selection, global overlays, and shell-level providers may stay in app shell; feature data wiring must move to route containers.
-- [ ] TODO-DESIGN-3.3 Extract or identify route rendering boundaries for authenticated shell, onboarding flow, received worries, write worry, write reply, reply details, my-page/account, and policy screens.
-- [ ] TODO-DESIGN-3.4 Record the maximum allowed `src/App.tsx` responsibilities before Phase 5 starts; if route expansion increases responsibility beyond that boundary, split route rendering into dedicated shell/container files in this phase before continuing.
-- [ ] TODO-DESIGN-3.5 Verify no visual reskin work begins in this phase beyond minimal route skeletons needed to test routing.
-- [ ] TODO-DESIGN-3.V1 Verify Phase 3 with a file/module map, App-shell responsibility notes, and evidence that route rendering boundaries exist before screen contract work starts.
+- [x] TODO-DESIGN-3.1 Inventory current `src/App.tsx` responsibilities and classify each as app-shell orchestration, route rendering, feature container logic, or presentational screen rendering.
+- [x] TODO-DESIGN-3.2 Define the app-shell boundary: auth/profile loading, top-level route selection, global overlays, and shell-level providers may stay in app shell; feature data wiring must move to route containers.
+- [x] TODO-DESIGN-3.3 Extract or identify route rendering boundaries for authenticated shell, onboarding flow, received worries, write worry, write reply, reply details, my-page/account, and policy screens.
+- [x] TODO-DESIGN-3.4 Record the maximum allowed `src/App.tsx` responsibilities before Phase 5 starts; if route expansion increases responsibility beyond that boundary, split route rendering into dedicated shell/container files in this phase before continuing.
+- [x] TODO-DESIGN-3.5 Verify no visual reskin work begins in this phase beyond minimal route skeletons needed to test routing.
+- [x] TODO-DESIGN-3.V1 Verify Phase 3 with a file/module map, App-shell responsibility notes, and evidence that route rendering boundaries exist before screen contract work starts.
 
 ### Phase 4 - Presentational Screen Contract Definition
 

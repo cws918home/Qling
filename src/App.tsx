@@ -87,7 +87,6 @@ import {
   routeAfterPass,
   routeAfterReplyPublish,
   routeAfterWorryPublish,
-  routeName,
   routeToEditInterests,
   routeToMyAnswers,
   routeToMyReplyDetail,
@@ -95,12 +94,11 @@ import {
   routeToWriteReply,
   routeToWriteWorry,
   resolveAppRouteState,
-  tabForRoute,
-  type AppRoute,
   type AppRouteState,
   type AppRouteViewState,
   type PrdAppTab,
 } from './services/appShell/prdNavigationPolicy';
+import { routeRenderingBoundaryForRoute } from './services/appShell/routeRenderingBoundary';
 import { CONTENT_MAX_LENGTH, validateDraftContent } from './services/validation/content';
 import { clearDraft, getDraft, setDraft, type DraftMap } from './services/drafts/contentDrafts';
 import { withAuthProfileUid } from './services/authProfile/profileIdentity';
@@ -596,7 +594,8 @@ export default function App() {
     ? '관심 주제'
     : `${visibleHomeInterestBadgeText}${profileInterests.length > 5 ? '...' : ''}`;
   const visibleFeedWorries = filterSuppressedFeedWorries({ feedWorries, suppressedDeliveryIds });
-  const currentRoute = routeName(view);
+  const routeBoundary = routeRenderingBoundaryForRoute(view);
+  const currentRoute = routeBoundary.currentRoute;
   const currentMyWorryDetailRoute: Extract<AppRouteState, { route: 'my_worry_detail' }> | null =
     typeof view === 'string' || view.route !== 'my_worry_detail' ? null : view;
   const currentMyAnswerDetailRoute: Extract<AppRouteState, { route: 'my_answer_detail' | 'read_my_reply' }> | null =
@@ -716,7 +715,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Header (hidden before the authenticated shell) */}
-      {currentRoute !== 'login' && currentRoute !== 'onboarding' && (
+      {routeBoundary.mountsAuthenticatedShell && (
         <header className="fixed top-0 left-0 right-0 bg-[#FDFCF8]/80 backdrop-blur-md z-50 border-b border-[#E9EDC9]/50">
           <div className="max-w-2xl mx-auto px-6 h-16 flex items-center justify-between">
             <button onClick={() => setView('답변하기')} className="text-xl font-serif font-bold tracking-tight text-[#D4A373] flex items-center gap-2">
@@ -735,7 +734,7 @@ export default function App() {
         </header>
       )}
 
-      <main className={cn("max-w-2xl mx-auto px-6", currentRoute === 'onboarding' ? "pt-12 pb-12" : "pt-24 pb-32")}>
+      <main className={cn("max-w-2xl mx-auto px-6", routeBoundary.routeGroup === 'onboarding flow' ? "pt-12 pb-12" : "pt-24 pb-32")}>
         <AnimatePresence mode="wait">
           
           {/* 0. Login View */}
@@ -1478,9 +1477,9 @@ export default function App() {
 
         </AnimatePresence>
       </main>
-      {tabForRoute(view) && (
+      {routeBoundary.mountsBottomNavigation && routeBoundary.authenticatedTab && (
         <BottomTabBar
-          activeTab={tabForRoute(view) as PrdAppTab}
+          activeTab={routeBoundary.authenticatedTab}
           onSelect={(tab) => setView(tab)}
           onCentralAction={() => setView(routeToWriteWorry())}
         />
