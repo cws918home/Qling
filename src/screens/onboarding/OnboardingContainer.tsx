@@ -6,6 +6,7 @@ import {
   createExampleWorriesViaApi,
   reserveNicknameViaApi,
 } from '../../services/userProfile/apiClient';
+import { submitAvailableOnboarding } from '../../services/userProfile/onboardingFlow';
 import {
   canSubmitOnboarding,
   mapReservationResultToDuplicateState,
@@ -62,23 +63,22 @@ export function OnboardingContainer(props: Props) {
     if (!props.user || disabled) return;
     props.setIsProcessing(true);
     try {
-      const result = await completeOnboardingViaApi({
+      await submitAvailableOnboarding({
         user: props.user,
+        disabled,
         profile: {
           nickname: validation.nickname.valid ? validation.nickname.nickname : nickname,
           gender: gender === '' ? 'female' : gender,
           age: validation.age.valid ? validation.age.age : 0,
           interests: selectedInterests,
         },
+        deps: {
+          completeOnboarding: completeOnboardingViaApi,
+          createExamples: createExampleWorriesViaApi,
+          onComplete: props.onComplete,
+          onError: props.onError,
+        },
       });
-      if (result.status !== 'completed') {
-        props.onError(result.message);
-        return;
-      }
-      await createExampleWorriesViaApi({ user: props.user });
-      props.onComplete(result.profile);
-    } catch (error) {
-      props.onError(error instanceof Error ? error.message : '온보딩 완료 중 문제가 발생했어요.');
     } finally {
       props.setIsProcessing(false);
     }
