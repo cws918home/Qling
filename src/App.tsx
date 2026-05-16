@@ -32,6 +32,7 @@ import {
   CENTRAL_BOTTOM_NAVIGATION_ACTION,
   PRD_APP_TABS,
   routeAfterAuthProfileLoad,
+  routeAfterAccountDeletion,
   routeAfterOnboardingComplete,
   routeAfterProfileReadDenied,
   routeToWriteWorry,
@@ -224,6 +225,18 @@ export default function App() {
     }
   };
 
+  const handleAccountDeleted = () => {
+    setUser(null);
+    setProfile(null);
+    setSelectedWorry(null);
+    setSelectedMyWorry(null);
+    setSelectedReply(null);
+    setError(null);
+    setFilterAlert(null);
+    setView(routeAfterAccountDeletion());
+    window.scrollTo(0, 0);
+  };
+
   // Presence Updater
   useEffect(() => {
     if (!profile) return;
@@ -402,6 +415,7 @@ export default function App() {
                 pushRegistrationStatus={pushRegistrationStatus}
                 requestNotificationPermission={requestNotificationPermission}
                 resetPushRegistrationOnSignOut={resetPushRegistrationOnSignOut}
+                onAccountDeleted={handleAccountDeleted}
               />
             </motion.div>
           )}

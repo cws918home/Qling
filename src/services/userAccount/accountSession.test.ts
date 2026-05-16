@@ -54,3 +54,43 @@ test('account deletion confirmation does not clean up or sign out after deletion
   assert.deepEqual(result, { status: 'failed', reason: 'server failed' });
   assert.deepEqual(calls, ['delete']);
 });
+
+test('account deletion confirmation completes with warning when local cleanup fails after server deletion', async () => {
+  const calls: string[] = [];
+  const result = await confirmAccountDeletionWithCleanup({
+    async deleteAccount() {
+      calls.push('delete');
+      return { status: 'deleted' };
+    },
+    async cleanupLocalPushState() {
+      calls.push('cleanup');
+      throw new Error('cleanup failed');
+    },
+    async signOut() {
+      calls.push('signOut');
+    },
+  });
+
+  assert.deepEqual(result, { status: 'completed_with_local_warning', reason: 'cleanup failed' });
+  assert.deepEqual(calls, ['delete', 'cleanup']);
+});
+
+test('account deletion confirmation completes with warning when sign-out fails after server deletion', async () => {
+  const calls: string[] = [];
+  const result = await confirmAccountDeletionWithCleanup({
+    async deleteAccount() {
+      calls.push('delete');
+      return { status: 'deleted' };
+    },
+    async cleanupLocalPushState() {
+      calls.push('cleanup');
+    },
+    async signOut() {
+      calls.push('signOut');
+      throw new Error('sign out failed');
+    },
+  });
+
+  assert.deepEqual(result, { status: 'completed_with_local_warning', reason: 'sign out failed' });
+  assert.deepEqual(calls, ['delete', 'cleanup', 'signOut']);
+});

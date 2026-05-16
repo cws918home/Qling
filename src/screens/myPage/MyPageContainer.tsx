@@ -12,6 +12,7 @@ import { loadPolicyDocumentViaApi } from '../../services/policyDocuments/apiClie
 import type { PolicyDocumentResult } from '../../services/policyDocuments/types';
 import {
   backRouteForRoute,
+  routeAfterAccountDeletion,
   routeToEditInterests,
   routeToMyAnswers,
   routeToMyWorries,
@@ -38,7 +39,10 @@ export type MyPageContainerProps = {
   readonly pushRegistrationStatus: string;
   readonly requestNotificationPermission: () => void | Promise<void>;
   readonly resetPushRegistrationOnSignOut: () => Promise<void>;
+  readonly onAccountDeleted: () => void;
 };
+
+export const ACCOUNT_DELETION_SUCCESS_ROUTE = routeAfterAccountDeletion();
 
 export function MyPageContainer(props: MyPageContainerProps) {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -145,8 +149,11 @@ export function MyPageContainer(props: MyPageContainerProps) {
         props.setFilterAlert(result.reason);
         return;
       }
+      if (result.status === 'completed_with_local_warning') {
+        console.warn('Account deletion completed with local cleanup warning:', result.reason);
+      }
 
-      props.setView(backRouteForRoute('account_deletion_confirmation'));
+      props.onAccountDeleted();
     } catch (error) {
       console.error('Account deletion failed:', error);
       props.setFilterAlert('계정 삭제 처리 중 문제가 발생했습니다.');

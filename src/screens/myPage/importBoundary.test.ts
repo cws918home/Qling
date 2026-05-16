@@ -47,3 +47,11 @@ test('App no longer imports Phase 7 production modules except justified push lif
   }
   assert.equal(imports.includes('services/pushRegistration'), true);
 });
+
+test('account deletion success finalizes through App callback instead of my-page back route', () => {
+  const source = readFileSync(join(process.cwd(), 'src/screens/myPage/MyPageContainer.tsx'), 'utf8');
+
+  assert.match(source, /onAccountDeleted: \(\) => void/);
+  assert.match(source, /props\.onAccountDeleted\(\)/);
+  assert.doesNotMatch(source, /setView\(backRouteForRoute\('account_deletion_confirmation'\)\)/);
+});

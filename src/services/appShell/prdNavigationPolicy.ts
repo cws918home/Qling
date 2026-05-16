@@ -134,6 +134,10 @@ export function routeAfterOnboardingComplete(): AppRoute {
   return DEFAULT_AUTHENTICATED_TAB;
 }
 
+export function routeAfterAccountDeletion(): AppRoute {
+  return 'login';
+}
+
 export function routeAfterWorryPublish(params: { worryId: string }): AppRouteState {
   return { route: 'my_worry_detail', worryId: params.worryId };
 }

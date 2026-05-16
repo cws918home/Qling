@@ -102,3 +102,15 @@ test('App.tsx remaining Firebase ownership is limited to shell auth/profile, pre
 
   assert.doesNotMatch(appSource, /collection\(db, 'deliveries'|collection\(db, 'worries'|collection\(db, 'replies'/);
 });
+
+test('App.tsx owns account deletion finalization without importing deletion clients', () => {
+  assert.match(appSource, /const handleAccountDeleted = \(\) => \{/);
+  assert.match(appSource, /setUser\(null\)/);
+  assert.match(appSource, /setProfile\(null\)/);
+  assert.match(appSource, /setSelectedWorry\(null\)/);
+  assert.match(appSource, /setSelectedMyWorry\(null\)/);
+  assert.match(appSource, /setSelectedReply\(null\)/);
+  assert.match(appSource, /setView\(routeAfterAccountDeletion\(\)\)/);
+  assert.match(appSource, /onAccountDeleted=\{handleAccountDeleted\}/);
+  assert.equal(appSource.includes('deleteMyAccountViaApi'), false);
+});

@@ -17,6 +17,7 @@ import {
   backRouteFromWriteWorry,
   resolveAppRouteState,
   routeAfterAuthProfileLoad,
+  routeAfterAccountDeletion,
   routeAfterProfileReadDenied,
   routeAfterFeedbackPublish,
   routeAfterOnboardingComplete,
@@ -91,6 +92,11 @@ test('routes auth/profile load and onboarding completion to answer feed', () => 
   assert.equal(routeAfterAuthProfileLoad('나의 고민'), '나의 고민');
   assert.equal(routeAfterOnboardingComplete(), '답변하기');
   assert.equal(tabForRoute(DEFAULT_AUTHENTICATED_ROUTE), DEFAULT_AUTHENTICATED_TAB);
+});
+
+test('routes account deletion completion to login without using my-page back route', () => {
+  assert.equal(routeAfterAccountDeletion(), 'login');
+  assert.equal(backRouteForRoute('account_deletion_confirmation'), '마이페이지');
 });
 
 test('routes profile read denial to safe onboarding recovery instead of login failure', () => {
