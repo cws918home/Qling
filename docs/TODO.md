@@ -472,18 +472,18 @@ Functional screen phases must use real production data sources and production ro
 
 ### Phase 12 - Worry Writing And Reply Writing Functional Alignment
 
-- [ ] TODO-DESIGN-12.1 Preserve `CONTENT_MAX_LENGTH` and `validateDraftContent` from `src/services/validation/content.ts` as the validation source for worry and reply.
-- [ ] TODO-DESIGN-12.2 Preserve worry draft persistence and clearing through `src/services/drafts/contentDrafts.ts`.
-- [ ] TODO-DESIGN-12.3 Preserve reply draft persistence and clearing keyed by delivery id.
-- [ ] TODO-DESIGN-12.4 Preserve moderation rejected/failed/published handling for both worry and reply publication.
-- [ ] TODO-DESIGN-12.5 Preserve publish success routing from Phase 2: worry publish success opens the written worry detail, reply publish success opens the written my-answer detail, any transient success toast/modal/copy does not block detail navigation, and no standalone terminal success screen is introduced.
-- [ ] TODO-DESIGN-12.6 Implement design-compatible input states: placeholder, live character count, disabled submit, processing submit, validation help/error text, moderation rejection display, and retry path where applicable.
-- [ ] TODO-DESIGN-12.7 Add validation tests in `src/services/validation/content.test.ts` only if validation rules change.
-- [ ] TODO-DESIGN-12.8 Add draft tests in `src/services/drafts/contentDrafts.test.ts` if draft keys or clearing behavior changes.
-- [ ] TODO-DESIGN-12.9 Add or update publication/API tests in `src/services/worryPublication/apiClient.test.ts`, `src/services/replyPublication/apiClient.test.ts`, and server publication tests if behavior changes.
-- [ ] TODO-DESIGN-12.10 Add pure props-contract tests for empty input, too-long input, valid input, rejected moderation display, failed publish display, successful publish callback, draft clearing callback, processing state, and route transition request.
-- [ ] TODO-DESIGN-12.11 Add manual screenshot evidence for write worry and write reply at 393px before final visual polishing if using functional skeletons.
-- [ ] TODO-DESIGN-12.V1 Verify Phase 12 with validation/draft/publication tests, props-contract tests, and manual screenshot evidence.
+- [x] TODO-DESIGN-12.1 Preserve `CONTENT_MAX_LENGTH` and `validateDraftContent` from `src/services/validation/content.ts` as the validation source for worry and reply.
+- [x] TODO-DESIGN-12.2 Preserve worry draft persistence and clearing through `src/services/drafts/contentDrafts.ts`.
+- [x] TODO-DESIGN-12.3 Preserve reply draft persistence and clearing keyed by delivery id.
+- [x] TODO-DESIGN-12.4 Preserve moderation rejected/failed/published handling for both worry and reply publication.
+- [x] TODO-DESIGN-12.5 Preserve publish success routing from Phase 2: worry publish success opens the written worry detail, reply publish success opens the written my-answer detail, any transient success toast/modal/copy does not block detail navigation, and no standalone terminal success screen is introduced.
+- [x] TODO-DESIGN-12.6 Implement design-compatible input states: placeholder, live character count, disabled submit, processing submit, validation help/error text, moderation rejection display, and retry path where applicable.
+- [x] TODO-DESIGN-12.7 Add validation tests in `src/services/validation/content.test.ts` only if validation rules change.
+- [x] TODO-DESIGN-12.8 Add draft tests in `src/services/drafts/contentDrafts.test.ts` if draft keys or clearing behavior changes.
+- [x] TODO-DESIGN-12.9 Add or update publication/API tests in `src/services/worryPublication/apiClient.test.ts`, `src/services/replyPublication/apiClient.test.ts`, and server publication tests if behavior changes.
+- [x] TODO-DESIGN-12.10 Add pure props-contract tests for empty input, too-long input, valid input, rejected moderation display, failed publish display, successful publish callback, draft clearing callback, processing state, and route transition request.
+- [x] TODO-DESIGN-12.11 Add manual screenshot evidence for write worry and write reply at 393px before final visual polishing if using functional skeletons.
+- [x] TODO-DESIGN-12.V1 Verify Phase 12 with validation/draft/publication tests, props-contract tests, and manual screenshot evidence.
 
 ### Phase 13 - Reply Check, Feedback, Comment Functional Alignment
 

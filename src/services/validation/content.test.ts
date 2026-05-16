@@ -24,6 +24,14 @@ test('shared validator rejects content over 1000 trimmed characters', () => {
   assert.equal(result.code, 'too_long');
 });
 
+test('shared validator accepts exactly the max trimmed length', () => {
+  const content = 'a'.repeat(CONTENT_MAX_LENGTH);
+  assert.deepEqual(validateContent(` ${content} `, 'worry'), {
+    status: 'valid',
+    content,
+  });
+});
+
 test('shared validator rejects non-string server input', () => {
   const result = validateContent(null, 'reply');
   assert.equal(result.status, 'validation_error');
@@ -35,5 +43,16 @@ test('draft validator uses the same short-content policy', () => {
   assert.deepEqual(validateDraftContent('힘내', 'worry'), {
     status: 'valid',
     content: '힘내',
+  });
+});
+
+test('draft validator accepts valid worry and reply content with normalized publication content', () => {
+  assert.deepEqual(validateDraftContent('  고민입니다  ', 'worry'), {
+    status: 'valid',
+    content: '고민입니다',
+  });
+  assert.deepEqual(validateDraftContent('\n답장입니다\n', 'reply'), {
+    status: 'valid',
+    content: '답장입니다',
   });
 });

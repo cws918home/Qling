@@ -13,6 +13,7 @@ export function buildWriteDraftContract(params: {
 }): WriteDraftContract {
   const submitDisabledReason = resolveSubmitDisabledReason({
     validation: params.validation,
+    moderation: params.moderation,
     isProcessing: params.isProcessing,
   });
 
@@ -45,9 +46,11 @@ export function mapSelectedWorryToOriginalWorrySummary(
 
 function resolveSubmitDisabledReason(params: {
   readonly validation: ContentValidationResult;
+  readonly moderation: ScreenModerationState;
   readonly isProcessing: boolean;
 }): SubmitDisabledReason | undefined {
   if (params.isProcessing) return 'processing';
+  if (params.moderation.status === 'checking') return 'moderation-pending';
   if (params.validation.status === 'valid') return undefined;
   if (params.validation.code === 'empty') return 'empty';
   if (params.validation.code === 'too_long') return 'too-long';

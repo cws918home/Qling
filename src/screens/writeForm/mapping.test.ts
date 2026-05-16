@@ -99,3 +99,15 @@ test('builds processing and moderation display states', () => {
   assert.equal(rejected.moderation.status, 'rejected');
   assert.equal(failed.errorMessage, 'Failed');
 });
+
+test('builds moderation-pending disabled state when checking is represented without submit processing', () => {
+  const contract = buildWriteDraftContract({
+    value: 'draft',
+    maxLength: CONTENT_MAX_LENGTH,
+    validation: validateDraftContent('draft', 'worry'),
+    moderation: { status: 'checking' },
+    isProcessing: false,
+  });
+
+  assert.equal(contract.submitDisabledReason, 'moderation-pending');
+});

@@ -2,7 +2,7 @@ import { Loader2, Send, Sparkles } from 'lucide-react';
 import type { WriteFormScreenProps } from './contract';
 
 export function WriteFormScreen(props: WriteFormScreenProps) {
-  const isDisabled = props.draft.isProcessing || props.draft.validation.status !== 'valid';
+  const isDisabled = Boolean(props.draft.submitDisabledReason);
   const characterCount = props.draft.characterCount;
   const isTooLong = characterCount > props.draft.maxLength;
 
@@ -51,6 +51,10 @@ export function WriteFormScreen(props: WriteFormScreenProps) {
             ? [props.draft.moderation.reason, props.draft.moderation.helpMessage].filter(Boolean).join('\n\n')
             : props.draft.moderation.message}
         </div>
+      )}
+
+      {props.draft.moderation.status === 'checking' && (
+        <p className="text-sm font-medium text-[#8B8B6B]">AI 안심 필터가 내용을 확인하고 있습니다.</p>
       )}
 
       <div className="bg-[#E9EDC9]/30 p-4 rounded-xl flex gap-3 items-start border border-[#E9EDC9]">

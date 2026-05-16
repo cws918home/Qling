@@ -5,13 +5,18 @@ import { publishReplyViaApi } from '../../services/replyPublication/apiClient';
 import {
   backRouteFromWriteReply,
   resolveAppRouteState,
-  routeAfterReplyPublish,
   type AppRouteViewState,
 } from '../../services/appShell/prdNavigationPolicy';
-import { clearDraft, getDraft, setDraft, type DraftMap } from '../../services/drafts/contentDrafts';
+import {
+  clearStoredDraft,
+  getStoredDraft,
+  replyDraftKey,
+  setStoredDraft,
+} from '../../services/drafts/contentDrafts';
 import { CONTENT_MAX_LENGTH, validateDraftContent } from '../../services/validation/content';
 import type { SelectedReceivedWorry } from '../receivedWorries/ReceivedWorriesContainer';
 import type { ScreenModerationState } from '../shared/contract';
+import { resolveReplyPublicationResult } from './containerPolicy';
 import { buildWriteDraftContract, mapSelectedWorryToOriginalWorrySummary } from './mapping';
 import { WriteFormScreen } from './WriteFormScreen';
 
@@ -25,11 +30,12 @@ export type WriteReplyContainerProps = {
 };
 
 export function WriteReplyContainer(props: WriteReplyContainerProps) {
-  const [drafts, setDrafts] = useState<DraftMap>({});
+  const [draft, setDraft] = useState(() => getStoredDraft(
+    props.selectedWorry.deliveryId ? replyDraftKey(props.selectedWorry.deliveryId) : undefined,
+  ));
   const [isProcessing, setIsProcessing] = useState(false);
   const [moderation, setModeration] = useState<ScreenModerationState>({ status: 'idle' });
   const originalWorry = mapSelectedWorryToOriginalWorrySummary(props.selectedWorry);
-  const draft = getDraft(drafts, props.selectedWorry.deliveryId);
   const validation = validateDraftContent(draft, 'reply');
 
   if (!originalWorry) {
@@ -49,8 +55,8 @@ export function WriteReplyContainer(props: WriteReplyContainerProps) {
   }
 
   const publish = async (target: { readonly deliveryId: string; readonly worryId: string }) => {
-    const currentDraft = getDraft(drafts, target.deliveryId);
-    const currentValidation = validateDraftContent(currentDraft, 'reply');
+    if (isProcessing) return;
+    const currentValidation = validateDraftContent(draft, 'reply');
     if (currentValidation.status !== 'valid') {
       setModeration({ status: 'failed', message: currentValidation.message });
       return;
@@ -71,28 +77,17 @@ export function WriteReplyContainer(props: WriteReplyContainerProps) {
         deliveryId: target.deliveryId,
         content: currentValidation.content,
       });
+      const policy = resolveReplyPublicationResult(result, target);
 
-      if (result.status === 'rejected') {
-        const message = result.userMessage ?? result.reason ?? '오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-        setModeration({ status: 'rejected', reason: message, helpMessage: result.helpMessage });
-        props.setFilterAlert(result.helpMessage ? `${message}\n\n${result.helpMessage}` : message);
+      setModeration(policy.moderation);
+      if (policy.alertMessage) props.setFilterAlert(policy.alertMessage);
+      if (!policy.clearDraft || !policy.route) {
         return;
       }
 
-      if (result.status === 'failed') {
-        const message = result.reason || '답장 전송 실패';
-        setModeration({ status: 'failed', message });
-        props.setFilterAlert(message);
-        return;
-      }
-
-      props.setView(prev => resolveAppRouteState(prev, routeAfterReplyPublish({
-        replyId: result.replyId,
-        deliveryId: target.deliveryId,
-        worryId: target.worryId,
-      })));
-      setDrafts(prev => clearDraft(prev, target.deliveryId));
-      setModeration({ status: 'approved' });
+      props.setView(prev => resolveAppRouteState(prev, policy.route));
+      clearStoredDraft(replyDraftKey(target.deliveryId));
+      setDraft('');
       props.clearSelectedWorry();
       props.clearSelectedReply();
     } catch (e) {
@@ -125,7 +120,8 @@ export function WriteReplyContainer(props: WriteReplyContainerProps) {
           isProcessing,
         })}
         onDraftChange={value => {
-          setDrafts(prev => setDraft(prev, originalWorry.deliveryId, value));
+          setDraft(value);
+          setStoredDraft(replyDraftKey(originalWorry.deliveryId), value);
           setModeration({ status: 'idle' });
         }}
         onPublish={publish}

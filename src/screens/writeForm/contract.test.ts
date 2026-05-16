@@ -1,7 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { WORRY_CATEGORIES } from '@midnight-radio/domain';
-import type { WriteFormScreenProps, WriteReplyFormProps, WriteWorryFormProps } from './contract';
+import type {
+  WriteDraftContract,
+  WriteFormScreenProps,
+  WriteReplyFormProps,
+  WriteWorryFormProps,
+} from './contract';
 
 const validDraft = {
   value: 'Draft text',
@@ -86,4 +91,57 @@ test('write form union keeps publication as event props only', () => {
   assert.equal(Object.hasOwn(props, 'publicationClient'), false);
   assert.equal(Object.hasOwn(props, 'successRoute'), false);
   assert.equal(Object.hasOwn(props, 'successScreen'), false);
+});
+
+test('write form contract covers empty, too-long, valid, processing, rejected, and failed states', () => {
+  const states: Array<Partial<WriteDraftContract> & Pick<WriteDraftContract, 'validation'>> = [
+    { validation: { status: 'invalid', message: 'Required' }, submitDisabledReason: 'empty' },
+    { validation: { status: 'invalid', message: 'Too long' }, submitDisabledReason: 'too-long' },
+    { validation: { status: 'valid' }, submitDisabledReason: undefined },
+    { validation: { status: 'valid' }, isProcessing: true, submitDisabledReason: 'processing' },
+    { validation: { status: 'valid' }, moderation: { status: 'rejected', reason: 'Rejected', helpMessage: 'Help' } },
+    { validation: { status: 'valid' }, moderation: { status: 'failed', message: 'Failed' }, errorMessage: 'Failed' },
+  ] as const;
+
+  for (const state of states) {
+    const draft: WriteDraftContract = {
+      ...validDraft,
+      ...state,
+      moderation: state.moderation ?? validDraft.moderation,
+      isProcessing: state.isProcessing ?? false,
+    };
+    const props = {
+      kind: 'write-worry',
+      draft,
+      onDraftChange: () => undefined,
+      onPublish: () => undefined,
+    } satisfies WriteWorryFormProps;
+
+    assert.equal(props.draft.validation.status, state.validation.status);
+    assert.equal(props.draft.submitDisabledReason, state.submitDisabledReason);
+  }
+});
+
+test('write form callbacks stay pure events for publish, draft clearing, and route transition policies', () => {
+  const events: string[] = [];
+  const props = {
+    kind: 'write-reply',
+    originalWorry: {
+      deliveryId: 'delivery-1',
+      worryId: 'worry-1',
+      category: WORRY_CATEGORIES[0],
+      bodyText: 'Original',
+    },
+    draft: validDraft,
+    onDraftChange: value => events.push(`draft:${value}`),
+    onPublish: target => events.push(`publish:${target.deliveryId}:${target.worryId}`),
+  } satisfies WriteReplyFormProps;
+
+  props.onDraftChange('updated');
+  props.onPublish({ deliveryId: props.originalWorry.deliveryId, worryId: props.originalWorry.worryId });
+
+  assert.deepEqual(events, ['draft:updated', 'publish:delivery-1:worry-1']);
+  assert.equal(Object.hasOwn(props, 'clearDraft'), false);
+  assert.equal(Object.hasOwn(props, 'setView'), false);
+  assert.equal(Object.hasOwn(props, 'routeAfterReplyPublish'), false);
 });

@@ -17,14 +17,16 @@ test('write-reply container uses server API and does not expose legacy human rep
 test('write containers clear worry and reply drafts only after successful publish paths', () => {
   const worryContainer = fs.readFileSync('src/screens/writeForm/WriteWorryContainer.tsx', 'utf8');
   const replyContainer = fs.readFileSync('src/screens/writeForm/WriteReplyContainer.tsx', 'utf8');
+  const policy = fs.readFileSync('src/screens/writeForm/containerPolicy.ts', 'utf8');
 
-  assert.match(worryContainer, /if \(result\.status === 'rejected'\) \{[\s\S]*?return;\s*\}/);
-  assert.match(worryContainer, /if \(result\.status === 'failed'\) \{[\s\S]*?return;\s*\}/);
-  assert.match(worryContainer, /setDraft\(''\);[\s\S]*?routeAfterWorryPublish\(\{ worryId: result\.worryId \}\)/);
-  assert.match(replyContainer, /if \(result\.status === 'rejected'\) \{[\s\S]*?return;\s*\}/);
-  assert.match(replyContainer, /if \(result\.status === 'failed'\) \{[\s\S]*?return;\s*\}/);
-  assert.match(replyContainer, /routeAfterReplyPublish\(\{[\s\S]*?replyId: result\.replyId,[\s\S]*?deliveryId: target\.deliveryId,[\s\S]*?worryId: target\.worryId,[\s\S]*?\}\)\)/);
-  assert.match(replyContainer, /setDrafts\(prev => clearDraft\(prev, target\.deliveryId\)\)/);
+  assert.match(policy, /if \(result\.status === 'rejected'\) \{[\s\S]*?clearDraft: false,[\s\S]*?\}/);
+  assert.match(policy, /if \(result\.status === 'failed'\) \{[\s\S]*?clearDraft: false,[\s\S]*?\}/);
+  assert.match(policy, /routeAfterWorryPublish\(\{ worryId: result\.worryId \}\)/);
+  assert.match(policy, /routeAfterReplyPublish\(\{[\s\S]*?replyId: result\.replyId,[\s\S]*?deliveryId: target\.deliveryId,[\s\S]*?worryId: target\.worryId,[\s\S]*?\}\)/);
+  assert.match(worryContainer, /if \(!policy\.clearDraft \|\| !policy\.route\) \{[\s\S]*?return;\s*\}/);
+  assert.match(worryContainer, /setDraft\(''\);[\s\S]*?clearStoredDraft\(WRITE_WORRY_DRAFT_KEY\)/);
+  assert.match(replyContainer, /if \(!policy\.clearDraft \|\| !policy\.route\) \{[\s\S]*?return;\s*\}/);
+  assert.match(replyContainer, /clearStoredDraft\(replyDraftKey\(target\.deliveryId\)\);[\s\S]*?setDraft\(''\)/);
   assert.doesNotMatch(worryContainer, /routeAfterWorryPublish\([^)]*\)\.route/);
   assert.doesNotMatch(replyContainer, /routeAfterReplyPublish\([^)]*\)\.route/);
 });

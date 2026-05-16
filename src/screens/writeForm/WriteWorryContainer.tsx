@@ -5,11 +5,17 @@ import { publishWorryViaApi } from '../../services/worryPublication/apiClient';
 import {
   backRouteFromWriteWorry,
   resolveAppRouteState,
-  routeAfterWorryPublish,
   type AppRouteViewState,
 } from '../../services/appShell/prdNavigationPolicy';
+import {
+  clearStoredDraft,
+  getStoredDraft,
+  setStoredDraft,
+  WRITE_WORRY_DRAFT_KEY,
+} from '../../services/drafts/contentDrafts';
 import { CONTENT_MAX_LENGTH, validateDraftContent } from '../../services/validation/content';
 import type { ScreenModerationState } from '../shared/contract';
+import { resolveWorryPublicationResult } from './containerPolicy';
 import { buildWriteDraftContract } from './mapping';
 import { WriteFormScreen } from './WriteFormScreen';
 
@@ -22,12 +28,13 @@ export type WriteWorryContainerProps = {
 };
 
 export function WriteWorryContainer(props: WriteWorryContainerProps) {
-  const [draft, setDraft] = useState('');
+  const [draft, setDraft] = useState(() => getStoredDraft(WRITE_WORRY_DRAFT_KEY));
   const [isProcessing, setIsProcessing] = useState(false);
   const [moderation, setModeration] = useState<ScreenModerationState>({ status: 'idle' });
   const validation = validateDraftContent(draft, 'worry');
 
   const publish = async () => {
+    if (isProcessing) return;
     const currentValidation = validateDraftContent(draft, 'worry');
     if (currentValidation.status !== 'valid') {
       setModeration({ status: 'failed', message: currentValidation.message });
@@ -46,29 +53,22 @@ export function WriteWorryContainer(props: WriteWorryContainerProps) {
         user: props.user,
         content: currentValidation.content,
       });
+      const policy = resolveWorryPublicationResult(result);
 
-      if (result.status === 'rejected') {
-        const message = result.userMessage ?? result.reason ?? '오류가 발생했습니다. 잠시 후 다시 시도해주세요.';
-        setModeration({ status: 'rejected', reason: message, helpMessage: result.helpMessage });
-        props.setFilterAlert(result.helpMessage ? `${message}\n\n${result.helpMessage}` : message);
+      setModeration(policy.moderation);
+      if (policy.alertMessage) props.setFilterAlert(policy.alertMessage);
+      if (!policy.clearDraft || !policy.route) {
         return;
       }
 
-      if (result.status === 'failed') {
-        const message = `전송 실패: ${result.reason || '알 수 없는 오류'}`;
-        setModeration({ status: 'failed', message });
-        props.setFilterAlert(message);
-        return;
-      }
-
-      if (result.warnings.length > 0) {
+      if (result.status === 'published' && result.warnings.length > 0) {
         console.warn('Worry publication completed with warnings:', result.warnings);
       }
 
       setDraft('');
-      setModeration({ status: 'approved' });
+      clearStoredDraft(WRITE_WORRY_DRAFT_KEY);
       props.clearSelectedMyWorry();
-      props.setView(prev => resolveAppRouteState(prev, routeAfterWorryPublish({ worryId: result.worryId })));
+      props.setView(prev => resolveAppRouteState(prev, policy.route));
       window.scrollTo(0, 0);
     } catch (e) {
       const message = `전송 실패: ${e instanceof Error ? e.message : '알 수 없는 오류'}`;
@@ -104,6 +104,7 @@ export function WriteWorryContainer(props: WriteWorryContainerProps) {
         })}
         onDraftChange={value => {
           setDraft(value);
+          setStoredDraft(WRITE_WORRY_DRAFT_KEY, value);
           setModeration({ status: 'idle' });
         }}
         onPublish={publish}

@@ -46,3 +46,48 @@ test('worry API client preserves structured rejection fields', async () => {
     moderationLogId: 'mod1',
   });
 });
+
+test('worry API client preserves failed responses and created id route inputs', async () => {
+  const published = await publishWorryViaApi({
+    user: { getIdToken: async () => 'token' } as never,
+    content: 'ok',
+    fetchImpl: async () => new Response(JSON.stringify({
+      status: 'published',
+      worryId: 'created-worry',
+      deliveryIds: [],
+      moderationLogId: 'mod1',
+    }), { status: 200 }),
+  });
+  const failed = await publishWorryViaApi({
+    user: { getIdToken: async () => 'token' } as never,
+    content: 'bad',
+    fetchImpl: async () => new Response(JSON.stringify({
+      error: { code: 'provider_error', message: 'moderation unavailable' },
+    }), { status: 503 }),
+  });
+  const malformed = await publishWorryViaApi({
+    user: { getIdToken: async () => 'token' } as never,
+    content: 'bad',
+    fetchImpl: async () => new Response(JSON.stringify({ nope: true }), { status: 200 }),
+  });
+
+  assert.equal(published.status, 'published');
+  assert.equal(published.status === 'published' ? published.worryId : '', 'created-worry');
+  assert.deepEqual(failed, {
+    status: 'failed',
+    code: 'provider_error',
+    reason: 'moderation unavailable',
+  });
+  assert.deepEqual(malformed, {
+    status: 'failed',
+    reason: '고민 전송 응답을 해석할 수 없습니다.',
+  });
+});
+
+test('worry API client leaves thrown network errors for the container retry path', async () => {
+  await assert.rejects(() => publishWorryViaApi({
+    user: { getIdToken: async () => 'token' } as never,
+    content: 'ok',
+    fetchImpl: async () => { throw new Error('network down'); },
+  }), /network down/);
+});

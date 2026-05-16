@@ -60,3 +60,36 @@ test('reply API client maps rejection and error responses', async () => {
     reason: 'already',
   });
 });
+
+test('reply API client maps malformed responses and preserves created reply id', async () => {
+  const published = await publishReplyViaApi({
+    user: { getIdToken: async () => 'token' } as never,
+    deliveryId: 'delivery1',
+    content: 'reply',
+    fetchImpl: async () => new Response(JSON.stringify({
+      status: 'published',
+      replyId: 'reply-created',
+    }), { status: 200 }),
+  });
+  const malformed = await publishReplyViaApi({
+    user: { getIdToken: async () => 'token' } as never,
+    deliveryId: 'delivery1',
+    content: 'reply',
+    fetchImpl: async () => new Response(JSON.stringify({ nope: true }), { status: 200 }),
+  });
+
+  assert.deepEqual(published, { status: 'published', replyId: 'reply-created' });
+  assert.deepEqual(malformed, {
+    status: 'failed',
+    reason: '답장 전송 응답을 해석할 수 없습니다.',
+  });
+});
+
+test('reply API client leaves thrown network errors for the container retry path', async () => {
+  await assert.rejects(() => publishReplyViaApi({
+    user: { getIdToken: async () => 'token' } as never,
+    deliveryId: 'delivery1',
+    content: 'reply',
+    fetchImpl: async () => { throw new Error('network down'); },
+  }), /network down/);
+});
