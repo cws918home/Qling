@@ -394,11 +394,11 @@ Functional screen phases must use real production data sources and production ro
 
 ### Phase 6 - Write Forms Container Boundary
 
-- [ ] TODO-DESIGN-6.1 Implement write-worry container wiring to `validateDraftContent`, `CONTENT_MAX_LENGTH`, worry draft state, `publishWorryViaApi`, moderation result display, draft clearing, and route helpers.
-- [ ] TODO-DESIGN-6.2 Implement write-reply container wiring to selected delivery/worry data, reply draft keyed by delivery id, `publishReplyViaApi`, moderation result display, draft clearing, feed refresh, and route helpers.
-- [ ] TODO-DESIGN-6.3 Ensure write form presentational components only receive props and emit events; they must not import publication APIs, Firebase, draft services, or validation service internals unless validation result is explicitly part of a shared pure UI contract.
-- [ ] TODO-DESIGN-6.4 Verify no visual reskin work begins in this phase beyond minimal functional UI needed to exercise publication flows.
-- [ ] TODO-DESIGN-6.V1 Verify Phase 6 with container notes, props-contract tests, and manual screenshot evidence for functional write-worry/write-reply skeletons.
+- [x] TODO-DESIGN-6.1 Implement write-worry container wiring to `validateDraftContent`, `CONTENT_MAX_LENGTH`, worry draft state, `publishWorryViaApi`, moderation result display, draft clearing, and route helpers.
+- [x] TODO-DESIGN-6.2 Implement write-reply container wiring to selected delivery/worry data, reply draft keyed by delivery id, `publishReplyViaApi`, moderation result display, draft clearing, feed refresh, and route helpers.
+- [x] TODO-DESIGN-6.3 Ensure write form presentational components only receive props and emit events; they must not import publication APIs, Firebase, draft services, or validation service internals unless validation result is explicitly part of a shared pure UI contract.
+- [x] TODO-DESIGN-6.4 Verify no visual reskin work begins in this phase beyond minimal functional UI needed to exercise publication flows.
+- [x] TODO-DESIGN-6.V1 Verify Phase 6 with container notes, props-contract tests, and manual screenshot evidence for functional write-worry/write-reply skeletons.
 
 ### Phase 7 - My-Page/Account/Reply-Detail Container Boundary
 

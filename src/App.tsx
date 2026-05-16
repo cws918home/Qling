@@ -46,11 +46,9 @@ import {
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { cn } from './lib/utils';
-import { publishReplyViaApi } from './services/replyPublication/apiClient';
 import {
   markRepliesForWorryReadWithServer,
 } from './services/readState/apiClient';
-import { publishWorryViaApi } from './services/worryPublication/apiClient';
 import { submitReplyFeedbackWithProductionAdapters } from './services/replyFeedback/production';
 import type { ReplyFeedback } from './services/replyFeedback/types';
 import {
@@ -68,19 +66,14 @@ import {
   backRouteForRoute,
   backRouteFromMyReplyDetail,
   backRouteFromReceivedReplyDetail,
-  backRouteFromWriteReply,
-  backRouteFromWriteWorry,
   routeAfterFeedbackPublish,
   routeAfterAuthProfileLoad,
   routeAfterOnboardingComplete,
-  routeAfterReplyPublish,
-  routeAfterWorryPublish,
   routeToEditInterests,
   routeToMyAnswers,
   routeToMyReplyDetail,
   routeToReceivedReplyDetail,
   routeToWriteWorry,
-  resolveAppRouteState,
   type AppRouteState,
   type AppRouteViewState,
   type PrdAppTab,
@@ -93,6 +86,8 @@ import {
   ReceivedWorriesContainer,
   type SelectedReceivedWorry,
 } from './screens/receivedWorries/ReceivedWorriesContainer';
+import { WriteWorryContainer } from './screens/writeForm/WriteWorryContainer';
+import { WriteReplyContainer } from './screens/writeForm/WriteReplyContainer';
 
 // --- Constants ---
 const CATEGORIES = WORRY_CATEGORIES;
@@ -145,8 +140,6 @@ export default function App() {
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [worryDraft, setWorryDraft] = useState('');
-  const [replyDrafts, setReplyDrafts] = useState<DraftMap>({});
   const [feedbackCommentDrafts, setFeedbackCommentDrafts] = useState<DraftMap>({});
   
   // PWA Install Logic
@@ -407,88 +400,6 @@ export default function App() {
   const showRejectionAlert = (result: { reason?: string; userMessage?: string; helpMessage?: string }) => {
     const message = result.userMessage ?? result.reason ?? "오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
     setFilterAlert(result.helpMessage ? `${message}\n\n${result.helpMessage}` : message);
-  };
-
-  const publishWorry = async (content: string) => {
-    if (!user || !profile) {
-      setFilterAlert("로그인 정보가 없습니다.");
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const result = await publishWorryViaApi({
-        user,
-        content,
-      });
-
-      if (result.status === 'rejected') {
-        showRejectionAlert(result);
-        return;
-      }
-
-      if (result.status === 'failed') {
-        setFilterAlert(`전송 실패: ${result.reason || "알 수 없는 오류"}`);
-        return;
-      }
-
-      if (result.status === 'published' && result.warnings.length > 0) {
-        console.warn("Worry publication completed with warnings:", result.warnings);
-      }
-
-      setWorryDraft('');
-      setSelectedMyWorry(null);
-      setView(prev => resolveAppRouteState(prev, routeAfterWorryPublish({ worryId: result.worryId })));
-      window.scrollTo(0, 0);
-    } catch (e: any) {
-      console.error("Publication Error:", e);
-      setFilterAlert(`전송 실패: ${e.message || "알 수 없는 오류"}`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-
-  // 2. Send Reply -> Filter Check First
-  const sendReply = async (content: string, worry: SelectedReceivedWorry) => {
-    if (!user) return;
-    if (!worry.deliveryId) {
-      setFilterAlert("이전 형식의 고민에는 새 답장을 보낼 수 없습니다.");
-      return;
-    }
-
-    setIsProcessing(true);
-    try {
-      const result = await publishReplyViaApi({
-        user,
-        deliveryId: worry.deliveryId,
-        content,
-      });
-
-      if (result.status === 'rejected') {
-        showRejectionAlert(result);
-        return;
-      }
-
-      if (result.status === 'failed') {
-        setFilterAlert(result.reason || "답장 전송 실패");
-        return;
-      }
-
-      setView(prev => resolveAppRouteState(prev, routeAfterReplyPublish({
-        replyId: result.replyId,
-        deliveryId: worry.deliveryId,
-        worryId: worry.worryId,
-      })));
-      setReplyDrafts(prev => worry.deliveryId ? clearDraft(prev, worry.deliveryId) : prev);
-      setSelectedWorry(null);
-      setSelectedReply(null);
-    } catch (e) {
-      console.error(e);
-      setFilterAlert("답장 전송 실패");
-    } finally {
-      setIsProcessing(false);
-    }
   };
 
   const giveFeedback = async (_replyId: string, feedbackType: ReplyFeedback) => {
@@ -1031,18 +942,12 @@ export default function App() {
           {/* 3. Write Worry View */}
           {currentRoute === 'write_worry' && (
             <motion.div key="write_worry" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-              <button onClick={() => setView(backRouteFromWriteWorry())} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
-                <ArrowLeft className="w-4 h-4" /> 돌아가기
-              </button>
-              <h2 className="text-2xl font-serif font-bold mb-2">당신의 이야기를 들려주세요</h2>
-              <p className="text-[#8B8B6B] mb-8">마음 한구석에 담아둔 고민을 적어보세요. AI 안심 필터가 내용을 확인한 뒤, 가장 따뜻한 답변을 줄 수 있는 이웃에게 전달합니다.</p>
-              
-              <WriteForm
-                type="worry"
-                value={worryDraft}
-                onChange={setWorryDraft}
-                isProcessing={isProcessing}
-                onSubmit={publishWorry}
+              <WriteWorryContainer
+                user={user}
+                profile={profile}
+                setView={setView}
+                clearSelectedMyWorry={() => setSelectedMyWorry(null)}
+                setFilterAlert={setFilterAlert}
               />
             </motion.div>
           )}
@@ -1050,26 +955,13 @@ export default function App() {
           {/* 4. Write Reply View */}
           {currentRoute === 'write_reply' && selectedWorry && (
             <motion.div key="write_reply" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-              <button onClick={() => setView(backRouteFromWriteReply())} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
-                <ArrowLeft className="w-4 h-4" /> 돌아가기
-              </button>
-              <div className="bg-[#FAEDCD]/50 p-6 rounded-2xl mb-8 border border-[#FAEDCD]">
-                <div className="text-xs font-bold text-[#D4A373] mb-2">답장할 고민 ({selectedWorry.category})</div>
-                <p className="text-[#5A5A40] text-sm leading-relaxed whitespace-pre-wrap">{selectedWorry.refinedContent}</p>
-              </div>
-              
-              <h2 className="text-2xl font-serif font-bold mb-2">위로를 건네주세요</h2>
-              
-              <WriteForm
-                type="reply"
-                value={getDraft(replyDrafts, selectedWorry.deliveryId)}
-                onChange={content => {
-                  if (selectedWorry.deliveryId) {
-                    setReplyDrafts(prev => setDraft(prev, selectedWorry.deliveryId as string, content));
-                  }
-                }}
-                isProcessing={isProcessing}
-                onSubmit={(content) => sendReply(content, selectedWorry)}
+              <WriteReplyContainer
+                user={user}
+                selectedWorry={selectedWorry}
+                setView={setView}
+                clearSelectedWorry={() => setSelectedWorry(null)}
+                clearSelectedReply={() => setSelectedReply(null)}
+                setFilterAlert={setFilterAlert}
               />
             </motion.div>
           )}
@@ -1463,62 +1355,6 @@ function OnboardingForm({ onSubmit, isProcessing, initialGender = '', initialInt
         className="w-full py-4 bg-[#5A5A40] text-white rounded-xl font-bold shadow-xl hover:bg-[#4A4A30] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 mt-8"
       >
         {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{isEditing ? '설정 저장하기' : '주파수 맞추기 완료'} <ArrowRightIcon /></>}
-      </button>
-    </div>
-  );
-}
-
-function WriteForm({
-  type,
-  value,
-  onChange,
-  isProcessing,
-  onSubmit,
-}: {
-  type: 'worry'|'reply';
-  value: string;
-  onChange: (content: string) => void;
-  isProcessing: boolean;
-  onSubmit: (content: string) => void;
-}) {
-  const validation = validateDraftContent(value, type);
-  const trimmedLength = value.trim().length;
-  const isTooLong = trimmedLength > CONTENT_MAX_LENGTH;
-  const isValid = validation.status === 'valid';
-
-  return (
-    <div className="space-y-6">
-      <div className="relative">
-        <textarea 
-          value={value} onChange={e => onChange(e.target.value)}
-          placeholder={type === 'worry' ? "오늘 하루 속상했던 일, 불안했던 생각들을 편하게 털어놓으세요." : "따뜻한 위로의 말을 남겨주세요."}
-          className="w-full h-48 bg-white p-6 rounded-2xl border border-[#FAEDCD] resize-none focus:outline-none focus:ring-2 focus:ring-[#D4A373] placeholder:text-[#E9EDC9] leading-loose shadow-inner"
-        />
-        <div className="absolute bottom-4 right-6 text-xs font-medium text-[#8B8B6B]">
-          {isTooLong ? (
-            <span className="text-[#E07A5F]">{trimmedLength}/{CONTENT_MAX_LENGTH}자</span>
-          ) : trimmedLength > 0 ? (
-            <span className="text-[#A3B18A]">{trimmedLength}자 작성됨</span>
-          ) : (
-            <span className="text-[#8B8B6B]">최대 {CONTENT_MAX_LENGTH}자</span>
-          )}
-        </div>
-      </div>
-
-      <div className="bg-[#E9EDC9]/30 p-4 rounded-xl flex gap-3 items-start border border-[#E9EDC9]">
-        <Sparkles className="w-5 h-5 text-[#A3B18A] flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-[#8B8B6B] leading-relaxed">
-          <strong>AI 안심 필터 적용 안내</strong><br/>
-          입력하신 내용은 전송을 누르는 순간, AI 엔진을 통해 부적절한 언어가 감지되는지 확인합니다.<br/>문제가 없다면 상대방에게 원문 그대로 전달되니 편하게 적어주세요.
-        </p>
-      </div>
-
-      <button 
-        disabled={!isValid || isProcessing}
-        onClick={() => onSubmit(value)}
-        className="w-full py-4 bg-[#5A5A40] text-white rounded-xl font-bold shadow-xl hover:bg-[#4A4A30] disabled:opacity-50 transition-all flex items-center justify-center gap-3"
-      >
-        {isProcessing ? <><Loader2 className="w-5 h-5 animate-spin" /> 전송 중...</> : <><Send className="w-5 h-5" /> 전달하기</>}
       </button>
     </div>
   );
