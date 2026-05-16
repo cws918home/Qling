@@ -29,14 +29,17 @@ test('write containers clear worry and reply drafts only after successful publis
   assert.doesNotMatch(replyContainer, /routeAfterReplyPublish\([^)]*\)\.route/);
 });
 
-test('App feedback comments use PRD feedback API and preserve failed drafts', () => {
+test('reply-detail container feedback comments use PRD feedback API and preserve failed drafts', () => {
   const source = fs.readFileSync('src/App.tsx', 'utf8');
+  const container = fs.readFileSync('src/screens/replyDetail/ReplyDetailContainer.tsx', 'utf8');
 
-  assert.match(source, /submitReplyFeedbackWithProductionAdapters/);
-  assert.match(source, /comment:\s*content/);
-  assert.match(source, /feedback:\s*result\.feedback\s*\?\?\s*feedbackType/);
-  assert.match(source, /setFeedbackCommentDrafts\(prev => clearDraft\(prev, selectedReply\.id\)\)/);
-  assert.match(source, /if \(result\.status === 'rejected'\) \{\s*showRejectionAlert\(result\);\s*return result;\s*\}/);
+  assert.match(source, /<ReplyDetailContainer/);
+  assert.doesNotMatch(source, /submitReplyFeedbackWithProductionAdapters/);
+  assert.match(container, /submitReplyFeedbackWithProductionAdapters/);
+  assert.match(container, /comment,/);
+  assert.match(container, /feedback:\s*result\.feedback\s*\?\?\s*feedbackType/);
+  assert.match(container, /setFeedbackCommentDrafts\(prev => clearDraft\(prev, props\.selectedReply\?\.id \?\? ''\)\)/);
+  assert.match(container, /if \(result\.status === 'rejected'\) \{[\s\S]*?return result;\s*\}/);
   assert.doesNotMatch(source, /letters\.publisherComment/);
   assert.doesNotMatch(source, /letters\.feedback/);
 });

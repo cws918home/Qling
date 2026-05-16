@@ -402,12 +402,12 @@ Functional screen phases must use real production data sources and production ro
 
 ### Phase 7 - My-Page/Account/Reply-Detail Container Boundary
 
-- [ ] TODO-DESIGN-7.1 Implement my-page/account container wiring to profile data, helpedCount/received hearts, interests, settings items, real push permission/FCM registration/status hooks, PWA install/share hooks, sign-out cleanup, and `deleteMyAccountViaApi`.
-- [ ] TODO-DESIGN-7.2 Implement my-answers/my-worries container wiring to `useMyGivenReplies`, `useMyWorries`, `useRepliesForWorry`, selected item state, route helpers, and read-state behavior where applicable.
-- [ ] TODO-DESIGN-7.3 Implement reply-detail container wiring to original worry data, reply data, feedback submit, publisher comment submit, moderation rejection display, draft clearing, and route helpers.
-- [ ] TODO-DESIGN-7.4 Ensure my-page/account/reply-detail presentational screens only receive props and emit events; they must not import Firebase, userAccount APIs, push internals, feedback APIs, read-state APIs, or Firestore SDK.
-- [ ] TODO-DESIGN-7.5 Verify no visual reskin work begins in this phase beyond minimal functional UI needed to exercise account/detail flows.
-- [ ] TODO-DESIGN-7.V1 Verify Phase 7 with container notes, props-contract tests, and manual browser-note evidence for functional my-page/account/reply-detail skeletons.
+- [x] TODO-DESIGN-7.1 Implement my-page/account container wiring to profile data, helpedCount/received hearts, interests, settings items, real push permission/FCM registration/status hooks, PWA install/share hooks, sign-out cleanup, and `deleteMyAccountViaApi`.
+- [x] TODO-DESIGN-7.2 Implement my-answers/my-worries container wiring to `useMyGivenReplies`, `useMyWorries`, `useRepliesForWorry`, selected item state, route helpers, and read-state behavior where applicable.
+- [x] TODO-DESIGN-7.3 Implement reply-detail container wiring to original worry data, reply data, feedback submit, publisher comment submit, moderation rejection display, draft clearing, and route helpers.
+- [x] TODO-DESIGN-7.4 Ensure my-page/account/reply-detail presentational screens only receive props and emit events; they must not import Firebase, userAccount APIs, push internals, feedback APIs, read-state APIs, or Firestore SDK.
+- [x] TODO-DESIGN-7.5 Verify no visual reskin work begins in this phase beyond minimal functional UI needed to exercise account/detail flows.
+- [x] TODO-DESIGN-7.V1 Verify Phase 7 with container notes, props-contract tests, and manual browser-note evidence for functional my-page/account/reply-detail skeletons.
 
 ### Phase 8 - Import-Boundary And Deep Module Guardrail Verification
 

@@ -7,6 +7,8 @@ import {
   MY_PAGE_SETTING_ITEMS,
   PUSH_PERMISSION_STATUSES,
   type MyPageScreenProps,
+  type MyAnswersScreenProps,
+  type MyWorriesScreenProps,
   type PolicyScreenProps,
 } from './contract';
 
@@ -96,6 +98,54 @@ test('push and app-like usage access are UI states with callbacks', () => {
     'registered',
     'error',
   ]);
+});
+
+test('my answers and my worries contracts expose list states and route callbacks without sample labels', () => {
+  const answers = {
+    state: { status: 'ready' },
+    items: [{
+      replyId: 'reply-1',
+      deliveryId: 'delivery-1',
+      worryId: 'worry-1',
+      previewText: '답장 내용',
+    }],
+    onBack: () => undefined,
+    onSelect: () => undefined,
+  } satisfies MyAnswersScreenProps;
+  const worries = {
+    state: { status: 'ready' },
+    items: [{
+      worryId: 'worry-1',
+      contentPreview: '고민 내용',
+      categoryLabel: WORRY_CATEGORIES[0],
+      replyCount: 1,
+      hasUnreadReplies: true,
+      isSelected: false,
+    }],
+    selectedWorry: {
+      worryId: 'worry-1',
+      content: '고민 내용',
+      repliesState: { status: 'ready' },
+      replies: [{
+        replyId: 'reply-1',
+        worryId: 'worry-1',
+        previewText: '받은 답장',
+        hasUnread: true,
+      }],
+    },
+    onWriteWorry: () => undefined,
+    onSelectWorry: () => undefined,
+    onSelectReply: () => undefined,
+  } satisfies MyWorriesScreenProps;
+
+  assert.equal(answers.items[0].previewText, '답장 내용');
+  assert.equal(typeof answers.onSelect, 'function');
+  assert.equal(worries.selectedWorry?.replies[0].hasUnread, true);
+  for (const item of [...answers.items, ...worries.items]) {
+    assert.equal(Object.hasOwn(item, 'exampleLabel'), false);
+    assert.equal(Object.hasOwn(item, 'fakeLabel'), false);
+    assert.equal(Object.hasOwn(item, 'sampleLabel'), false);
+  }
 });
 
 test('policy screen contract carries title, body or unavailable state', () => {

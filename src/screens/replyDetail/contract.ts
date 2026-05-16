@@ -43,6 +43,7 @@ export type ReplyDetailScreenProps = {
   readonly commentModeration: ScreenModerationState;
   readonly isFeedbackProcessing: boolean;
   readonly isCommentProcessing: boolean;
+  readonly onBack: () => void;
   readonly onFeedbackChange: (value: FeedbackValue) => void;
   readonly onFeedbackSubmit: () => void;
   readonly onCommentChange: (value: string) => void;

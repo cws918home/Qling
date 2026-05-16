@@ -41,6 +41,7 @@ test('reply detail contract represents original worry, reply, feedback, and comm
     commentModeration: { status: 'approved' },
     isFeedbackProcessing: false,
     isCommentProcessing: false,
+    onBack: () => undefined,
     onFeedbackChange: () => undefined,
     onFeedbackSubmit: () => undefined,
     onCommentChange: () => undefined,
@@ -51,6 +52,8 @@ test('reply detail contract represents original worry, reply, feedback, and comm
   assert.equal(props.existingFeedback.status, 'submitted');
   assert.equal(typeof props.onFeedbackSubmit, 'function');
   assert.equal(typeof props.onCommentSubmit, 'function');
+  assert.equal(typeof props.onBack, 'function');
+  assert.equal(Object.hasOwn(props, 'onHelpedCountChange'), false);
 });
 
 test('reply detail contract represents rejection and unavailable states without mutation clients', () => {
@@ -63,6 +66,7 @@ test('reply detail contract represents rejection and unavailable states without 
     commentModeration: { status: 'rejected', reason: 'Rejected comment' },
     isFeedbackProcessing: false,
     isCommentProcessing: false,
+    onBack: () => undefined,
     onFeedbackChange: () => undefined,
     onFeedbackSubmit: () => undefined,
     onCommentChange: () => undefined,

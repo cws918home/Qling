@@ -187,6 +187,10 @@ export function routeToMyWorries(): AppRoute {
   return '나의 고민';
 }
 
+export function routeToMyWorryDetail(params: { worryId: string }): AppRouteState {
+  return { route: 'my_worry_detail', worryId: params.worryId };
+}
+
 export function routeToEditInterests(): AppRoute {
   return 'edit_interests';
 }
