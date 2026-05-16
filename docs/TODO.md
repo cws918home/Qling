@@ -451,8 +451,8 @@ Functional screen phases must use real production data sources and production ro
 - [x] TODO-DESIGN-10.12 Add route-policy tests for my-page subroutes in `src/services/appShell/prdNavigationPolicy.test.ts`.
 - [x] TODO-DESIGN-10.13 Add account behavior tests in existing account/push locations, including `src/services/userAccount/deleteMyAccount.test.ts` and `src/services/pushRegistration/internalLifecycle.test.ts` when cleanup behavior changes; push tests must cover permission request, FCM registration, and status mapping when touched.
 - [x] TODO-DESIGN-10.14 Add pure props-contract tests for helpedCount fallback, destructive-action confirmation props, and settings item routing in the my-page contract test target from Phase 4.
-- [ ] TODO-DESIGN-10.15 Add manual screenshot evidence for my page, logout confirmation, and account deletion confirmation using dynamic data, proving hardcoded design values such as `라미` and `314` are gone.
-- [ ] TODO-DESIGN-10.V1 Verify Phase 10 with route tests, account/push tests, props-contract tests, and manual screenshot evidence.
+- [x] TODO-DESIGN-10.15 Add manual screenshot evidence for my page, logout confirmation, and account deletion confirmation using dynamic data, proving hardcoded design values such as `라미` and `314` are gone.
+- [x] TODO-DESIGN-10.V1 Verify Phase 10 with route tests, account/push tests, props-contract tests, and manual screenshot evidence.
 
 ### Phase 11 - Received Worries And Pass/Reply Functional Alignment
 
