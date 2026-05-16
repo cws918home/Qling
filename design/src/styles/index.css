@@ -1,0 +1,19 @@
+@import url("https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/variable/woff2/SUIT-Variable.css");
+@import "tailwindcss" source(none);
+@source "../**/*.{js,ts,jsx,tsx}";
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: "SUIT Variable", "SUIT", Inter, system-ui, sans-serif;
+  background: #111827;
+}
+
+button {
+  font: inherit;
+}
