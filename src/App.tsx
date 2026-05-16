@@ -87,14 +87,18 @@ import {
   routeAfterPass,
   routeAfterReplyPublish,
   routeAfterWorryPublish,
+  routeName,
   routeToEditInterests,
   routeToMyAnswers,
   routeToMyReplyDetail,
   routeToReceivedReplyDetail,
   routeToWriteReply,
   routeToWriteWorry,
+  resolveAppRouteState,
   tabForRoute,
   type AppRoute,
+  type AppRouteState,
+  type AppRouteViewState,
   type PrdAppTab,
 } from './services/appShell/prdNavigationPolicy';
 import { CONTENT_MAX_LENGTH, validateDraftContent } from './services/validation/content';
@@ -144,7 +148,7 @@ export default function App() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   
-  const [view, setView] = useState<AppRoute>('login');
+  const [view, setView] = useState<AppRouteViewState>('login');
   
   const [selectedWorry, setSelectedWorry] = useState<HomeWorryFeedLetter | null>(null);
   const [selectedMyWorry, setSelectedMyWorry] = useState<MyWorryListItem | null>(null);
@@ -449,7 +453,7 @@ export default function App() {
 
       setWorryDraft('');
       setSelectedMyWorry(null);
-      setView(routeAfterWorryPublish({ worryId: result.worryId }).route);
+      setView(prev => resolveAppRouteState(prev, routeAfterWorryPublish({ worryId: result.worryId })));
       window.scrollTo(0, 0);
     } catch (e: any) {
       console.error("Publication Error:", e);
@@ -486,11 +490,11 @@ export default function App() {
         return;
       }
 
-      setView(routeAfterReplyPublish({
+      setView(prev => resolveAppRouteState(prev, routeAfterReplyPublish({
         replyId: result.replyId,
         deliveryId: worry.deliveryId,
         worryId: worry.worryId,
-      }).route);
+      })));
       setReplyDrafts(prev => worry.deliveryId ? clearDraft(prev, worry.deliveryId) : prev);
       setSelectedWorry(null);
       setSelectedReply(null);
@@ -506,7 +510,7 @@ export default function App() {
   const openWorryForReply = (worry: HomeWorryFeedLetter) => {
     setSelectedWorry(worry);
     if (worry.deliveryId) {
-      setView(routeToWriteReply({ deliveryId: worry.deliveryId, worryId: worry.worryId }).route);
+      setView(routeToWriteReply({ deliveryId: worry.deliveryId, worryId: worry.worryId }));
     } else {
       setView('write_reply');
     }
@@ -592,6 +596,11 @@ export default function App() {
     ? '관심 주제'
     : `${visibleHomeInterestBadgeText}${profileInterests.length > 5 ? '...' : ''}`;
   const visibleFeedWorries = filterSuppressedFeedWorries({ feedWorries, suppressedDeliveryIds });
+  const currentRoute = routeName(view);
+  const currentMyWorryDetailRoute: Extract<AppRouteState, { route: 'my_worry_detail' }> | null =
+    typeof view === 'string' || view.route !== 'my_worry_detail' ? null : view;
+  const currentMyAnswerDetailRoute: Extract<AppRouteState, { route: 'my_answer_detail' | 'read_my_reply' }> | null =
+    typeof view === 'string' || (view.route !== 'my_answer_detail' && view.route !== 'read_my_reply') ? null : view;
 
   if (loading) {
     return <div className="min-h-screen bg-[#FDFCF8] flex items-center justify-center"><Loader2 className="w-8 h-8 text-[#D4A373] animate-spin" /></div>;
@@ -633,7 +642,7 @@ export default function App() {
             </motion.div>
           </motion.div>
         )}
-        {view === 'logout_confirmation' && (
+        {currentRoute === 'logout_confirmation' && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
@@ -668,7 +677,7 @@ export default function App() {
             </motion.div>
           </motion.div>
         )}
-        {view === 'account_deletion_confirmation' && (
+        {currentRoute === 'account_deletion_confirmation' && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
@@ -707,7 +716,7 @@ export default function App() {
       </AnimatePresence>
 
       {/* Header (hidden before the authenticated shell) */}
-      {view !== 'login' && view !== 'onboarding' && (
+      {currentRoute !== 'login' && currentRoute !== 'onboarding' && (
         <header className="fixed top-0 left-0 right-0 bg-[#FDFCF8]/80 backdrop-blur-md z-50 border-b border-[#E9EDC9]/50">
           <div className="max-w-2xl mx-auto px-6 h-16 flex items-center justify-between">
             <button onClick={() => setView('답변하기')} className="text-xl font-serif font-bold tracking-tight text-[#D4A373] flex items-center gap-2">
@@ -726,11 +735,11 @@ export default function App() {
         </header>
       )}
 
-      <main className={cn("max-w-2xl mx-auto px-6", view === 'onboarding' ? "pt-12 pb-12" : "pt-24 pb-32")}>
+      <main className={cn("max-w-2xl mx-auto px-6", currentRoute === 'onboarding' ? "pt-12 pb-12" : "pt-24 pb-32")}>
         <AnimatePresence mode="wait">
           
           {/* 0. Login View */}
-          {view === 'login' && (
+          {currentRoute === 'login' && (
             <motion.div key="login" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center min-h-[70vh] space-y-8">
               <div className="text-center space-y-4">
                 <div className="w-24 h-24 bg-[#FAEDCD] rounded-full flex items-center justify-center mx-auto shadow-md">
@@ -763,7 +772,7 @@ export default function App() {
           )}
 
           {/* 1. Onboarding View */}
-          {view === 'onboarding' && (
+          {currentRoute === 'onboarding' && (
             <motion.div key="onboarding" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
               <div className="text-center space-y-4 mb-10">
                 <div className="w-20 h-20 bg-[#FAEDCD] rounded-full flex items-center justify-center mx-auto shadow-sm">
@@ -777,7 +786,7 @@ export default function App() {
             </motion.div>
           )}
 
-          {view === 'edit_interests' && profile && (
+          {currentRoute === 'edit_interests' && profile && (
             <motion.div key="edit_interests" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
               <button onClick={() => setView(backRouteForRoute('edit_interests'))} className="mb-2 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 마이페이지로
@@ -799,7 +808,7 @@ export default function App() {
             </motion.div>
           )}
 
-          {view === 'my_answers' && (
+          {currentRoute === 'my_answers' && (
             <motion.div key="my_answers" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
               <button onClick={() => setView(backRouteForRoute('my_answers'))} className="mb-2 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 마이페이지로
@@ -824,7 +833,7 @@ export default function App() {
                           replyId: reply.id,
                           deliveryId: reply.deliveryId,
                           worryId: reply.worryId,
-                        }).route);
+                        }));
                       }}
                       className="w-full text-left p-4 bg-[#FDFCF8] rounded-xl border border-[#E9EDC9] transition-all hover:bg-[#FAEDCD]"
                     >
@@ -842,13 +851,13 @@ export default function App() {
             </motion.div>
           )}
 
-          {(view === 'privacy_policy' || view === 'operation_policy') && (
-            <motion.div key={view} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+          {(currentRoute === 'privacy_policy' || currentRoute === 'operation_policy') && (
+            <motion.div key={currentRoute} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
               <button onClick={() => setView(backRouteForRoute(view))} className="mb-2 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 마이페이지로
               </button>
               <div className="space-y-2">
-                <h2 className="text-2xl font-serif font-bold">{view === 'privacy_policy' ? '개인정보처리방침' : '운영정책'}</h2>
+                <h2 className="text-2xl font-serif font-bold">{currentRoute === 'privacy_policy' ? '개인정보처리방침' : '운영정책'}</h2>
                 <p className="text-[#8B8B6B] text-sm">정책 본문 준비 중입니다.</p>
               </div>
               <div className="bg-white p-6 rounded-2xl border border-[#E9EDC9] text-sm text-[#8B8B6B] leading-relaxed">
@@ -858,7 +867,7 @@ export default function App() {
           )}
 
           {/* 1.5 My Page View */}
-          {view === '마이페이지' && profile && (
+          {currentRoute === '마이페이지' && profile && (
             <motion.div key="my_page" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-8">
               <div className="space-y-2">
                 <h2 className="text-2xl font-serif font-bold">마이페이지</h2>
@@ -903,7 +912,7 @@ export default function App() {
                             replyId: reply.id,
                             deliveryId: reply.deliveryId,
                             worryId: reply.worryId,
-                          }).route);
+                          }));
                         }}
                         className="w-full text-left p-4 bg-[#FDFCF8] rounded-xl border border-[#E9EDC9] transition-all hover:bg-[#FAEDCD]"
                       >
@@ -1078,7 +1087,7 @@ export default function App() {
           )}
 
           {/* 2. Answer View (Feed) */}
-          {view === '답변하기' && (
+          {(currentRoute === '답변하기' || currentRoute === 'received_worries') && (
             <motion.div key="answer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-serif font-bold">답변하기</h2>
@@ -1147,7 +1156,7 @@ export default function App() {
           )}
 
           {/* 3. Write Worry View */}
-          {view === 'write_worry' && (
+          {currentRoute === 'write_worry' && (
             <motion.div key="write_worry" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <button onClick={() => setView(backRouteFromWriteWorry())} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 돌아가기
@@ -1166,7 +1175,7 @@ export default function App() {
           )}
 
           {/* 4. Write Reply View */}
-          {view === 'write_reply' && selectedWorry && (
+          {currentRoute === 'write_reply' && selectedWorry && (
             <motion.div key="write_reply" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <button onClick={() => setView(backRouteFromWriteReply())} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 돌아가기
@@ -1193,7 +1202,7 @@ export default function App() {
           )}
 
           {/* 5. My Worries View */}
-          {view === '나의 고민' && (
+          {(currentRoute === '나의 고민' || currentRoute === 'my_worries') && (
             <motion.div key="my_worries" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -1264,7 +1273,7 @@ export default function App() {
                         setView(routeToReceivedReplyDetail({
                           worryId: selectedMyWorry.id,
                           replyId: reply.id,
-                        }).route);
+                        }));
                       }}
                       className={cn(
                         "w-full text-left p-6 rounded-2xl border transition-all hover:bg-[#FAEDCD]",
@@ -1285,14 +1294,17 @@ export default function App() {
             </motion.div>
           )}
 
-          {view === 'my_worry_detail' && (
+          {currentRoute === 'my_worry_detail' && (
             <motion.div key="my_worry_detail" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
               <button onClick={() => setView(backRouteForRoute('my_worry_detail'))} className="mb-2 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 나의 고민으로
               </button>
               <div className="space-y-2">
                 <h2 className="text-2xl font-serif font-bold">작성한 고민</h2>
-                <p className="text-[#8B8B6B] text-sm">방금 작성한 고민 상세를 불러오는 중입니다.</p>
+                <p className="text-[#8B8B6B] text-sm">
+                  방금 작성한 고민 상세를 불러오는 중입니다.
+                  {currentMyWorryDetailRoute ? ` worryId: ${currentMyWorryDetailRoute.worryId}` : ''}
+                </p>
               </div>
               <div className="bg-white p-6 rounded-2xl border border-[#E9EDC9] text-sm text-[#8B8B6B]">
                 작성한 고민 상세 준비 중입니다.
@@ -1301,7 +1313,7 @@ export default function App() {
           )}
 
           {/* 6. Read Reply & Feedback View */}
-          {(view === 'read_received_reply' || view === 'received_answer_detail') && selectedReply && (
+          {(currentRoute === 'read_received_reply' || currentRoute === 'received_answer_detail') && selectedReply && (
             <motion.div key="read_received_reply" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                <button onClick={() => setView(backRouteFromReceivedReplyDetail())} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 목록으로
@@ -1398,7 +1410,7 @@ export default function App() {
           )}
 
           {/* 7. Read My Reply View */}
-          {(view === 'read_my_reply' || view === 'my_answer_detail') && selectedReply && (
+          {(currentRoute === 'read_my_reply' || currentRoute === 'my_answer_detail') && selectedReply && (
             <motion.div key="read_my_reply" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
                <button onClick={() => setView(backRouteFromMyReplyDetail())} className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 목록으로
@@ -1446,14 +1458,17 @@ export default function App() {
             </motion.div>
           )}
 
-          {view === 'my_answer_detail' && !selectedReply && (
+          {currentRoute === 'my_answer_detail' && !selectedReply && (
             <motion.div key="my_answer_detail_loading" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
               <button onClick={() => setView(backRouteForRoute('my_answer_detail'))} className="mb-2 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
                 <ArrowLeft className="w-4 h-4" /> 내가 쓴 답변으로
               </button>
               <div className="space-y-2">
                 <h2 className="text-2xl font-serif font-bold">내가 쓴 답변</h2>
-                <p className="text-[#8B8B6B] text-sm">방금 작성한 답변 상세를 불러오는 중입니다.</p>
+                <p className="text-[#8B8B6B] text-sm">
+                  방금 작성한 답변 상세를 불러오는 중입니다.
+                  {currentMyAnswerDetailRoute ? ` replyId: ${currentMyAnswerDetailRoute.replyId}` : ''}
+                </p>
               </div>
               <div className="bg-white p-6 rounded-2xl border border-[#E9EDC9] text-sm text-[#8B8B6B]">
                 내가 쓴 답변 상세 준비 중입니다.

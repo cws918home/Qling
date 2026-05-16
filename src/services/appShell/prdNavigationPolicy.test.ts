@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  ANSWER_FEED_ROUTE_ALIASES,
   CENTRAL_BOTTOM_NAVIGATION_ACTION,
   DEFAULT_AUTHENTICATED_ROUTE,
   DEFAULT_AUTHENTICATED_TAB,
@@ -14,6 +15,7 @@ import {
   backRouteFromReceivedReplyDetail,
   backRouteFromWriteReply,
   backRouteFromWriteWorry,
+  resolveAppRouteState,
   routeAfterAuthProfileLoad,
   routeAfterFeedbackPublish,
   routeAfterOnboardingComplete,
@@ -35,6 +37,7 @@ test('defines the canonical PRD app tabs and default authenticated tab', () => {
   assert.deepEqual(PRD_APP_TABS, ['답변하기', '나의 고민', '마이페이지']);
   assert.equal(DEFAULT_AUTHENTICATED_TAB, '답변하기');
   assert.equal(DEFAULT_AUTHENTICATED_ROUTE, 'received_worries');
+  assert.deepEqual(ANSWER_FEED_ROUTE_ALIASES, ['답변하기', 'received_worries']);
 });
 
 test('defines the My Page More items required by the PRD shell without excluded MVP routes', () => {
@@ -86,6 +89,7 @@ test('routes auth/profile load and onboarding completion to answer feed', () => 
   assert.equal(routeAfterAuthProfileLoad('splash'), '답변하기');
   assert.equal(routeAfterAuthProfileLoad('나의 고민'), '나의 고민');
   assert.equal(routeAfterOnboardingComplete(), '답변하기');
+  assert.equal(tabForRoute(DEFAULT_AUTHENTICATED_ROUTE), DEFAULT_AUTHENTICATED_TAB);
 });
 
 test('routes publish success with created ids and has no standalone write success routes', () => {
@@ -105,6 +109,28 @@ test('routes publish success with created ids and has no standalone write succes
   });
   assert.equal((REQUIRED_PHASE_2_ROUTE_STATES as readonly string[]).includes('write_worry_success'), false);
   assert.equal((REQUIRED_PHASE_2_ROUTE_STATES as readonly string[]).includes('write_reply_success'), false);
+});
+
+test('preserves id-bearing route state when applying routes to App view state', () => {
+  const worryPublishRoute = routeAfterWorryPublish({ worryId: 'worry-created-1' });
+  const replyPublishRoute = routeAfterReplyPublish({
+    replyId: 'reply-created-1',
+    deliveryId: 'delivery-1',
+    worryId: 'worry-1',
+  });
+
+  assert.deepEqual(resolveAppRouteState('write_worry', worryPublishRoute), {
+    route: 'my_worry_detail',
+    worryId: 'worry-created-1',
+  });
+  assert.deepEqual(resolveAppRouteState({ route: 'write_reply', deliveryId: 'delivery-1' }, replyPublishRoute), {
+    route: 'my_answer_detail',
+    replyId: 'reply-created-1',
+    deliveryId: 'delivery-1',
+    worryId: 'worry-1',
+  });
+  assert.notEqual(resolveAppRouteState('write_worry', worryPublishRoute), worryPublishRoute.route);
+  assert.notEqual(resolveAppRouteState('write_reply', replyPublishRoute), replyPublishRoute.route);
 });
 
 test('routes pass, feedback, write, detail, and my-page subroute targets', () => {

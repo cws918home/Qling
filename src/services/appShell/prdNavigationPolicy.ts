@@ -39,8 +39,11 @@ export type AppRouteState =
   | { route: 'my_answer_detail' | 'read_my_reply'; replyId: string; deliveryId?: string; worryId?: string }
   | { route: 'my_worry_detail'; worryId: string };
 
+export type AppRouteViewState = AppRoute | AppRouteState;
+
 export const DEFAULT_AUTHENTICATED_TAB: PrdAppTab = '답변하기';
 export const DEFAULT_AUTHENTICATED_ROUTE: AppRoute = 'received_worries';
+export const ANSWER_FEED_ROUTE_ALIASES = [DEFAULT_AUTHENTICATED_TAB, DEFAULT_AUTHENTICATED_ROUTE] as const;
 
 export const MY_PAGE_MORE_ITEMS = [
   'notification_settings',
@@ -103,11 +106,15 @@ export const REQUIRED_PHASE_2_ROUTE_STATES = [
   'account_deletion_confirmation',
 ] as const satisfies readonly AppRoute[];
 
-export function routeName(route: AppRoute | AppRouteState): AppRoute {
+export function routeName(route: AppRouteViewState): AppRoute {
   return typeof route === 'string' ? route : route.route;
 }
 
-export function routeAfterAuthProfileLoad(previousRoute: AppRoute | AppRouteState): AppRoute {
+export function resolveAppRouteState(_previousRoute: AppRouteViewState, nextRoute: AppRouteViewState): AppRouteViewState {
+  return nextRoute;
+}
+
+export function routeAfterAuthProfileLoad(previousRoute: AppRouteViewState): AppRoute {
   const previousRouteName = routeName(previousRoute);
   return previousRouteName === 'login'
     || previousRouteName === 'onboarding'
@@ -143,7 +150,7 @@ export function routeAfterPass(): AppRoute {
   return DEFAULT_AUTHENTICATED_TAB;
 }
 
-export function routeAfterFeedbackPublish(currentRoute: AppRoute | AppRouteState): AppRoute {
+export function routeAfterFeedbackPublish(currentRoute: AppRouteViewState): AppRoute {
   return routeName(currentRoute);
 }
 
@@ -184,7 +191,7 @@ export function routeToEditInterests(): AppRoute {
   return 'edit_interests';
 }
 
-export function backRouteForRoute(route: AppRoute | AppRouteState): AppRoute {
+export function backRouteForRoute(route: AppRouteViewState): AppRoute {
   const currentRoute = routeName(route);
   if (currentRoute === 'write_worry' || currentRoute === 'my_worry_detail') return '나의 고민';
   if (currentRoute === 'write_reply') return DEFAULT_AUTHENTICATED_TAB;
@@ -211,7 +218,7 @@ export function backRouteFromMyReplyDetail(): AppRoute {
   return backRouteForRoute('my_answer_detail');
 }
 
-export function tabForRoute(route: AppRoute | AppRouteState): PrdAppTab | null {
+export function tabForRoute(route: AppRouteViewState): PrdAppTab | null {
   const currentRoute = routeName(route);
   if (PRD_APP_TABS.includes(currentRoute as PrdAppTab)) return currentRoute as PrdAppTab;
   if (currentRoute === 'received_worries' || currentRoute === 'write_reply') return '답변하기';
