@@ -17,6 +17,11 @@ const human = (uid: string, interests: string[]): HumanProfile => ({
   interests,
 });
 
+const humanWithAge = (uid: string, interests: string[], age: number): HumanProfile & { age: number } => ({
+  ...human(uid, interests),
+  age,
+});
+
 test('active human eligibility fixture matches current query contract and excludes only author uid', () => {
   const now = new Date('2026-05-10T00:00:00.000Z');
 
@@ -65,6 +70,22 @@ test('same-overlap tie-breaking is deterministic with injected shuffle', () => {
 
   assert.equal(result.status, 'selected');
   assert.deepEqual(result.recipients.map(({ uid }) => uid), ['third', 'second', 'first']);
+});
+
+test('MVP recipient matching does not filter or sort by age', () => {
+  const result = selectWorryRecipients({
+    humans: [
+      humanWithAge('older', ['취업'], 60),
+      humanWithAge('younger', ['취업'], 18),
+      humanWithAge('middle', ['취업'], 35),
+    ],
+    inferredCategories: ['취업'],
+    shuffle: identityShuffle,
+  });
+
+  assert.equal(result.status, 'selected');
+  assert.deepEqual(result.recipients.map(({ uid }) => uid), ['older', 'younger', 'middle']);
+  assert.deepEqual(result.recipients.map(recipient => Object.hasOwn(recipient, 'age')), [false, false, false]);
 });
 
 test('fallback policy: matched count 2 adds one ai bot and no random fallback human', () => {

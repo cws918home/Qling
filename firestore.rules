@@ -57,6 +57,7 @@ service cloud.firestore {
       return [
         'uid',
         'gender',
+        'age',
         'interests',
         'createdAt',
         'updatedAt',
@@ -73,6 +74,8 @@ service cloud.firestore {
         'helpedCount',
         'deleted',
         'deletedAt',
+        'nickname',
+        'normalizedNickname',
         'onboardingCompletedAt',
         'exampleWorriesCreatedAt',
         'exampleWorrySeedIds',
@@ -112,13 +115,25 @@ service cloud.firestore {
       return value == 'male' || value == 'female';
     }
 
+    function isAllowedAge(value) {
+      return value is int && value >= 14 && value <= 99;
+    }
+
     function safeProfileCreateValuesAreValid() {
-      return !('gender' in request.resource.data) || isAllowedGender(request.resource.data.gender);
+      return ('age' in request.resource.data)
+        && isAllowedAge(request.resource.data.age)
+        && (!('gender' in request.resource.data) || isAllowedGender(request.resource.data.gender));
     }
 
     function safeProfileUpdateValuesAreValid() {
-      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['gender'])
-        || isAllowedGender(request.resource.data.gender);
+      return (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['gender'])
+          || isAllowedGender(request.resource.data.gender)
+        )
+        && (
+          !request.resource.data.diff(resource.data).affectedKeys().hasAny(['age'])
+          || isAllowedAge(request.resource.data.age)
+        );
     }
 
     function existingUserIsNotDeleted() {
@@ -167,6 +182,10 @@ service cloud.firestore {
         allow read: if isSelf(uid) && isNotDeletedSelf();
         allow create, update, delete: if false;
       }
+    }
+
+    match /nicknameReservations/{normalizedNickname} {
+      allow read, create, update, delete: if false;
     }
 
     match /worries/{worryId} {

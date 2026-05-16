@@ -3,7 +3,6 @@ import {
   useEffect,
   type ReactNode,
 } from 'react';
-import { WORRY_CATEGORIES } from '@midnight-radio/domain';
 import {
   onAuthStateChanged,
   signInWithPopup,
@@ -13,8 +12,6 @@ import {
   serverTimestamp,
   doc,
   updateDoc,
-  Timestamp,
-  setDoc,
   getDoc,
 } from 'firebase/firestore';
 import { onMessage } from 'firebase/messaging';
@@ -23,7 +20,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Send,
   Radio,
-  Mic2,
   Loader2,
   MessageSquare,
   XCircle,
@@ -57,21 +53,18 @@ import {
   type SelectedMyWorry,
 } from './screens/myPage/MyWorriesContainer';
 import { ReplyDetailContainer } from './screens/replyDetail/ReplyDetailContainer';
-
-// --- Constants ---
-const CATEGORIES = WORRY_CATEGORIES;
-const GENDERS = [
-  { id: 'male', label: '남성' },
-  { id: 'female', label: '여성' },
-];
+import { OnboardingContainer } from './screens/onboarding/OnboardingContainer';
 
 // --- Types ---
 interface UserProfile {
   uid: string;
+  nickname?: string;
+  normalizedNickname?: string;
   gender: string;
+  age?: number;
   interests: string[];
   helpedCount?: number;
-  createdAt: Timestamp;
+  createdAt?: unknown;
   onboardingCompletedAt?: unknown;
   exampleWorriesCreatedAt?: unknown;
   exampleWorrySeedIds?: string[];
@@ -238,55 +231,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, [profile]);
 
-  const handleOnboardingSubmit = async (gender: string, interests: string[]) => {
-    if (!user) {
-      alert("로그인 정보가 없습니다.");
-      return;
-    }
-    
-    setIsProcessing(true);
-    console.log("Submitting onboarding data...");
-
-    try {
-      const userRef = doc(db, 'users', user.uid);
-      const now = Timestamp.now();
-      
-      const newProfileData: any = {
-        uid: user.uid,
-        gender,
-        interests,
-        createdAt: now,
-        lastActive: serverTimestamp() // Set to server timestamp for matching
-      };
-      
-      // 1. Save to Firestore
-      await setDoc(userRef, newProfileData, { merge: true });
-      console.log("Profile saved successfully.");
-
-      // 2. Create server-owned onboarding examples before entering the feed.
-      await createExampleWorriesForCurrentUser(user);
-      const savedProfile = await getDoc(userRef);
-      const profileData = savedProfile.exists()
-        ? withAuthProfileUid(savedProfile.data(), user.uid)
-        : { ...newProfileData, lastActive: now };
-
-      // 3. Update local state after server-owned state is present.
-      setProfile(profileData as UserProfile);
-      
-      // 4. Forcefully switch view
-      setView(routeAfterOnboardingComplete());
-      
-      // 5. Scroll to top
-      window.scrollTo(0, 0);
-
-    } catch (e: any) {
-      console.error("Onboarding Submit Error:", e);
-      alert(`데이터 저장에 실패했습니다. (사유: ${e.message})`);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
   const [filterAlert, setFilterAlert] = useState<string | null>(null);
 
   const profileInterests = profile?.interests ?? [];
@@ -399,14 +343,21 @@ export default function App() {
           {currentRoute === 'onboarding' && (
             <motion.div key="onboarding" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
               <div className="text-center space-y-4 mb-10">
-                <div className="w-20 h-20 bg-[#FAEDCD] rounded-full flex items-center justify-center mx-auto shadow-sm">
-                  <Mic2 className="w-10 h-10 text-[#D4A373]" />
-                </div>
                 <h1 className="text-3xl font-serif font-bold text-[#5A5A40]">주파수를 맞춰주세요</h1>
                 <p className="text-[#8B8B6B]">당신의 취향을 알려주시면<br/>답변할 수 있는 고민을 먼저 전해드릴게요.</p>
               </div>
 
-              <OnboardingForm onSubmit={handleOnboardingSubmit} isProcessing={isProcessing} />
+              <OnboardingContainer
+                user={user}
+                isProcessing={isProcessing}
+                setIsProcessing={setIsProcessing}
+                onComplete={(completedProfile) => {
+                  setProfile(withAuthProfileUid(completedProfile as UserProfile, user?.uid ?? ''));
+                  setView(routeAfterOnboardingComplete());
+                  window.scrollTo(0, 0);
+                }}
+                onError={message => setFilterAlert(message)}
+              />
             </motion.div>
           )}
 
@@ -608,61 +559,3 @@ function BottomTabBar({
     </nav>
   );
 }
-
-function OnboardingForm({ onSubmit, isProcessing, initialGender = '', initialInterests = [] }: { onSubmit: (g: string, i: string[]) => void, isProcessing: boolean, initialGender?: string, initialInterests?: string[] }) {
-  const [gender, setGender] = useState<string>(initialGender);
-  const [interests, setInterests] = useState<string[]>(initialInterests);
-
-  const toggleInterest = (i: string) => {
-    if (interests.includes(i)) setInterests(interests.filter(x => x !== i));
-    else setInterests([...interests, i]);
-  };
-
-  const isValid = gender !== '' && interests.length > 0;
-  const isEditing = initialGender !== '';
-
-  return (
-    <div className="space-y-10">
-      <div className="space-y-4">
-        <h3 className="font-bold text-lg">성별</h3>
-        <div className="flex gap-3">
-          {GENDERS.map(g => (
-            <button 
-              key={g.id} onClick={() => setGender(g.id)}
-              className={cn("flex-1 py-3 rounded-xl border font-medium transition-all", gender === g.id ? "bg-[#D4A373] text-white border-[#D4A373] shadow-md" : "bg-white text-[#8B8B6B] border-[#E9EDC9] hover:bg-[#FAEDCD]")}
-            >
-              {g.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <h3 className="font-bold text-lg">가장 관심있는 주제 (복수 선택)</h3>
-        <div className="flex flex-wrap gap-2">
-          {CATEGORIES.map(cat => {
-            const isSelected = interests.includes(cat);
-            return (
-              <button 
-                key={cat} onClick={() => toggleInterest(cat)}
-                className={cn("px-4 py-2.5 rounded-full border text-sm font-bold transition-all", isSelected ? "bg-[#A3B18A] text-white border-[#A3B18A] shadow-md" : "bg-white text-[#8B8B6B] border-[#E9EDC9] hover:bg-[#E9EDC9]")}
-              >
-                {cat}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      <button 
-        onClick={() => onSubmit(gender, interests)}
-        disabled={!isValid || isProcessing}
-        className="w-full py-4 bg-[#5A5A40] text-white rounded-xl font-bold shadow-xl hover:bg-[#4A4A30] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 mt-8"
-      >
-        {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{isEditing ? '설정 저장하기' : '주파수 맞추기 완료'} <ArrowRightIcon /></>}
-      </button>
-    </div>
-  );
-}
-
-function ArrowRightIcon() { return <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg> }

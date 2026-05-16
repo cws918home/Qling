@@ -22,6 +22,7 @@ import { registerRematchRoutes } from "./src/server/rematchRoutes";
 import { registerAiFallbackRoutes } from "./src/server/aiFallbackRoutes";
 import { registerExampleWorryRoutes } from "./src/server/exampleWorryRoutes";
 import { registerUserAccountRoutes } from "./src/server/userAccountRoutes";
+import { registerUserProfileRoutes } from "./src/server/userProfileRoutes";
 import { registerAdminHidingRoutes } from "./src/server/adminHidingRoutes";
 import { registerAnswerFeedRoutes } from "./src/server/answerFeedRoutes";
 
@@ -126,6 +127,10 @@ async function startServer() {
       db,
       auth: getAuth(),
     });
+    registerUserProfileRoutes(app, {
+      db,
+      auth: getAuth(),
+    });
     registerAdminHidingRoutes(app, {
       db,
     });
@@ -199,6 +204,10 @@ async function startServer() {
       auth: {} as never,
     });
     registerUserAccountRoutes(app, {
+      db: null,
+      auth: {} as never,
+    });
+    registerUserProfileRoutes(app, {
       db: null,
       auth: {} as never,
     });

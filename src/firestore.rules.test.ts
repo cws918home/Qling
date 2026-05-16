@@ -22,6 +22,7 @@ const productionDatabaseId = 'ai-studio-5b923681-2d77-477b-ae6d-a04fc4c79fb2';
 const safeProfile = (uid: string) => ({
   uid,
   gender: 'female',
+  age: 20,
   interests: ['career'],
   createdAt: new Date(),
   lastActive: new Date(),
@@ -159,6 +160,16 @@ describe('profile and token transition', () => {
     await assertSucceeds(dbFor('author').doc('users/author').set(safeProfile('author')));
   });
 
+  test('first-time own profile create requires valid age', async () => {
+    const { age: _age, ...withoutAge } = safeProfile('author');
+    await assertFails(dbFor('author').doc('users/author').set(withoutAge));
+    await assertFails(dbFor('author').doc('users/author').set({ ...safeProfile('author'), age: 13 }));
+    await assertFails(dbFor('author').doc('users/author').set({ ...safeProfile('author'), age: 100 }));
+    await assertFails(dbFor('author').doc('users/author').set({ ...safeProfile('author'), age: '20' }));
+    await assertSucceeds(dbFor('author').doc('users/author').set({ ...safeProfile('author'), age: 14 }));
+    await assertSucceeds(dbFor('recipient').doc('users/recipient').set({ ...safeProfile('recipient'), age: 99 }));
+  });
+
   test('own profile create and gender update require PRD gender enum', async () => {
     await assertFails(dbFor('author').doc('users/author').set({
       ...safeProfile('author'),
@@ -207,13 +218,40 @@ describe('profile and token transition', () => {
     }));
   });
 
+  test('unsafe direct client writes to nickname reservation and server-owned nickname fields are denied', async () => {
+    await assertFails(dbFor('author').doc('nicknameReservations/라미').set({
+      uid: 'author',
+      nickname: '라미',
+      normalizedNickname: '라미',
+      createdAt: new Date(),
+    }));
+    await assertFails(dbFor('author').doc('nicknameReservations/라미').get());
+    await assertFails(dbFor('author').doc('users/author').set({
+      ...safeProfile('author'),
+      nickname: '라미',
+      normalizedNickname: '라미',
+    }));
+
+    await seed('users/author', {
+      ...safeProfile('author'),
+      nickname: '라미',
+      normalizedNickname: '라미',
+    });
+    await assertFails(dbFor('author').doc('users/author').update({ nickname: 'QLING' }));
+    await assertFails(dbFor('author').doc('users/author').update({ normalizedNickname: 'qling' }));
+  });
+
   test('own profile update succeeds for allowed fields', async () => {
     await seed('users/author', safeProfile('author'));
     await assertSucceeds(dbFor('author').doc('users/author').update({
       interests: ['career', 'family'],
+      age: 21,
       lastActive: new Date(),
       lastTokenRefresh: new Date(),
     }));
+    await assertFails(dbFor('author').doc('users/author').update({ age: 13 }));
+    await assertFails(dbFor('author').doc('users/author').update({ age: 100 }));
+    await assertFails(dbFor('author').doc('users/author').update({ age: '21' }));
   });
 
   test('safe update succeeds when existing activeDeliveryCount is preserved', async () => {
@@ -279,6 +317,7 @@ describe('profile and token transition', () => {
     await assertFails(dbFor('author').doc('users/author').set({
       uid: 'author',
       gender: 'female',
+      age: 20,
       interests: ['career'],
       createdAt: new Date(),
       lastActive: new Date(),
@@ -287,6 +326,7 @@ describe('profile and token transition', () => {
     await assertFails(dbFor('author').doc('users/author').set({
       uid: 'author',
       gender: 'female',
+      age: 20,
       interests: ['career'],
       createdAt: new Date(),
       lastActive: new Date(),

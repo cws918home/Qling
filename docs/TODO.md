@@ -420,20 +420,20 @@ Functional screen phases must use real production data sources and production ro
 
 ### Phase 9 - Onboarding Functional Implementation
 
-- [ ] TODO-DESIGN-9.1 Implement the finalized PRD onboarding flow using minimal functional skeletons first if the final visual reskin is not ready: nickname input, nickname duplicate check, gender/age input, interests selection, example worry creation, then answer feed.
-- [ ] TODO-DESIGN-9.2 Implement nickname validation in the service location chosen in Phase 1 and add tests for trimming, normalization, min/max length, allowed characters, blocked characters, and error copy.
-- [ ] TODO-DESIGN-9.3 Implement duplicate-check behavior with idle/checking/available/duplicate/invalid/network-failed/retry states and disabled continue until availability is proven.
-- [ ] TODO-DESIGN-9.4 Implement server/API transaction or reservation logic and tests for duplicate reservation, normalized-name conflict, and concurrent/race conflict behavior.
-- [ ] TODO-DESIGN-9.5 Add Firestore rules coverage in `src/firestore.rules.test.ts` proving unsafe client writes to nickname reservation docs or server-owned nickname fields are denied.
-- [ ] TODO-DESIGN-9.6 Implement required age validation, persistence to `users/{uid}.age`, rules behavior, and tests for valid, invalid, empty, and boundary ages.
-- [ ] TODO-DESIGN-9.7 Verify age is not used in MVP matching sort/filter logic and no age-removal onboarding adaptation is implemented under the current PRD.
-- [ ] TODO-DESIGN-9.8 Preserve gender persistence and rules behavior already covered by `src/firestore.rules.test.ts`.
-- [ ] TODO-DESIGN-9.9 Preserve interests persistence using domain category values, including `워라밸`; update onboarding tests and fixtures so `워라밸` remains the target domain/display value and any truly legacy misspelling is handled only as explicit compatibility input.
-- [ ] TODO-DESIGN-9.10 Preserve server-owned example worry creation before entering the authenticated feed, and verify example worries are not labeled, badged, or otherwise distinguished from real worries in production UI.
-- [ ] TODO-DESIGN-9.11 Preserve onboarding completion route transition from Phase 2.
-- [ ] TODO-DESIGN-9.12 Add or update onboarding service/container tests in the relevant new or existing service test files for valid onboarding, invalid required fields, duplicate nickname, required age, profile persistence, example worry creation, and route transition.
-- [ ] TODO-DESIGN-9.13 Add manual browser-note evidence for first-time sign-in through onboarding at 393px before final reskin, proving the functional skeleton works end to end.
-- [ ] TODO-DESIGN-9.V1 Verify Phase 9 with onboarding tests, nickname/rules tests if applicable, and the manual browser-note evidence.
+- [x] TODO-DESIGN-9.1 Implement the finalized PRD onboarding flow using minimal functional skeletons first if the final visual reskin is not ready: nickname input, nickname duplicate check, gender/age input, interests selection, example worry creation, then answer feed.
+- [x] TODO-DESIGN-9.2 Implement nickname validation in the service location chosen in Phase 1 and add tests for trimming, normalization, min/max length, allowed characters, blocked characters, and error copy.
+- [x] TODO-DESIGN-9.3 Implement duplicate-check behavior with idle/checking/available/duplicate/invalid/network-failed/retry states and disabled continue until availability is proven.
+- [x] TODO-DESIGN-9.4 Implement server/API transaction or reservation logic and tests for duplicate reservation, normalized-name conflict, and concurrent/race conflict behavior.
+- [x] TODO-DESIGN-9.5 Add Firestore rules coverage in `src/firestore.rules.test.ts` proving unsafe client writes to nickname reservation docs or server-owned nickname fields are denied.
+- [x] TODO-DESIGN-9.6 Implement required age validation, persistence to `users/{uid}.age`, rules behavior, and tests for valid, invalid, empty, and boundary ages.
+- [x] TODO-DESIGN-9.7 Verify age is not used in MVP matching sort/filter logic and no age-removal onboarding adaptation is implemented under the current PRD.
+- [x] TODO-DESIGN-9.8 Preserve gender persistence and rules behavior already covered by `src/firestore.rules.test.ts`.
+- [x] TODO-DESIGN-9.9 Preserve interests persistence using domain category values, including `워라밸`; update onboarding tests and fixtures so `워라밸` remains the target domain/display value and any truly legacy misspelling is handled only as explicit compatibility input.
+- [x] TODO-DESIGN-9.10 Preserve server-owned example worry creation before entering the authenticated feed, and verify example worries are not labeled, badged, or otherwise distinguished from real worries in production UI.
+- [x] TODO-DESIGN-9.11 Preserve onboarding completion route transition from Phase 2.
+- [x] TODO-DESIGN-9.12 Add or update onboarding service/container tests in the relevant new or existing service test files for valid onboarding, invalid required fields, duplicate nickname, required age, profile persistence, example worry creation, and route transition.
+- [x] TODO-DESIGN-9.13 Add manual browser-note evidence for first-time sign-in through onboarding at 393px before final reskin, proving the functional skeleton works end to end.
+- [x] TODO-DESIGN-9.V1 Verify Phase 9 with onboarding tests, nickname/rules tests if applicable, and the manual browser-note evidence.
 
 ### Phase 10 - My-Page/Account Functional Expansion
 

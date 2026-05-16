@@ -131,6 +131,7 @@ test('discovers every presentational screen file under src/screens', () => {
       'src/screens/myPage/MyAnswersScreen.tsx',
       'src/screens/myPage/MyPageScreen.tsx',
       'src/screens/myPage/MyWorriesScreen.tsx',
+      'src/screens/onboarding/OnboardingScreen.tsx',
       'src/screens/receivedWorries/ReceivedWorriesScreen.tsx',
       'src/screens/replyDetail/ReplyDetailScreen.tsx',
       'src/screens/writeForm/WriteFormScreen.tsx',
