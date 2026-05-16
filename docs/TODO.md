@@ -63,7 +63,7 @@ Design integration is complete only when every checkbox in this document is chec
 ### Phase 0 - Design Inventory And Production-Gap Audit
 
 - [x] TODO-DESIGN-0.1 Inspect `design/README.md`, `design/package.json`, every `design/src/screens/**/Component.tsx`, all screen-local SVG/image assets, `design/src/styles/index.css`, `src/App.tsx`, `src/main.tsx`, `src/index.css`, `src/services/appShell/prdNavigationPolicy.ts`, `src/services/validation/content.ts`, `src/services/drafts/contentDrafts.ts`, the service folders named in this TODO, `packages/domain/src/index.ts`, `firestore.rules`, `src/firestore.rules.test.ts`, and existing related tests; evidence: PR checklist entry with inspected file list and date.
-- [x] TODO-DESIGN-0.2 Create a single screen-to-route mapping table covering every design screen: `splash`, `loading`, `login`, `onboarding-basic`, `onboarding-duplicate`, `onboarding-interests`, `received-worries`, `question-write-a`, `question-write-b`, `answer-write-1`, `answer-write-2`, `answer-write-3`, `answer-check`, `my-page`, `edit-interests`, `my-answers`, `my-worries`, `privacy-policy`, `logout`, and `account-deletion`; evidence: table with columns `Design screen`, `Production route/state`, `Functional behavior required`, `Visual-only/variant/exclusion`, `Data source`, `Verification`.
+- [x] TODO-DESIGN-0.2 Create a single screen-to-route mapping table covering every design screen: `splash`, `loading`, `login`, `onboarding-basic`, `onboarding-duplicate`, `onboarding-interests`, `received-worries`, `question-write-a`, `question-write-b`, `answer-write-1`, `answer-write-2`, `answer-write-3`, `answer-check`, `my-page`, `edit-interests`, `my-answers`, `my-worries`, `privacy-policy`, operation-policy access if implemented through a policy index/detail route, `logout`, and `account-deletion`; evidence: table with columns `Design screen`, `Production route/state`, `Functional behavior required`, `Visual-only/variant/exclusion`, `Data source`, `Verification`.
 - [x] TODO-DESIGN-0.3 Classify each design screen in the table as one of: required functional screen, confirmation/modal variant, visual variant of another screen, or intentional product-level exclusion.
 - [x] TODO-DESIGN-0.4 Record production gaps discovered from the audit, including onboarding identity fields, onboarding duplicate check, explicit onboarding subroutes, edit interests, my answers, my worries, privacy policy, logout confirmation, account deletion confirmation, answer-check/detail mapping, bottom navigation, and static-design data replacement.
 - [x] TODO-DESIGN-0.5 Record design tokens and motifs: SUIT font, orange `#ff8b3d`/`#ff8b0d`, cream `#fff1d1`/`#fff5eb`, dark text `#1a1a1a`/`#2a2a2a`, muted gray `#b8b8b8`, border gray `#dadce0`/`#f0f0f2`, pill/card/modal radii, card/modal shadows, orange header band, cream content sheet, bottom navigation, category chips, white cards, text areas, CTA styles, modal styles, and profile eye/avatar motif.
@@ -73,36 +73,36 @@ Design integration is complete only when every checkbox in this document is chec
 
 ### Phase 1 - Product Model And Schema Decisions Before UI
 
-Phase 2 must not begin until every Phase 1 decision item is explicitly resolved. If a decision cannot be resolved, document it as a blocker and stop design-integration implementation. Do not continue with an assumption.
+Phase 2 must not begin until Phase 1 verifies that the current `docs/PRD.md` product decisions are reflected in this TODO and downstream implementation items. If a TODO item conflicts with `docs/PRD.md`, treat the PRD as the source of truth and stop to update this TODO before implementation.
 
-- [ ] TODO-DESIGN-1.1 Decide nickname behavior; default decision: nickname is required because design onboarding/profile screens show a display identity that production does not currently model. If product owner rejects nickname, document the blocker-resolution and exact replacement UI before Phase 2.
-- [ ] TODO-DESIGN-1.2 If nickname is kept, define profile fields exactly: display nickname field, normalized nickname field if stored, trim behavior, min/max length, allowed characters, blocked characters, error copy, and whether nickname can be changed after onboarding.
-- [ ] TODO-DESIGN-1.3 If nickname is kept, define duplicate-check behavior exactly: route/state location, trigger, idle/checking/available/duplicate/invalid/network-failed/retry states, disabled submit rules, and display copy.
-- [ ] TODO-DESIGN-1.4 If nickname is kept, define uniqueness persistence exactly; default decision: server/API transaction using normalized nickname reservation documents, not client-only Firestore checks.
-- [ ] TODO-DESIGN-1.5 If nickname is rejected, define exact design adaptation for onboarding basic, duplicate-check screen exclusion, profile display name, and my-page profile summary; evidence must include the replacement copy/data source.
-- [ ] TODO-DESIGN-1.6 Decide age behavior; default decision: age is not required unless `docs/PRD.md` is amended, because current matching/profile services use gender and interests only.
-- [ ] TODO-DESIGN-1.7 If age is kept, define `users/{uid}.age` type, allowed range, empty-state behavior, validation copy, persistence path, rules behavior, and whether age affects matching.
-- [ ] TODO-DESIGN-1.8 If age is rejected, define exact onboarding-basic adaptation that removes age while preserving the design hierarchy.
-- [ ] TODO-DESIGN-1.9 Decide category display labels; default decision: keep stable internal values from `packages/domain/src/index.ts`, including `워라밸`, and add a display-label map only when approved copy intentionally differs from internal values such as `워라벨`.
-- [ ] TODO-DESIGN-1.10 Decide received hearts behavior; default decision: `받은 하트` displays existing `helpedCount` because `docs/PRD.md` defines likes received by answerers as helpedCount.
-- [ ] TODO-DESIGN-1.11 Decide profile avatar behavior; default decision: use the design eye/profile motif as a static production-safe avatar until uploaded avatars are explicitly added to the product model.
-- [ ] TODO-DESIGN-1.12 Decide profile display-name fallback; default decision: use nickname if kept, otherwise use `큐링 사용자` unless a privacy-safe auth display name is explicitly approved.
-- [ ] TODO-DESIGN-1.13 Decide privacy/terms behavior; requires product-owner decision if no current terms/policy source exists. Privacy policy must route to real product text; terms must either route to real terms text or be documented as an intentional exclusion.
-- [ ] TODO-DESIGN-1.14 Write the Phase 1 decision record in `docs/PRD.md`, an ADR, or the implementation PR checklist; it must include nickname, age, duplicate check, helpedCount/received hearts, avatar, display name fallback, privacy/terms behavior, and category display labels.
-- [ ] TODO-DESIGN-1.15 Add validation/schema test targets to the implementation plan: category label/value tests in `packages/domain/src/index.test.ts` if a domain display-label map is added; content validation remains in `src/services/validation/content.test.ts`; profile/nickname validation tests go in a new service test such as `src/services/userProfile/profileValidation.test.ts` or `src/services/authProfile/profileIdentity.test.ts` if that module owns the logic.
-- [ ] TODO-DESIGN-1.16 If nickname is kept, add nickname uniqueness test targets: normalized nickname validation, duplicate check result mapping, reservation transaction conflict, concurrent/race conflict behavior, and Firestore rules preventing unsafe direct client writes.
-- [ ] TODO-DESIGN-1.17 If nickname/age/reservation docs change Firestore shape, add Firestore rules test targets in `src/firestore.rules.test.ts` and note whether `npm run test:rules` is required in Phase 24.
-- [ ] TODO-DESIGN-1.GATE Verify the hard decision gate: every Phase 1 decision is resolved with evidence, or unresolved decisions are documented as blockers and Phase 2 has not started.
+- [ ] TODO-DESIGN-1.1 Verify nickname required behavior from `docs/PRD.md`: onboarding must collect nickname, nickname duplicate check remains in the flow, nickname and age are added to stored profile data, and nickname is visible only to the signed-in user in the my-page profile summary.
+- [ ] TODO-DESIGN-1.2 Define profile fields exactly: display nickname field, normalized nickname field, trim behavior, min/max length, allowed characters, blocked characters, error copy, and whether nickname can be changed after onboarding; ensure nickname exposure is limited to the my-page profile summary and does not appear in my answers, answer detail, other-user screens, worry cards, reply cards, example worries, or notification copy.
+- [ ] TODO-DESIGN-1.3 Define duplicate-check behavior exactly: route/state location, trigger, idle/checking/available/duplicate/invalid/network-failed/retry states, disabled submit rules, and display copy.
+- [ ] TODO-DESIGN-1.4 Define nickname uniqueness persistence exactly for implementation: server/API transaction using normalized nickname reservation documents, not client-only Firestore checks; keep the PRD wording limited to server-side final duplicate-check guarantee.
+- [ ] TODO-DESIGN-1.5 Verify nickname rejection/removal paths are not implemented because nickname is required by the current PRD; evidence must show onboarding basic, duplicate-check, and my-page summary all follow required-nickname behavior.
+- [ ] TODO-DESIGN-1.6 Verify age required behavior from `docs/PRD.md`: age is mandatory, persisted to `users/{uid}.age`, validated during onboarding, included in data policy, and not used for MVP matching sort/filter logic.
+- [ ] TODO-DESIGN-1.7 Define `users/{uid}.age` type, allowed range, validation copy, persistence path, rules behavior, and matching non-use exactly; use the current PRD range of 14 through 99 unless the product owner updates the PRD.
+- [ ] TODO-DESIGN-1.8 Verify age rejection/removal paths are not implemented because age is required by the current PRD; evidence must show onboarding basic preserves required age input and validation.
+- [ ] TODO-DESIGN-1.9 Implement category value migration: update `packages/domain/src/index.ts` so the domain value and display value are both `워라벨`, migrate or compatibility-handle existing Firestore data, seed/example worries, and test fixtures that still use the old spelling, and do not solve this with a display-label map only.
+- [ ] TODO-DESIGN-1.10 Verify received hearts behavior: `받은 하트` displays existing `helpedCount` and browser UI code does not mutate `helpedCount` directly.
+- [ ] TODO-DESIGN-1.11 Keep the design eye/profile motif as a design implementation detail only; do not add avatar upload or avatar fields to the product model unless the PRD later adds them.
+- [ ] TODO-DESIGN-1.12 Define profile display-name fallback under required-nickname behavior: my-page summary may display the user's nickname, but fallback identity must not leak into other users' screens, worry/reply cards, my-answer lists, or answer details.
+- [ ] TODO-DESIGN-1.13 Implement policy behavior from `docs/PRD.md`: keep privacy policy and operation policy only, exclude terms and a dedicated usage-guide screen from MVP, do not show policy links on login, expose policy access only from my-page/more, use `docs/privacy_policy.md` and `docs/operation_policy.md` as policy body sources, allow those files to be empty, and show a production-safe empty state such as policy body preparation without adding fake policy copy.
+- [ ] TODO-DESIGN-1.14 Verify the Phase 1 PRD reflection record in the implementation PR checklist; it must confirm nickname, age, duplicate check, helpedCount/received hearts, avatar-as-design-detail, display-name exposure limits, privacy/operation policy behavior, PWA install/share, push notification settings, bottom navigation, publish-success routing, category migration, example-worry indistinguishability, hidden-content behavior, and my-page edit scope.
+- [ ] TODO-DESIGN-1.15 Add validation/schema test targets to the implementation plan: category value migration tests in `packages/domain/src/index.test.ts`; LLM category validation/fallback/matching tests proving `워라벨` is valid; content validation remains in `src/services/validation/content.test.ts`; profile nickname and required age validation tests go in a new service test such as `src/services/userProfile/profileValidation.test.ts` or `src/services/authProfile/profileIdentity.test.ts` if that module owns the logic.
+- [ ] TODO-DESIGN-1.16 Add nickname uniqueness test targets: normalized nickname validation, duplicate check result mapping, reservation transaction conflict, concurrent/race conflict behavior, and Firestore rules preventing unsafe direct client writes.
+- [ ] TODO-DESIGN-1.17 Add Firestore rules test targets in `src/firestore.rules.test.ts` for nickname reservation docs, server-owned nickname fields, required age persistence, and age validation/rules behavior; note whether `npm run test:rules` is required in Phase 24.
+- [ ] TODO-DESIGN-1.GATE Verify the PRD reflection gate: all current `docs/PRD.md` product decisions are reflected in this TODO, and Phase 2+ implementation items do not contradict the PRD.
 
 ### Phase 2 - Route And App-Shell Functional Expansion
 
 - [ ] TODO-DESIGN-2.1 Update route types and helper functions in `src/services/appShell/prdNavigationPolicy.ts`; no route helper may live only inside a presentational component.
-- [ ] TODO-DESIGN-2.2 Add route/state coverage for splash/loading, login, onboarding basic, onboarding duplicate check if kept, onboarding interests, received worries, write worry, write reply, answer/reply check, my page, edit interests, my answers, my worries, privacy policy, logout confirmation, and account deletion confirmation.
-- [ ] TODO-DESIGN-2.3 Preserve existing PRD semantics unless Phase 1/PRD explicitly changed them: default authenticated route to received worries/answer feed, onboarding completion to received worries/answer feed after profile/examples are ready, worry publish success to my worries unless a confirmation route is inserted, reply publish success to received worries/answer feed unless a confirmation route is inserted, and pass success to received worries/answer feed.
+- [ ] TODO-DESIGN-2.2 Add route/state coverage for splash/loading, login, onboarding basic, onboarding duplicate check, onboarding gender/age, onboarding interests, received worries, write worry, write reply, answer/reply check, my page, edit interests, my answers, my worries, privacy policy and operation policy through detail routes or a policy index/detail structure, logout confirmation, and account deletion confirmation.
+- [ ] TODO-DESIGN-2.3 Implement current PRD route semantics: default authenticated route to received worries/answer feed, onboarding completion to received worries/answer feed after profile/examples are ready, worry publish success to the newly written worry detail, reply publish success to the newly written my-answer detail, and pass success to received worries/answer feed; if needed, update publish API results or route containers so the created worryId/replyId can be resolved.
 - [ ] TODO-DESIGN-2.4 Define back routes for write worry, write reply, received-answer detail, my-answer detail, edit interests, my answers, my worries, privacy policy, logout confirmation, and account deletion confirmation.
 - [ ] TODO-DESIGN-2.5 Define bottom-tab ownership for nested routes: received worries/write reply under answer tab, my worries/write worry/received-answer detail under my-worries tab, and my page/edit interests/my answers/my-answer detail/settings subroutes under my-page tab.
 - [ ] TODO-DESIGN-2.6 Create minimal functional screen skeletons only where needed to exercise new routes before visual reskin; skeletons must use real route state and callbacks, not static design data.
-- [ ] TODO-DESIGN-2.7 Add route-policy tests in `src/services/appShell/prdNavigationPolicy.test.ts` for default authenticated route, onboarding completion, publish success, reply success, pass success, every back route, my-page subroutes, logout/account deletion routes, and bottom-tab selection.
+- [ ] TODO-DESIGN-2.7 Add route-policy tests in `src/services/appShell/prdNavigationPolicy.test.ts` for default authenticated route, onboarding completion, worry publish success to written worry detail, reply publish success to my-answer detail, pass success to received worries/answer feed, every back route, my-page subroutes, logout/account deletion routes, policy routes, and bottom-tab selection.
 - [ ] TODO-DESIGN-2.V1 Verify Phase 2 with passing `src/services/appShell/prdNavigationPolicy.test.ts`, a route map diff, and evidence that route policy did not move into UI components.
 
 ### Phase 3 - App Shell Responsibility And Route Rendering Boundary
@@ -118,10 +118,10 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 
 - [ ] TODO-DESIGN-4.1 Define screen props contracts for login/loading/splash screens, including auth/loading/error/submit props and no Firebase imports.
 - [ ] TODO-DESIGN-4.2 Define screen props contracts for onboarding basic, duplicate check, and interests, including field values, validation messages, submit/check callbacks, processing states, and no Firestore/API imports.
-- [ ] TODO-DESIGN-4.3 Define screen props contracts for received-worries, including feed items, pass/open callbacks, loading/error/empty states, already-replied state, and no delivery API imports.
+- [ ] TODO-DESIGN-4.3 Define screen props contracts for received-worries, including feed items, pass/open callbacks, loading/error/empty states, unread state, and no delivery API imports; do not include a completed-reply display state because replied deliveries must be excluded from the answer feed.
 - [ ] TODO-DESIGN-4.4 Define screen props contracts for write-worry and write-reply forms, including draft value, validation result, character count, publish callback, processing/moderation/error states, and no publication API imports.
 - [ ] TODO-DESIGN-4.5 Define screen props contracts for reply-check/detail screens, including original worry, reply, feedback, comment, submit callbacks, existing-feedback states, and no feedback API imports.
-- [ ] TODO-DESIGN-4.6 Define screen props contracts for my-page/account screens, including profile summary, helpedCount, interests, settings items, logout/delete callbacks, push/PWA access props, and no Firebase/userAccount imports.
+- [ ] TODO-DESIGN-4.6 Define screen props contracts for my-page/account screens, including profile summary, helpedCount/received hearts, interests, required push notification settings access, required PWA install/share access, policy settings items, logout/delete callbacks, and no Firebase/userAccount imports.
 - [ ] TODO-DESIGN-4.7 Add pure props-contract tests in named targets near the screen contract modules, such as `src/screens/receivedWorries/contract.test.ts`, `src/screens/writeForm/contract.test.ts`, and `src/screens/myPage/contract.test.ts`; do not require React DOM rendering tests unless a React test harness is deliberately added.
 - [ ] TODO-DESIGN-4.8 If a React DOM component test harness is added deliberately, document the dependency, setup file, and first test target; otherwise rely on pure props-contract tests, import-boundary tests, service tests, and manual browser evidence.
 - [ ] TODO-DESIGN-4.V1 Verify Phase 4 with contract definitions and props-contract test output before container wiring begins.
@@ -145,7 +145,7 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 
 ### Phase 7 - My-Page/Account/Reply-Detail Container Boundary
 
-- [ ] TODO-DESIGN-7.1 Implement my-page/account container wiring to profile data, helpedCount/received hearts, interests, settings items, push/PWA hooks, sign-out cleanup, and `deleteMyAccountViaApi`.
+- [ ] TODO-DESIGN-7.1 Implement my-page/account container wiring to profile data, helpedCount/received hearts, interests, settings items, real push permission/FCM registration/status hooks, PWA install/share hooks, sign-out cleanup, and `deleteMyAccountViaApi`.
 - [ ] TODO-DESIGN-7.2 Implement my-answers/my-worries container wiring to `useMyGivenReplies`, `useMyWorries`, `useRepliesForWorry`, selected item state, route helpers, and read-state behavior where applicable.
 - [ ] TODO-DESIGN-7.3 Implement reply-detail container wiring to original worry data, reply data, feedback submit, publisher comment submit, moderation rejection display, draft clearing, and route helpers.
 - [ ] TODO-DESIGN-7.4 Ensure my-page/account/reply-detail presentational screens only receive props and emit events; they must not import Firebase, userAccount APIs, push internals, feedback APIs, read-state APIs, or Firestore SDK.
@@ -163,36 +163,36 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 
 ### Phase 9 - Onboarding Functional Implementation
 
-- [ ] TODO-DESIGN-9.1 Implement the finalized onboarding flow from Phase 1 using minimal functional skeletons first if the final visual reskin is not ready.
-- [ ] TODO-DESIGN-9.2 If nickname is kept, implement nickname validation in the service location chosen in Phase 1 and add tests for trimming, normalization, min/max length, allowed characters, blocked characters, and error copy.
-- [ ] TODO-DESIGN-9.3 If nickname is kept, implement duplicate-check behavior with idle/checking/available/duplicate/invalid/network-failed/retry states and disabled continue until availability is proven.
-- [ ] TODO-DESIGN-9.4 If nickname is kept, implement server/API transaction or reservation logic and tests for duplicate reservation, normalized-name conflict, and concurrent/race conflict behavior.
-- [ ] TODO-DESIGN-9.5 If nickname is kept, add Firestore rules coverage in `src/firestore.rules.test.ts` proving unsafe client writes to nickname reservation docs or server-owned nickname fields are denied.
-- [ ] TODO-DESIGN-9.6 If age is kept, implement age validation/persistence/rules from Phase 1 and test valid, invalid, empty, and boundary ages.
-- [ ] TODO-DESIGN-9.7 If age is rejected, implement the Phase 1 adaptation and verify no hardcoded age UI remains.
+- [ ] TODO-DESIGN-9.1 Implement the finalized PRD onboarding flow using minimal functional skeletons first if the final visual reskin is not ready: nickname input, nickname duplicate check, gender/age input, interests selection, example worry creation, then answer feed.
+- [ ] TODO-DESIGN-9.2 Implement nickname validation in the service location chosen in Phase 1 and add tests for trimming, normalization, min/max length, allowed characters, blocked characters, and error copy.
+- [ ] TODO-DESIGN-9.3 Implement duplicate-check behavior with idle/checking/available/duplicate/invalid/network-failed/retry states and disabled continue until availability is proven.
+- [ ] TODO-DESIGN-9.4 Implement server/API transaction or reservation logic and tests for duplicate reservation, normalized-name conflict, and concurrent/race conflict behavior.
+- [ ] TODO-DESIGN-9.5 Add Firestore rules coverage in `src/firestore.rules.test.ts` proving unsafe client writes to nickname reservation docs or server-owned nickname fields are denied.
+- [ ] TODO-DESIGN-9.6 Implement required age validation, persistence to `users/{uid}.age`, rules behavior, and tests for valid, invalid, empty, and boundary ages.
+- [ ] TODO-DESIGN-9.7 Verify age is not used in MVP matching sort/filter logic and no age-removal onboarding adaptation is implemented under the current PRD.
 - [ ] TODO-DESIGN-9.8 Preserve gender persistence and rules behavior already covered by `src/firestore.rules.test.ts`.
-- [ ] TODO-DESIGN-9.9 Preserve interests persistence using domain category values and any approved display-label map.
-- [ ] TODO-DESIGN-9.10 Preserve server-owned example worry creation before entering the authenticated feed.
+- [ ] TODO-DESIGN-9.9 Preserve interests persistence using domain category values, including the migrated `워라벨` value; update onboarding tests and fixtures so the old spelling is not treated as the target domain value.
+- [ ] TODO-DESIGN-9.10 Preserve server-owned example worry creation before entering the authenticated feed, and verify example worries are not labeled, badged, or otherwise distinguished from real worries in production UI.
 - [ ] TODO-DESIGN-9.11 Preserve onboarding completion route transition from Phase 2.
-- [ ] TODO-DESIGN-9.12 Add or update onboarding service/container tests in the relevant new or existing service test files for valid onboarding, invalid required fields, duplicate nickname if kept, profile persistence, example worry creation, and route transition.
+- [ ] TODO-DESIGN-9.12 Add or update onboarding service/container tests in the relevant new or existing service test files for valid onboarding, invalid required fields, duplicate nickname, required age, profile persistence, example worry creation, and route transition.
 - [ ] TODO-DESIGN-9.13 Add manual browser-note evidence for first-time sign-in through onboarding at 393px before final reskin, proving the functional skeleton works end to end.
 - [ ] TODO-DESIGN-9.V1 Verify Phase 9 with onboarding tests, nickname/rules tests if applicable, and the manual browser-note evidence.
 
 ### Phase 10 - My-Page/Account Functional Expansion
 
-- [ ] TODO-DESIGN-10.1 Implement profile summary using dynamic display name, avatar motif decision, interests, and helpedCount/received hearts.
-- [ ] TODO-DESIGN-10.2 Implement edit-interests route/state backed by existing profile update behavior and preserve gender unless Phase 1 changed that behavior.
-- [ ] TODO-DESIGN-10.3 Implement my-answers route/state backed by `useMyGivenReplies`, with dynamic list items and detail navigation.
-- [ ] TODO-DESIGN-10.4 Implement my-worries route/state backed by `useMyWorries` and `useRepliesForWorry`, with dynamic list items and received replies navigation.
-- [ ] TODO-DESIGN-10.5 Implement privacy-policy route/state using real policy text or a documented product-owner exclusion for missing terms/policy content.
+- [ ] TODO-DESIGN-10.1 Implement profile summary using dynamic nickname, interests, PRD-approved self-profile fields only, and helpedCount/received hearts; keep avatar motif as visual detail and do not expose nickname outside my-page summary.
+- [ ] TODO-DESIGN-10.2 Implement edit-interests route/state backed by existing profile update behavior for interests only; gender is not editable in MVP and no gender edit UI should be added.
+- [ ] TODO-DESIGN-10.3 Implement my-answers route/state backed by `useMyGivenReplies`, with dynamic list items and detail navigation; include replies to example worries exactly like real replies and hide any content suppressed by moderation/admin policy.
+- [ ] TODO-DESIGN-10.4 Implement my-worries route/state backed by `useMyWorries` and `useRepliesForWorry`, with dynamic list items and received replies navigation; hide worries and replies suppressed by moderation/admin policy from both publisher and answerer views.
+- [ ] TODO-DESIGN-10.5 Implement privacy policy and operation policy route/state using `docs/privacy_policy.md` and `docs/operation_policy.md` as body sources; if a source file is empty, show a production-safe empty state such as policy body preparation; do not add fake policy copy and do not implement terms or a dedicated usage-guide route for MVP.
 - [ ] TODO-DESIGN-10.6 Implement logout confirmation route/state before calling existing sign-out behavior.
 - [ ] TODO-DESIGN-10.7 Implement account deletion confirmation route/state before calling `deleteMyAccountViaApi`.
 - [ ] TODO-DESIGN-10.8 Preserve logout cleanup: local push registration state is cleared and Firebase auth signs out.
 - [ ] TODO-DESIGN-10.9 Preserve account deletion cleanup: server deletion path runs, local push state is cleaned, and user is signed out.
-- [ ] TODO-DESIGN-10.10 Preserve push notification settings access if retained; if hidden by design, document where PRD-required push settings remain reachable.
-- [ ] TODO-DESIGN-10.11 Preserve PWA install/share access if retained; if hidden by design, document where PRD-required PWA install/share remains reachable.
+- [ ] TODO-DESIGN-10.10 Preserve required push notification settings access in my-page/more with real Web Push permission request, FCM registration, and granted/denied/default status display; do not reduce this to static guidance.
+- [ ] TODO-DESIGN-10.11 Preserve required PWA install/share access in my-page/more as an "앱처럼 사용하기" flow covering Android install, iOS share-to-home-screen guidance, and service URL/QR sharing as applicable.
 - [ ] TODO-DESIGN-10.12 Add route-policy tests for my-page subroutes in `src/services/appShell/prdNavigationPolicy.test.ts`.
-- [ ] TODO-DESIGN-10.13 Add account behavior tests in existing account/push locations, including `src/services/userAccount/deleteMyAccount.test.ts` and `src/services/pushRegistration/internalLifecycle.test.ts` when cleanup behavior changes.
+- [ ] TODO-DESIGN-10.13 Add account behavior tests in existing account/push locations, including `src/services/userAccount/deleteMyAccount.test.ts` and `src/services/pushRegistration/internalLifecycle.test.ts` when cleanup behavior changes; push tests must cover permission request, FCM registration, and status mapping when touched.
 - [ ] TODO-DESIGN-10.14 Add pure props-contract tests for helpedCount fallback, destructive-action confirmation props, and settings item routing in the my-page contract test target from Phase 4.
 - [ ] TODO-DESIGN-10.15 Add manual screenshot evidence for my page, logout confirmation, and account deletion confirmation using dynamic data, proving hardcoded design values such as `라미` and `314` are gone.
 - [ ] TODO-DESIGN-10.V1 Verify Phase 10 with route tests, account/push tests, props-contract tests, and manual screenshot evidence.
@@ -200,7 +200,7 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 ### Phase 11 - Received Worries And Pass/Reply Functional Alignment
 
 - [ ] TODO-DESIGN-11.1 Wire received-worries data to `useHomeWorryFeed` and `filterSuppressedFeedWorries`.
-- [ ] TODO-DESIGN-11.2 Render dynamic category, received-time/fallback copy, unread state, worry content, already-replied state, loading, error, and empty states.
+- [ ] TODO-DESIGN-11.2 Render dynamic category, received-time/fallback copy, unread state, worry content, loading, error, and empty states; exclude deliveries/replies that have already been answered from the received-worries feed instead of rendering a completed-reply state.
 - [ ] TODO-DESIGN-11.3 Ensure card body opens write reply through route helpers and marks delivery read where applicable.
 - [ ] TODO-DESIGN-11.4 Ensure `건너뛰기` maps to existing `passDeliveryViaApi` behavior, not UI-only removal.
 - [ ] TODO-DESIGN-11.5 Ensure pass click does not trigger card body open.
@@ -208,9 +208,9 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 - [ ] TODO-DESIGN-11.7 Ensure pass success suppresses/hides the delivery and refreshes feed behavior correctly.
 - [ ] TODO-DESIGN-11.8 Ensure pass failure preserves the card, clears loading, and displays the existing error path.
 - [ ] TODO-DESIGN-11.9 Preserve unread/read-state behavior through existing read-state service/API modules.
-- [ ] TODO-DESIGN-11.10 Add or update tests in existing delivery/feed/read-state locations: `src/services/deliveries/uiPolicy.test.ts`, `src/services/deliveries/passDelivery.test.ts`, `src/services/homeWorryFeed/prdPolicy.test.ts`, `src/services/homeWorryFeed/apiClient.test.ts`, and read-state tests as behavior changes require.
-- [ ] TODO-DESIGN-11.11 Add pure props-contract tests for card open, pass click isolation, pass loading, already-replied display, empty state, and error state.
-- [ ] TODO-DESIGN-11.12 Add manual browser-note evidence for one card open, one pass success, one pass failure or simulated failure, one already-replied display, and empty feed.
+- [ ] TODO-DESIGN-11.10 Add or update tests in existing delivery/feed/read-state locations: `src/services/deliveries/uiPolicy.test.ts`, `src/services/deliveries/passDelivery.test.ts`, `src/services/homeWorryFeed/prdPolicy.test.ts`, `src/services/homeWorryFeed/apiClient.test.ts`, and read-state tests as behavior changes require; include coverage that answered deliveries/replies and hidden worries/replies are excluded from the answer feed/read model.
+- [ ] TODO-DESIGN-11.11 Add pure props-contract tests for card open, pass click isolation, pass loading, answered-item exclusion from props, empty state, and error state.
+- [ ] TODO-DESIGN-11.12 Add manual browser-note evidence for one card open, one pass success, one pass failure or simulated failure, reply success removing the submitted item from the answer feed, and empty feed.
 - [ ] TODO-DESIGN-11.V1 Verify Phase 11 with service tests, props-contract tests, and manual browser-note evidence.
 
 ### Phase 12 - Worry Writing And Reply Writing Functional Alignment
@@ -219,7 +219,7 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 - [ ] TODO-DESIGN-12.2 Preserve worry draft persistence and clearing through `src/services/drafts/contentDrafts.ts`.
 - [ ] TODO-DESIGN-12.3 Preserve reply draft persistence and clearing keyed by delivery id.
 - [ ] TODO-DESIGN-12.4 Preserve moderation rejected/failed/published handling for both worry and reply publication.
-- [ ] TODO-DESIGN-12.5 Preserve publish success routing from Phase 2.
+- [ ] TODO-DESIGN-12.5 Preserve publish success routing from Phase 2: worry publish success opens the written worry detail, and reply publish success opens the written my-answer detail.
 - [ ] TODO-DESIGN-12.6 Implement design-compatible input states: placeholder, live character count, disabled submit, processing submit, validation help/error text, moderation rejection display, and retry path where applicable.
 - [ ] TODO-DESIGN-12.7 Add validation tests in `src/services/validation/content.test.ts` only if validation rules change.
 - [ ] TODO-DESIGN-12.8 Add draft tests in `src/services/drafts/contentDrafts.test.ts` if draft keys or clearing behavior changes.
@@ -231,16 +231,16 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 ### Phase 13 - Reply Check, Feedback, Comment Functional Alignment
 
 - [ ] TODO-DESIGN-13.1 Map answer-check to received-answer detail for replies to the user's worries.
-- [ ] TODO-DESIGN-13.2 Map my-answer detail to replies written by the user, even if it shares the answer-check visual pattern.
+- [ ] TODO-DESIGN-13.2 Map my-answer detail to replies written by the user, even if it shares the answer-check visual pattern; include replies written to example worries without distinguishing them from real-worry replies.
 - [ ] TODO-DESIGN-13.3 Preserve dynamic original worry content and dynamic reply content in both detail flows.
 - [ ] TODO-DESIGN-13.4 Preserve helpful and not-helpful feedback submission through `submitReplyFeedbackWithProductionAdapters`.
 - [ ] TODO-DESIGN-13.5 Preserve publisher comment submission where allowed after helpful feedback.
 - [ ] TODO-DESIGN-13.6 Preserve feedback/comment moderation rejection handling and user/help copy.
 - [ ] TODO-DESIGN-13.7 Preserve helpedCount behavior and do not mutate helpedCount from browser UI code.
-- [ ] TODO-DESIGN-13.8 Preserve read-model assumptions for existing feedback and comments.
+- [ ] TODO-DESIGN-13.8 Preserve read-model assumptions for existing feedback and comments, and ensure hidden worries/replies disappear from publisher and answerer read models.
 - [ ] TODO-DESIGN-13.9 Preserve feedback comment draft persistence and clearing.
 - [ ] TODO-DESIGN-13.10 Add or update feedback tests in `src/services/replyFeedback/submitReplyFeedback.test.ts`, `src/services/replyFeedback/serverFeedback.test.ts`, and `src/services/replyFeedback/serverFirestore.test.ts` if behavior changes.
-- [ ] TODO-DESIGN-13.11 Add or update mailbox/read-model tests in `src/services/replyMailbox/controller.test.ts`, `src/services/myWorries/prdPolicy.test.ts`, or read-state tests if detail/read behavior changes.
+- [ ] TODO-DESIGN-13.11 Add or update mailbox/read-model tests in `src/services/replyMailbox/controller.test.ts`, `src/services/myWorries/prdPolicy.test.ts`, `src/services/homeWorryFeed/prdPolicy.test.ts`, or read-state tests if detail/read behavior changes; include hidden worry/reply exclusion for home feed, my worries, received replies, my answers, and detail routes.
 - [ ] TODO-DESIGN-13.12 Add pure props-contract tests for helpful feedback, not-helpful feedback, comment submission, rejected comment, existing feedback display, my-answer detail display, and received-answer detail display.
 - [ ] TODO-DESIGN-13.13 Add manual browser-note evidence for received-answer detail, my-answer detail, feedback submission, existing feedback display, and comment submission/rejection state.
 - [ ] TODO-DESIGN-13.V1 Verify Phase 13 with feedback/read-model tests, props-contract tests, and manual browser-note evidence.
@@ -264,17 +264,17 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 
 - [ ] TODO-DESIGN-15.1 Confirm Phase 2 route wiring, Phase 3 shell boundaries, Phase 4 screen contracts, and Phase 14 tokens/primitives are complete before visual work starts.
 - [ ] TODO-DESIGN-15.2 Reskin loading/splash using production loading/error state, safe-area-aware layout, accessible loading text, and no fake status/home indicators.
-- [ ] TODO-DESIGN-15.3 Reskin login using production Google login wiring, processing/disabled/auth-error states, privacy/terms behavior from Phase 1, and keyboard/focus behavior.
+- [ ] TODO-DESIGN-15.3 Reskin login using production Google login wiring, processing/disabled/auth-error states, no policy or terms links under the current PRD, and keyboard/focus behavior.
 - [ ] TODO-DESIGN-15.4 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
-- [ ] TODO-DESIGN-15.5 Add manual screenshot evidence for loading/splash and login at 393px and at least one non-393px width.
+- [ ] TODO-DESIGN-15.5 Add manual screenshot evidence for loading/splash and login at 393px and at least one non-393px width, including evidence that policy links are absent from login.
 - [ ] TODO-DESIGN-15.V1 Verify Phase 15 with screenshots/browser notes and any touched functional test output.
 
 ### Phase 16 - Onboarding Visual Reskin
 
 - [ ] TODO-DESIGN-16.1 Confirm Phase 1 product decisions and Phase 9 onboarding functional implementation are complete before onboarding visual work starts.
-- [ ] TODO-DESIGN-16.2 Reskin onboarding basic with dynamic fields, validation errors, nickname/age adaptations from Phase 1, disabled/processing states, and keyboard/focus behavior.
-- [ ] TODO-DESIGN-16.3 Reskin onboarding duplicate-check screen/state if nickname duplicate check is kept; otherwise verify the Phase 1 exclusion/adaptation is reflected visually.
-- [ ] TODO-DESIGN-16.4 Reskin onboarding interests with dynamic category data, selected/unselected states, invalid/no-selection state, disabled/processing state, and accessible selection controls.
+- [ ] TODO-DESIGN-16.2 Reskin onboarding basic with dynamic required nickname, gender, and age fields from Phase 1, validation errors, disabled/processing states, and keyboard/focus behavior.
+- [ ] TODO-DESIGN-16.3 Reskin onboarding duplicate-check screen/state for required nickname duplicate checking.
+- [ ] TODO-DESIGN-16.4 Reskin onboarding interests with dynamic category data including `워라벨`, selected/unselected states, invalid/no-selection state, disabled/processing state, and accessible selection controls.
 - [ ] TODO-DESIGN-16.5 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
 - [ ] TODO-DESIGN-16.6 Add manual screenshot evidence for onboarding basic, duplicate/adapted step, and interests at 393px and at least one non-393px width.
 - [ ] TODO-DESIGN-16.V1 Verify Phase 16 with screenshots/browser notes and onboarding test output.
@@ -282,10 +282,10 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 ### Phase 17 - Received Worries/Write Reply Visual Reskin
 
 - [ ] TODO-DESIGN-17.1 Confirm Phase 5 received-worries container, Phase 11 pass/reply functional alignment, and Phase 12 write-reply behavior are complete before visual work starts.
-- [ ] TODO-DESIGN-17.2 Reskin received worries with dynamic feed data, loading/error/empty states, pass disabled/processing state, already-replied state, bottom-nav overlap prevention, and card accessibility labels.
+- [ ] TODO-DESIGN-17.2 Reskin received worries with dynamic feed data, loading/error/empty states, pass disabled/processing state, answered-item exclusion from the feed, bottom-nav overlap prevention, and card accessibility labels.
 - [ ] TODO-DESIGN-17.3 Reskin write reply with selected worry data, empty input, processing, validation error, moderation error, safe-area/bottom-nav overlap prevention, and keyboard behavior.
 - [ ] TODO-DESIGN-17.4 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
-- [ ] TODO-DESIGN-17.5 Add manual screenshot/browser-note evidence for received worries, empty/error/loading states where practical, pass state, already-replied state, and write reply.
+- [ ] TODO-DESIGN-17.5 Add manual screenshot/browser-note evidence for received worries, empty/error/loading states where practical, pass state, reply success removing the item from the answer feed, and write reply.
 - [ ] TODO-DESIGN-17.V1 Verify Phase 17 with screenshots/browser notes and affected pass/feed/write-reply test output.
 
 ### Phase 18 - Write Worry/My Worries Visual Reskin
@@ -309,18 +309,18 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 ### Phase 20 - My Page/Account/Policy Visual Reskin
 
 - [ ] TODO-DESIGN-20.1 Confirm Phase 7 my-page/account container and Phase 10 my-page/account functional expansion are complete before visual work starts.
-- [ ] TODO-DESIGN-20.2 Reskin my page with dynamic profile summary, helpedCount/received hearts, settings routes, loading/error state, bottom-nav overlap prevention, and accessible navigation buttons.
+- [ ] TODO-DESIGN-20.2 Reskin my page with dynamic profile summary, helpedCount/received hearts, required push notification settings access, required "앱처럼 사용하기" PWA install/share access, policy settings routes, loading/error state, bottom-nav overlap prevention, and accessible navigation buttons.
 - [ ] TODO-DESIGN-20.3 Reskin edit interests with selected interests, save disabled/processing/error states, bottom-nav overlap prevention, and accessible selection controls.
-- [ ] TODO-DESIGN-20.4 Reskin privacy policy with real content, loading/error state if applicable, readable long text, and no fake policy copy.
+- [ ] TODO-DESIGN-20.4 Reskin privacy policy and operation policy access with policy body content from the dedicated policy files, loading/error state if applicable, readable long text, production-safe empty state for empty policy files, and no fake policy copy.
 - [ ] TODO-DESIGN-20.5 Reskin logout confirmation with cancel/confirm wiring, processing disabled state, error state, focus trap/escape behavior if modal, and destructive-action copy.
 - [ ] TODO-DESIGN-20.6 Reskin account deletion confirmation with cancel/confirm wiring, processing disabled state, error state, focus trap/escape behavior if modal, and destructive-action copy.
 - [ ] TODO-DESIGN-20.7 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
-- [ ] TODO-DESIGN-20.8 Add manual screenshot/browser-note evidence for my page, edit interests, privacy policy, logout confirmation, and account deletion confirmation.
+- [ ] TODO-DESIGN-20.8 Add manual screenshot/browser-note evidence for my page, edit interests, privacy policy, operation policy, empty policy state if applicable, logout confirmation, and account deletion confirmation.
 - [ ] TODO-DESIGN-20.V1 Verify Phase 20 with screenshots/browser notes and account/push/route test output.
 
 ### Phase 21 - Static Hardcoded Data Removal And Visual Acceptance Pass
 
-- [ ] TODO-DESIGN-21.1 Remove static hardcoded design data from all production screens where dynamic data is required, including sample names, dates, counts, worry text, reply text, and lorem ipsum.
+- [ ] TODO-DESIGN-21.1 Remove static hardcoded design data from all production screens where dynamic data is required, including sample names, dates, counts, worry text, reply text, lorem ipsum, and any production UI marker that labels an example worry as example/sample/tutorial content.
 - [ ] TODO-DESIGN-21.2 Verify no production screen uses fake status bars or fake home indicators from `design/`; all mobile chrome spacing must be safe-area-aware production layout.
 - [ ] TODO-DESIGN-21.3 Verify no production screen depends on fixed 393px-only absolute positioning for dynamic content.
 - [ ] TODO-DESIGN-21.4 Verify color, font, CTA, card, chip, bottom-nav, modal, text-area, and profile motif alignment across reskinned screens.
@@ -331,13 +331,13 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 
 ### Phase 22 - Bottom Navigation And Mobile Shell Polish
 
-- [ ] TODO-DESIGN-22.1 Implement design-style bottom navigation without breaking existing PRD tab semantics.
+- [ ] TODO-DESIGN-22.1 Implement design-style bottom navigation with current PRD tab semantics: left `답변하기`, center `나의 고민`, right `마이페이지`, with the default authenticated screen on `답변하기`.
 - [ ] TODO-DESIGN-22.2 Ensure active tab highlighting works for top-level received worries/answer feed, my worries, and my page.
-- [ ] TODO-DESIGN-22.3 Ensure active tab highlighting works for nested write reply, write worry, received-answer detail, my-answer detail, edit interests, my answers, privacy policy, logout confirmation, and account deletion confirmation.
-- [ ] TODO-DESIGN-22.4 Resolve central action behavior before implementation; requires product-owner decision if the design's central orange action conflicts with existing PRD tab semantics.
+- [ ] TODO-DESIGN-22.3 Ensure active tab highlighting works for nested write reply, write worry, received-answer detail, my-answer detail, edit interests, my answers, privacy policy, operation policy, logout confirmation, and account deletion confirmation; `write_worry` remains owned by the `나의 고민` tab.
+- [ ] TODO-DESIGN-22.4 Implement the central orange action as a `고민 작성` shortcut that calls `routeToWriteWorry()` or the equivalent route helper and navigates to `write_worry`; do not implement it as a simple `나의 고민` tab switch.
 - [ ] TODO-DESIGN-22.5 Ensure bottom navigation does not cover form CTAs, card lists, modals, or final scroll content.
 - [ ] TODO-DESIGN-22.6 Ensure scroll containers include bottom padding based on nav height and `env(safe-area-inset-bottom)`.
-- [ ] TODO-DESIGN-22.7 Add route-policy tests in `src/services/appShell/prdNavigationPolicy.test.ts` for every bottom-tab mapping changed in this phase.
+- [ ] TODO-DESIGN-22.7 Add route-policy tests in `src/services/appShell/prdNavigationPolicy.test.ts` for every bottom-tab mapping changed in this phase, including default route to `답변하기`, `write_worry` ownership by `나의 고민`, and central action navigation to write worry rather than my-worries tab selection.
 - [ ] TODO-DESIGN-22.8 Add manual screenshot evidence for bottom nav at 393px, 360px, 430px, and desktop preview.
 - [ ] TODO-DESIGN-22.9 Add manual-only PWA/browser notes for iOS safe-area behavior and Android Chrome/PWA bottom navigation behavior; do not treat these as automated tests.
 - [ ] TODO-DESIGN-22.V1 Verify Phase 22 with route-policy test output, screenshots, and separate iOS/Android manual notes.
@@ -346,14 +346,14 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 
 - [ ] TODO-DESIGN-23.1 Replace fragile absolute positioning from design references with responsive production layouts wherever dynamic data can change size.
 - [ ] TODO-DESIGN-23.2 Preserve visual similarity to `design/`, but prefer accessible responsive layout over pixel-perfect copying when they conflict.
-- [ ] TODO-DESIGN-23.3 Verify long Korean worry, reply, feedback comment, nickname if kept, category chip wrapping, and privacy policy text remain readable without clipping.
+- [ ] TODO-DESIGN-23.3 Verify long Korean worry, reply, feedback comment, required nickname in its allowed my-page summary location, `워라벨` category chip wrapping, and privacy/operation policy text remain readable without clipping.
 - [ ] TODO-DESIGN-23.4 Verify all controls use semantic `button`, `a`, `input`, `textarea`, or appropriate ARIA roles.
 - [ ] TODO-DESIGN-23.5 Verify destructive actions are clearly confirmed, visually differentiated, and disabled while processing.
 - [ ] TODO-DESIGN-23.6 Verify color contrast for orange CTAs, cream backgrounds, muted gray text, disabled controls, danger buttons, and chip labels.
 - [ ] TODO-DESIGN-23.7 Verify keyboard focus order for login, onboarding, write forms, feedback forms, settings list, logout confirmation, and account deletion confirmation.
 - [ ] TODO-DESIGN-23.8 Verify screen-reader labels for icon-only or visually abstract controls, including bottom nav, back buttons, notification/settings icons, pass, feedback, close/cancel, and destructive actions.
 - [ ] TODO-DESIGN-23.9 Add manual screenshot evidence for mobile widths 360px, 393px, 430px, and desktop preview across representative routes.
-- [ ] TODO-DESIGN-23.10 Add manual-only PWA notes for iOS home-screen/safe-area behavior and Android PWA install/open behavior.
+- [ ] TODO-DESIGN-23.10 Add manual-only PWA and push notes for iOS home-screen/safe-area/share behavior, Android PWA install/open behavior, and notification permission granted/denied/default states with FCM registration status where supported.
 - [ ] TODO-DESIGN-23.11 Add browser-note evidence for loading, error, empty, disabled, and processing states on every production route.
 - [ ] TODO-DESIGN-23.V1 Verify Phase 23 with accessibility notes, responsive screenshots, PWA manual-only notes, and any added hardening tests.
 
@@ -364,7 +364,7 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 - [ ] TODO-DESIGN-24.3 Run `npm run build` and save passing output.
 - [ ] TODO-DESIGN-24.4 Run `npm run test:rules` if Firestore rules or Firestore behavior changed, and save passing output.
 - [ ] TODO-DESIGN-24.5 Add any missing focused tests discovered during implementation before release.
-- [ ] TODO-DESIGN-24.6 Verify auth, onboarding, example worries, worry publication, reply publication, pass/replacement, read-state, feedback, comment moderation, push registration, account deletion, and PWA install/share still work.
+- [ ] TODO-DESIGN-24.6 Verify auth, onboarding, nickname uniqueness, required age validation/rules, `워라벨` domain migration, example worries with no visible example marker, example-worry replies in my answers, worry publication to written worry detail, reply publication to my-answer detail, reply success removal from answer feed, pass/replacement, read-state, hidden worry/reply exclusion across read models, feedback, comment moderation, push permission/FCM registration/status, account deletion, and PWA install/share still work.
 - [ ] TODO-DESIGN-24.7 Verify every `design/` screen has a matching production route/screen or a documented intentional product-level exclusion in the Phase 0 table.
 - [ ] TODO-DESIGN-24.8 Verify no static hardcoded design text remains where dynamic production data is required.
 - [ ] TODO-DESIGN-24.9 Verify no unused copied design dependencies remain.
@@ -376,8 +376,8 @@ Phase 2 must not begin until every Phase 1 decision item is explicitly resolved.
 ## Final Release-Gate Checklist
 
 - [ ] TODO-DESIGN-GATE.1 Confirm all Phase 0 through Phase 24 verification items are checked with evidence.
-- [ ] TODO-DESIGN-GATE.2 Confirm Phase 1 product-decision gate was completed before Phase 2 work began.
-- [ ] TODO-DESIGN-GATE.3 Confirm no unresolved product decision was bypassed; unresolved decisions are blockers, not implementation assumptions.
+- [ ] TODO-DESIGN-GATE.2 Confirm Phase 1 PRD reflection gate was completed before Phase 2 work began.
+- [ ] TODO-DESIGN-GATE.3 Confirm no current PRD decision was bypassed or reopened as an implementation assumption.
 - [ ] TODO-DESIGN-GATE.4 Confirm no box was checked based only on visual similarity without functional wiring.
 - [ ] TODO-DESIGN-GATE.5 Confirm no `design/` static screen was copied directly into production without replacing hardcoded text/data and reconnecting production behavior.
 - [ ] TODO-DESIGN-GATE.6 Confirm required functional/product behavior was completed before presentational reskin work.
