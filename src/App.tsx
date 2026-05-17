@@ -344,12 +344,7 @@ export default function App() {
           
           {/* 1. Onboarding View */}
           {currentRoute === 'onboarding' && (
-            <motion.div key="onboarding" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
-              <div className="text-center space-y-4 mb-10">
-                <h1 className="text-3xl font-serif font-bold text-[#5A5A40]">주파수를 맞춰주세요</h1>
-                <p className="text-[#8B8B6B]">당신의 취향을 알려주시면<br/>답변할 수 있는 고민을 먼저 전해드릴게요.</p>
-              </div>
-
+            <motion.div key="onboarding" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <OnboardingContainer
                 user={user}
                 isProcessing={isProcessing}

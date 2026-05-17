@@ -533,13 +533,13 @@ Every visual reskin phase must use real production data and route state. Hardcod
 
 ### Phase 16 - Onboarding Visual Reskin
 
-- [ ] TODO-DESIGN-16.1 Confirm Phase 1 product decisions, Phase 9 onboarding functional implementation, and Phase 14 shared primitives are complete before onboarding visual work starts; do not duplicate content sheet, CTA, category chip, or loading/error primitives inside this phase.
-- [ ] TODO-DESIGN-16.2 Reskin onboarding basic with dynamic required nickname, gender, and age fields from Phase 1, validation errors, disabled/processing states, and keyboard/focus behavior.
-- [ ] TODO-DESIGN-16.3 Reskin onboarding duplicate-check screen/state for required nickname duplicate checking.
-- [ ] TODO-DESIGN-16.4 Reskin onboarding interests with dynamic category data including `워라밸`, selected/unselected states, invalid/no-selection state, disabled/processing state, and accessible selection controls.
+- [x] TODO-DESIGN-16.1 Confirm Phase 1 product decisions, Phase 9 onboarding functional implementation, and Phase 14 shared primitives are complete before onboarding visual work starts; do not duplicate content sheet, CTA, category chip, or loading/error primitives inside this phase.
+- [x] TODO-DESIGN-16.2 Reskin onboarding basic with dynamic required nickname, gender, and age fields from Phase 1, validation errors, disabled/processing states, and keyboard/focus behavior.
+- [x] TODO-DESIGN-16.3 Reskin onboarding duplicate-check screen/state for required nickname duplicate checking.
+- [x] TODO-DESIGN-16.4 Reskin onboarding interests with dynamic category data including `워라밸`, selected/unselected states, invalid/no-selection state, disabled/processing state, and accessible selection controls.
 - [ ] TODO-DESIGN-16.5 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
-- [ ] TODO-DESIGN-16.6 Add manual screenshot evidence for onboarding basic, duplicate/adapted step, and interests at 393px and at least one non-393px width.
-- [ ] TODO-DESIGN-16.V1 Verify Phase 16 with screenshots/browser notes and onboarding test output.
+- [x] TODO-DESIGN-16.6 Add Phase 16 browser-note evidence where production state is reachable, a static HTML visual preview under `tmp/phase-16/`, and a text-only user visual verification handoff checklist for onboarding basic, duplicate/adapted step, and interests at 393px and non-393px widths; do not create, store, or output screenshot evidence files for Phase 16.
+- [ ] TODO-DESIGN-16.V1 Verify Phase 16 with browser notes where reachable, static HTML preview evidence, text-only user visual verification handoff, and onboarding test output.
 
 ### Phase 17 - Received Worries/Write Reply Visual Reskin
 
