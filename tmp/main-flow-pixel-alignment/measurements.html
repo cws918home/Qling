@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>메인 플로우 픽셀 정렬 측정</title>
+    <style>
+      body { font-family: system-ui, sans-serif; line-height: 1.5; margin: 24px; color: #1f1f1f; }
+      table { border-collapse: collapse; width: 100%; margin: 16px 0 32px; font-size: 13px; }
+      th, td { border: 1px solid #ddd; padding: 8px; vertical-align: top; }
+      th { background: #fff1d1; text-align: left; }
+      code { background: #f6f6f6; padding: 2px 4px; }
+    </style>
+  </head>
+  <body>
+    <h1>메인 플로우 픽셀 정렬 측정</h1>
+    <p>이 문서는 구현 중 <code>measure.py</code>와 브라우저 캡처로 갱신되는 증거 파일이다. 기준표 값은 복사하지 않고, 아래 값은 구현 CSS 좌표와 실제 캡처 확인 결과를 함께 기록한다.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>화면</th>
+          <th>주요 요소</th>
+          <th>PNG 측정 bbox</th>
+          <th>참조 힌트 좌표</th>
+          <th>구현 CSS 좌표</th>
+          <th>렌더/스크린샷 bbox</th>
+          <th>조정 이유</th>
+          <th>남은 차이</th>
+          <th>좌표 소유권</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>06</td><td>캔버스</td><td><code>size: 393x852</code>, dominant <code>#ffffff 135092px, #fff1d1 70538px, #ff8b3d 53533px</code></td><td><code>393x852</code></td><td><code>393x852</code></td><td><code>06-production.png</code></td><td>프리뷰 하네스에서 고정 모바일 캔버스 사용</td><td>전체 non-bg는 상태바/상단 배경 때문에 <code>(0,0,393,852)</code></td><td>screen-local</td></tr>
+        <tr><td>06</td><td>시트/목록 영역</td><td><code>#fff1d1 largest: (0,119,393,740)</code>, <code>#fff5eb largest: (0,740,393,852)</code></td><td><code>(0,119,393,852)</code></td><td><code>left:0; top:119; width:393; height:733</code></td><td><code>06-production.png</code></td><td>참조의 크림 시트 시작점을 맞춤</td><td>하단 내비게이션이 <code>top:740</code>부터 시트 위를 덮어 색상 연결 요소가 분리됨</td><td>screen-local</td></tr>
+        <tr><td>06</td><td>카드 1-3</td><td>흰색 최대 연결 요소 <code>(16,407,377,542)</code>; 시각 좌표는 카드 반복 배치로 확인</td><td><code>(16,139)-(377,274)</code>, <code>(16,288)-(377,423)</code>, <code>(16,437)-(377,572)</code></td><td><code>left:16; top:139 + n*149; width:361; height:135</code></td><td><code>06-production.png</code></td><td>공유 카드 padding/shadow 대신 화면 전용 마크업 사용</td><td>폰트 렌더링/그림자 때문에 단순 색상 bbox는 개별 카드 전체를 분리 측정하지 못함</td><td>screen-local</td></tr>
+        <tr><td>07</td><td>캔버스/헤더</td><td><code>size: 393x852</code>, non-bg <code>(20,20,379,732)</code>, dominant <code>#fff5eb 186766px, #fff1d1 130434px, #ff8b3d 13402px</code></td><td>back <code>(24,71,31,84)</code>, title <code>(164,72,224,87)</code></td><td>컨테이너 <code>393x852</code>, back <code>left:22; top:56</code>, title <code>left:163.5; top:69</code></td><td><code>07-production.png</code></td><td>WriteWorryContainer가 해당 route chrome 소유자</td><td>실제 glyph bbox는 폰트 안티앨리어싱 의존</td><td>container chrome</td></tr>
+        <tr><td>07</td><td>textarea/placeholder/counter</td><td><code>#fff5eb largest: (21,121,372,660)</code>, orange border 조각 <code>(20,138,21,643)</code></td><td>textarea <code>(18,118,375,663)</code>, placeholder <code>(45,145,281,163)</code>, counter <code>(304,626,353,636)</code></td><td><code>left:20; top:120; width:353; height:541</code>, padding으로 placeholder/counter 조정</td><td><code>07-production.png</code></td><td>실제 textarea 유지, QlingTextArea wrapper 제거</td><td>border/radius 때문에 색상 bbox가 내부 면 기준으로 잡힘</td><td>screen-local + container chrome</td></tr>
+        <tr><td>07</td><td>CTA</td><td><code>#ff8b3d largest: (64,684,329,732)</code></td><td><code>(63,684,330,732)</code></td><td><code>left:63; top:684; width:267; height:48</code></td><td><code>07-production.png</code></td><td>PrimaryCTA radius/padding 영향 제거</td><td>rounded pill의 antialiasing 때문에 좌우 1px 안쪽으로 측정됨</td><td>screen-local</td></tr>
+        <tr><td>08</td><td>원문 카드</td><td><code>#ffffff largest: (16,127,377,427)</code>, dominant <code>#ffffff 164293px</code></td><td><code>(16,127,377,427)</code></td><td><code>left:16; top:127; width:361; height:300</code></td><td><code>08-production.png</code></td><td>received-answer-detail 분기만 전용 프레임 사용</td><td>텍스트 길이는 참조 문자열/대체 문자열 혼합</td><td>screen-local</td></tr>
+        <tr><td>08</td><td>답변 카드/피드백</td><td><code>#fff1d1 largest: (0,0,393,760)</code>, answer card는 시각 bbox로 확인</td><td>answer <code>(16,449,377,662)</code>, controls <code>(250,176,348,205)</code> local</td><td>answer <code>left:16; top:449; width:361; height:213</code>, controls <code>left:254; top:183</code> inside answer card</td><td><code>08-production.png</code></td><td>피드백 props가 visible일 때만 실제 버튼 렌더</td><td>아이콘은 lucide라 참조 bitmap과 차이 있음</td><td>screen-local</td></tr>
+      </tbody>
+    </table>
+  </body>
+</html>

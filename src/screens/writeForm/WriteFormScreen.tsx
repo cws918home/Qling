@@ -102,36 +102,35 @@ export function WriteFormScreen(props: WriteFormScreenProps) {
       : undefined;
 
   return (
-    <div className="space-y-5 pb-4">
-      <ContentSheet className="border border-[var(--qling-color-primary-orange)] bg-[var(--qling-color-cream-soft)] p-4 shadow-none sm:p-5">
-        <QlingTextArea
+    <div className="absolute inset-0">
+      <label className="absolute left-[20px] top-[120px] block h-[541px] w-[353px] overflow-hidden rounded-[18px] border-[1.5px] border-[#ff8b3d] bg-[#fff5eb]">
+        <span className="sr-only">질문 작성</span>
+        <textarea
           value={props.draft.value}
-          onChange={props.onDraftChange}
+          onChange={event => props.onDraftChange(event.currentTarget.value)}
           maxLength={props.draft.maxLength}
-          label="질문 작성"
-          placeholder="당신의 솔직한 이야기를 들려주세요"
-          errorMessage={validationMessage}
           disabled={props.draft.isProcessing}
-          processing={props.draft.isProcessing}
+          aria-invalid={Boolean(validationMessage) || undefined}
+          placeholder="당신의 솔직한 이야기를 들려주세요"
+          className="absolute inset-0 h-full w-full resize-none bg-transparent px-[25px] pb-[48px] pt-[20.5px] text-[16px] font-bold leading-[24px] tracking-[-0.64px] text-[#2a2a2a] outline-none placeholder:text-[#b8b8b8] disabled:cursor-not-allowed disabled:opacity-60"
         />
-        {characterCount === 0 && (
-          <p className="mt-2 text-xs font-bold text-[var(--qling-color-muted)]">
-            최대 {props.draft.maxLength}자까지 작성할 수 있어요.
-          </p>
-        )}
-      </ContentSheet>
+        <Sparkles className="pointer-events-none absolute left-[22.5px] top-[22.5px] h-[20px] w-[20px] text-[#b8b8b8]" aria-hidden="true" />
+        <span className="pointer-events-none absolute left-[281.5px] top-[501.5px] text-[13px] font-bold leading-none text-[#b8b8b8]">
+          {characterCount} / {props.draft.maxLength}
+        </span>
+      </label>
 
       {moderationMessage && (
-        <div className="whitespace-pre-wrap rounded-[var(--qling-radius-card)] border border-red-100 bg-red-50 p-4 text-sm font-semibold leading-6 text-red-700">
+        <div className="absolute left-[20px] top-[666px] z-10 w-[353px] whitespace-pre-wrap rounded-[12px] border border-red-100 bg-red-50 p-3 text-[12px] font-semibold leading-5 text-red-700">
           {moderationMessage}
         </div>
       )}
 
       {props.draft.moderation.status === 'checking' && (
-        <p className="text-sm font-bold text-[var(--qling-color-muted)]">AI 안심 필터가 내용을 확인하고 있습니다.</p>
+        <p className="absolute left-[20px] top-[666px] text-[12px] font-bold text-[#77716b]">AI 안심 필터가 내용을 확인하고 있습니다.</p>
       )}
 
-      <div className="rounded-[var(--qling-radius-card)] border border-[var(--qling-color-border)] bg-[var(--qling-color-surface)] p-4">
+      <div className="absolute left-[20px] top-[860px] w-[353px] rounded-[18px] border border-[var(--qling-color-border)] bg-[var(--qling-color-surface)] p-4">
         <div className="flex gap-3">
           <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-[var(--qling-color-primary-orange)]" aria-hidden="true" />
           <p className="text-xs leading-6 text-[var(--qling-color-muted)]">
@@ -141,19 +140,19 @@ export function WriteFormScreen(props: WriteFormScreenProps) {
         </div>
       </div>
 
-      <div className="sticky bottom-[calc(var(--qling-space-nav-height)+var(--qling-space-safe-bottom)+16px)] z-10">
-        <PrimaryCTA
-          disabled={isDisabled}
-          processing={props.draft.isProcessing}
-          accessibilityLabel="고민 전송"
-          onClick={() => {
-            props.onPublish();
-          }}
-        >
-          <Send className="h-5 w-5" aria-hidden="true" />
-          고민 전송
-        </PrimaryCTA>
-      </div>
+      <button
+        type="button"
+        disabled={isDisabled || props.draft.isProcessing}
+        aria-label="고민 전송"
+        aria-busy={props.draft.isProcessing || undefined}
+        onClick={() => {
+          props.onPublish();
+        }}
+        className="absolute left-[63px] top-[684px] flex h-[48px] w-[267px] items-center justify-center rounded-full bg-[#ff8b3d] px-[22px] text-[16px] font-extrabold leading-none text-[#fff5eb] disabled:cursor-not-allowed"
+      >
+        {props.draft.isProcessing && <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[#fff5eb] border-t-transparent" aria-hidden="true" />}
+        고민 전송
+      </button>
     </div>
   );
 }

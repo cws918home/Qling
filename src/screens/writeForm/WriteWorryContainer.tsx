@@ -81,16 +81,19 @@ export function WriteWorryContainer(props: WriteWorryContainerProps) {
   };
 
   return (
-    <div className="space-y-5 pb-4">
+    <div className="relative h-[852px] w-[393px] overflow-hidden bg-[#fff1d1] font-sans text-[#2a2a2a]">
+      <ReferenceStatusBar />
       <button
+        type="button"
         onClick={() => props.setView(backRouteFromWriteWorry())}
-        className="flex items-center gap-2 text-sm font-bold text-[var(--qling-color-muted)] transition-colors hover:text-[var(--qling-color-text)]"
+        className="absolute left-[22px] top-[56px] z-10 h-[32px] w-[18px] text-[32px] font-semibold leading-none text-[#2a2a2a] transition-colors hover:text-[#ff8b3d] focus:outline-none focus:ring-2 focus:ring-[#ff8b3d]"
         aria-label="나의 고민으로 돌아가기"
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> 돌아가기
+        <span aria-hidden="true">‹</span>
+        <ArrowLeft className="sr-only" aria-hidden="true" />
       </button>
-      <header className="text-center">
-        <h2 className="text-lg font-extrabold text-[var(--qling-color-text)]">질문 작성</h2>
+      <header>
+        <h2 className="absolute left-[163.5px] top-[69px] text-[17px] font-extrabold leading-none tracking-[-0.34px] text-[#2a2a2a]">질문 작성</h2>
       </header>
 
       <WriteFormScreen
@@ -110,5 +113,20 @@ export function WriteWorryContainer(props: WriteWorryContainerProps) {
         onPublish={publish}
       />
     </div>
+  );
+}
+
+function ReferenceStatusBar() {
+  return (
+    <>
+      <p className="absolute left-[30px] top-[18px] text-[16px] font-semibold leading-none text-[#25272b]">10:46</p>
+      <div className="absolute left-[295px] top-[28px] h-[4px] w-[3px] rounded-[0.5px] bg-[#1a1a1a]" />
+      <div className="absolute left-[300px] top-[26px] h-[6px] w-[3px] rounded-[0.5px] bg-[#1a1a1a]" />
+      <div className="absolute left-[305px] top-[24px] h-[8px] w-[3px] rounded-[0.5px] bg-[#1a1a1a]" />
+      <div className="absolute left-[310px] top-[22px] h-[10px] w-[3px] rounded-[0.5px] bg-[#1a1a1a]" />
+      <div className="absolute left-[350px] top-[22px] h-[12px] w-[26px] rounded-[3px] border-[1.5px] border-[#1a1a1a]" />
+      <div className="absolute left-[377px] top-[25px] h-[6px] w-[2px] rounded-[1px] border border-[#1a1a1a] bg-white" />
+      <div className="absolute left-[352px] top-[24.5px] h-[7px] w-[16px] rounded-[1px] border border-[#1a1a1a] bg-[#1a1a1a]" />
+    </>
   );
 }

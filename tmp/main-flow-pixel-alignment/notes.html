@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>메인 플로우 픽셀 정렬 노트</title>
+    <style>
+      body { font-family: system-ui, sans-serif; line-height: 1.6; margin: 24px; color: #1f1f1f; }
+      h2 { margin-top: 28px; }
+      code { background: #f6f6f6; padding: 2px 4px; }
+      li { margin: 6px 0; }
+    </style>
+  </head>
+  <body>
+    <h1>메인 플로우 픽셀 정렬 노트</h1>
+    <h2>공통</h2>
+    <ul>
+      <li>Fresh Measurement Anchors는 시작 좌표로만 사용했다. 최종 증거는 <code>measure.py</code>와 <code>06/07/08-production.png</code>를 기준으로 갱신한다.</li>
+      <li>스크린샷은 <code>tmp/main-flow-pixel-alignment/preview.html</code>에서 실제 React 컴포넌트를 렌더링해서 캡처한다. PIL로 UI를 그리거나 참조 PNG를 복사하지 않는다.</li>
+      <li><code>09-production.png</code>는 생성하지 않았다. 09 is unreachable because the current production flow has no equivalent existing success state without adding a new modal, toast, overlay, route, container state, or prop.</li>
+    </ul>
+    <h2>06 받은 고민</h2>
+    <ul>
+      <li>loaded/success branch만 화면 전용 <code>393px x 852px</code> 캔버스로 교체했다. loading/error/empty branch는 유지했다.</li>
+      <li>카드는 전체 클릭 가능한 실제 <code>button</code>을 유지하고, 건너뛰기 버튼은 <code>event.stopPropagation()</code>, <code>onPass</code>, disabled/processing 상태를 유지한다.</li>
+      <li>상단 프로필/알림은 preview 및 chrome-neutral 경로를 위한 시각 전용 요소다. 기존 production handler가 없으므로 새 navigation behavior를 만들지 않았다.</li>
+      <li>fixture 문자열은 참조 Component.tsx의 한국어 문구를 production prop shape에 맞게 재사용했다.</li>
+    </ul>
+    <h2>07 질문 작성</h2>
+    <ul>
+      <li><code>WriteWorryContainer.tsx</code>가 route back/header chrome 소유자라서 해당 파일을 <code>393px x 852px</code> 캔버스 소유자로 바꿨다.</li>
+      <li><code>WriteFormScreen.tsx</code>의 <code>kind === "write-worry"</code> branch만 전용 절대 좌표 레이아웃으로 바꿨다. <code>write-reply</code> branch는 유지했다.</li>
+      <li>textarea는 실제 <code>textarea</code>이며 <code>value</code>, <code>onDraftChange</code>, <code>maxLength</code>, disabled/processing 상태를 그대로 사용한다.</li>
+      <li>AI 안심 필터 정보는 product behavior를 삭제하지 않고 DOM에 남겼으나, 참조 캡처 영역과 충돌하지 않도록 캔버스 아래쪽에 배치했다. validation/moderation 메시지는 production 상태가 요구할 때만 표시된다.</li>
+      <li>fixture 문자열은 참조 Component.tsx의 placeholder와 CTA 문구를 사용했다.</li>
+    </ul>
+    <h2>08 답변 확인</h2>
+    <ul>
+      <li>loaded 상태의 <code>variant === "received-answer-detail"</code>에만 <code>ReceivedAnswerDetailFrame</code>을 적용했다. <code>my-answer-detail</code>, <code>MyAnswerFeedbackPanel</code>, generic comment behavior는 기존 분기를 유지한다.</li>
+      <li>feedback 버튼은 기존처럼 클릭 시 <code>onFeedbackChange</code> 다음 <code>onFeedbackSubmit</code>을 호출한다.</li>
+      <li>comment UI는 기존 production 상태가 요구하는 submitted-like-without-comment 조건에서만 렌더링한다.</li>
+      <li>원문 고민 한국어 문구는 참조 Component.tsx에서 가져왔고, 답변 본문은 현재 참조가 lorem ipsum을 사용하므로 같은 줄 수의 대체 문자열을 fixture에 사용했다.</li>
+    </ul>
+    <h2>Wrapper edits</h2>
+    <ul>
+      <li>App.tsx와 shared/ui.tsx는 수정하지 않았다. 따라서 wrapper edit 사유, route/auth/data/handler contract 변경 없음 증명 대상도 없다.</li>
+    </ul>
+  </body>
+</html>
