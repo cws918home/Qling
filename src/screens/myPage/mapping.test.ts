@@ -64,6 +64,12 @@ test('reply and worry read models map to list props without example labels', () 
   });
 
   assert.equal(answerItem.previewText, 'refined');
+  assert.equal(answerItem.originalWorryPreview, 'original');
+  assert.equal(answerItem.feedbackLabel, '받은 하트');
+  assert.equal(answerItem.hasReceivedHeart, true);
+  assert.equal(answerItem.isSelected, false);
+  assert.match(answerItem.accessibilityLabel, /내가 쓴 답변 상세로 이동/);
+  assert.match(answerItem.accessibilityLabel, /피드백 받은 하트/);
   assert.equal(receivedItem.hasUnread, true);
   assert.equal(worryItem.isSelected, true);
   assert.match(worryItem.accessibilityLabel, /카테고리 진로/);

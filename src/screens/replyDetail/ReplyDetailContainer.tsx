@@ -44,6 +44,7 @@ export function ReplyDetailContainer(props: ReplyDetailContainerProps) {
   const [moderationMessage, setModerationMessage] = useState<string | null>(null);
   const [failureMessage, setFailureMessage] = useState<string | null>(null);
   const [, rerenderDraft] = useState(0);
+  const [selectedFeedback, setSelectedFeedback] = useState<FeedbackValue>('like');
   const selectedFeedbackRef = useRef<FeedbackValue>('like');
   const variant: ReplyDetailVariant = props.mode === 'my-answer' ? 'my-answer-detail' : 'received-answer-detail';
   const routeWorryId = typeof props.route === 'string' ? undefined : 'worryId' in props.route ? props.route.worryId : undefined;
@@ -69,6 +70,7 @@ export function ReplyDetailContainer(props: ReplyDetailContainerProps) {
     reply: detailReply,
     variant,
     originalWorryFallback: props.selectedMyWorryContent,
+    isLoading: props.mode === 'my-answer' ? isLoadingMyGivenReplies : isLoadingRepliesForWorry,
   });
   const existingFeedback = detailReply?.feedback
     ? {
@@ -148,8 +150,9 @@ export function ReplyDetailContainer(props: ReplyDetailContainerProps) {
       originalWorry={detailProps.originalWorry}
       reply={detailProps.reply}
       existingFeedback={existingFeedback}
-      selectedFeedback={selectedFeedbackRef.current}
+      selectedFeedback={selectedFeedback}
       commentDraft={commentDraft}
+      commentMaxLength={CONTENT_MAX_LENGTH}
       commentValidation={failureMessage
         ? { status: 'invalid', message: failureMessage }
         : validation.status === 'validation_error' || commentDraft.trim().length > CONTENT_MAX_LENGTH
@@ -161,6 +164,7 @@ export function ReplyDetailContainer(props: ReplyDetailContainerProps) {
       onBack={() => props.setView(props.mode === 'my-answer' ? backRouteFromMyReplyDetail() : backRouteFromReceivedReplyDetail())}
       onFeedbackChange={(value) => {
         selectedFeedbackRef.current = value;
+        setSelectedFeedback(value);
       }}
       onFeedbackSubmit={onFeedbackSubmit}
       onCommentChange={value => {

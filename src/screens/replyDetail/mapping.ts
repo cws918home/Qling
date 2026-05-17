@@ -28,10 +28,13 @@ export function mapReplyToDetailProps(params: {
   readonly reply: ReplyReadModelItem | null;
   readonly variant: ReplyDetailVariant;
   readonly originalWorryFallback?: string;
+  readonly isLoading?: boolean;
 }): Pick<ReplyDetailScreenProps, 'state' | 'originalWorry' | 'reply' | 'existingFeedback'> {
   if (!params.reply) {
     return {
-      state: { status: 'empty', message: '선택한 답장을 찾을 수 없습니다.' },
+      state: params.isLoading
+        ? { status: 'loading', label: '답장을 불러오는 중입니다.' }
+        : { status: 'empty', message: '선택한 답장을 찾을 수 없습니다.' },
       existingFeedback: { status: 'none' },
     };
   }

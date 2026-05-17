@@ -1,35 +1,67 @@
 import { ArrowLeft, Heart, Send } from 'lucide-react';
+import { EmptyState, ErrorState, LoadingState, OrangeHeaderBand, QlingCard, SuccessBadge } from '../shared/ui';
 import type { MyAnswersScreenProps } from './contract';
 
 export function MyAnswersScreen(props: MyAnswersScreenProps) {
   return (
-    <div className="space-y-6">
-      <button onClick={props.onBack} className="mb-2 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors">
-        <ArrowLeft className="w-4 h-4" /> 마이페이지로
-      </button>
-      <div className="space-y-2">
-        <h2 className="text-2xl font-serif font-bold">내가 쓴 답변</h2>
-        <p className="text-[#8B8B6B] text-sm">내가 보낸 답변과 받은 반응을 확인합니다.</p>
-      </div>
-      {props.state.status === 'empty' ? (
-        <div className="text-center py-10 bg-[#FDFCF8] rounded-2xl border border-dashed border-[#E9EDC9]">
-          <Heart className="w-10 h-10 text-[#E9EDC9] mx-auto mb-3" />
-          <p className="text-[#8B8B6B] text-sm">{props.state.message ?? '아직 내가 보낸 위로가 없어요.'}</p>
+    <div className="mx-auto max-w-xl space-y-5 pb-6">
+      <OrangeHeaderBand className="-mx-[var(--qling-space-shell-x)] rounded-b-[32px] pb-10 pt-4">
+        <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-center">
+          <button
+            type="button"
+            onClick={props.onBack}
+            aria-label="마이페이지로 돌아가기"
+            className="flex h-10 w-10 items-center justify-center rounded-full text-white transition-colors hover:bg-white/15 focus:outline-none focus:ring-2 focus:ring-white"
+          >
+            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <h1 className="text-center text-lg font-extrabold">내가 쓴 답변</h1>
         </div>
-      ) : (
-        <div className="grid gap-3">
-          {props.items.map(reply => (
-            <button key={reply.replyId} onClick={() => props.onSelect(reply)} className="w-full text-left p-4 bg-[#FDFCF8] rounded-xl border border-[#E9EDC9] transition-all hover:bg-[#FAEDCD]">
-              <div className="flex items-center gap-2 mb-2">
-                <Send className="w-4 h-4 text-[#A3B18A]" />
-                <span className="text-xs font-semibold text-[#8B8B6B]">나의 다정한 답장</span>
+        <p className="mx-auto mt-4 max-w-xs text-center text-sm font-semibold leading-6 text-white/90">
+          내가 보낸 답변과 받은 반응을 확인합니다.
+        </p>
+      </OrangeHeaderBand>
+
+      <div className="-mt-8 space-y-3">
+        {props.state.status === 'loading' && <LoadingState title={props.state.label} />}
+        {props.state.status === 'error' && <ErrorState title="내가 쓴 답변을 불러오지 못했어요." message={props.state.message} />}
+        {props.state.status === 'empty' && (
+          <EmptyState title="아직 내가 보낸 위로가 없어요." message={props.state.message} />
+        )}
+        {props.state.status === 'ready' && props.items.map(reply => (
+          <button
+            key={reply.replyId}
+            type="button"
+            onClick={() => props.onSelect(reply)}
+            aria-label={reply.accessibilityLabel}
+            aria-current={reply.isSelected ? 'page' : undefined}
+            className="block w-full rounded-[var(--qling-radius-card)] text-left transition-transform hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-[var(--qling-color-primary-orange)] focus:ring-offset-2"
+          >
+            <QlingCard className="space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-center gap-2">
+                  <Send className="h-4 w-4 shrink-0 text-[var(--qling-color-primary-orange)]" aria-hidden="true" />
+                  <span className="text-xs font-extrabold text-[var(--qling-color-primary-orange)]">내가 쓴 답변</span>
+                  {reply.isUnread && <SuccessBadge label="새 반응" />}
+                </div>
+                {reply.hasReceivedHeart && <Heart className="h-5 w-5 shrink-0 fill-[var(--qling-color-danger)] text-[var(--qling-color-danger)]" aria-hidden="true" />}
               </div>
-              <p className="text-[#5A5A40] text-sm font-medium line-clamp-2 leading-relaxed">{reply.previewText}</p>
-              {reply.feedbackLabel && <p className="mt-2 text-xs font-bold text-[#E07A5F]">{reply.feedbackLabel}</p>}
-            </button>
-          ))}
-        </div>
-      )}
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[var(--qling-color-muted)]">
+                  {reply.dateLabel && <span>{reply.dateLabel}</span>}
+                  {reply.feedbackLabel && <span>{reply.feedbackLabel}</span>}
+                </div>
+                <p className="line-clamp-2 text-base font-extrabold leading-7 text-[var(--qling-color-text)]">
+                  {reply.originalWorryPreview}
+                </p>
+                <p className="line-clamp-2 text-sm font-semibold leading-6 text-[var(--qling-color-muted)]">
+                  {reply.previewText}
+                </p>
+              </div>
+            </QlingCard>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

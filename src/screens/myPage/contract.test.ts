@@ -111,6 +111,11 @@ test('my answers and my worries contracts expose list states and route callbacks
       deliveryId: 'delivery-1',
       worryId: 'worry-1',
       previewText: '답장 내용',
+      originalWorryPreview: '원래 고민',
+      dateLabel: '2026. 5. 17.',
+      hasReceivedHeart: false,
+      isSelected: false,
+      accessibilityLabel: '내가 쓴 답변 상세로 이동, 원래 고민 원래 고민, 피드백 없음, 선택되지 않음',
     }],
     onBack: () => undefined,
     onSelect: () => undefined,
@@ -145,6 +150,8 @@ test('my answers and my worries contracts expose list states and route callbacks
 
   assert.equal(answers.items[0].previewText, '답장 내용');
   assert.equal(typeof answers.onSelect, 'function');
+  assert.match(answers.items[0].accessibilityLabel, /내가 쓴 답변 상세로 이동/);
+  assert.match(answers.items[0].accessibilityLabel, /피드백 없음/);
   assert.equal(worries.selectedWorry?.replies[0].hasUnread, true);
   assert.match(worries.items[0].accessibilityLabel, /답장 1개/);
   assert.match(worries.items[0].accessibilityLabel, /읽지 않은 답장 있음/);

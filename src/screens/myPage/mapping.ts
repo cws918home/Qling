@@ -42,13 +42,33 @@ export function mapPushStatus(params: {
   return { status: 'default', message: '알림 권한 설정이 필요합니다.' };
 }
 
-export function mapMyGivenReplyToListItem(reply: ReplyReadModelItem): MyAnswerListItemProps {
+function dateLabel(value: { toMillis?: () => number } | null | undefined): string | undefined {
+  if (!value?.toMillis) return undefined;
+  return new Date(value.toMillis()).toLocaleDateString('ko-KR');
+}
+
+export function mapMyGivenReplyToListItem(reply: ReplyReadModelItem, selectedReplyId?: string): MyAnswerListItemProps {
+  const feedbackLabel = reply.feedback === 'helpful' ? '받은 하트' : reply.feedback === 'not_helpful' ? '확인됨' : undefined;
+  const isSelected = reply.id === selectedReplyId;
+  const originalWorryPreview = reply.replyToContent ?? reply.originalContent;
+
   return {
     replyId: reply.id,
     deliveryId: reply.deliveryId,
     worryId: reply.worryId,
     previewText: reply.refinedContent,
-    feedbackLabel: reply.feedback === 'helpful' ? '받은 하트' : reply.feedback === 'not_helpful' ? '확인됨' : undefined,
+    originalWorryPreview,
+    dateLabel: dateLabel(reply.createdAt),
+    feedbackLabel,
+    hasReceivedHeart: reply.feedback === 'helpful',
+    isUnread: reply.hasUnread,
+    isSelected,
+    accessibilityLabel: [
+      '내가 쓴 답변 상세로 이동',
+      originalWorryPreview ? `원래 고민 ${originalWorryPreview}` : undefined,
+      feedbackLabel ? `피드백 ${feedbackLabel}` : '피드백 없음',
+      isSelected ? '현재 선택됨' : '선택되지 않음',
+    ].filter(Boolean).join(', '),
   };
 }
 

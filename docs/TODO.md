@@ -561,12 +561,12 @@ Every visual reskin phase must use real production data and route state. Hardcod
 
 ### Phase 19 - Reply Check/Feedback/My Answers Visual Reskin
 
-- [ ] TODO-DESIGN-19.1 Confirm Phase 7 reply-detail container, Phase 10 my-answers functional expansion, Phase 13 feedback/comment functional alignment, and Phase 14 shared primitives are complete before visual work starts; do not duplicate bottom navigation, card, CTA, modal, or loading/error primitives inside this phase.
-- [ ] TODO-DESIGN-19.2 Reskin answer/reply check with original worry data, reply data, feedback states, comment states, loading/error fallbacks, bottom-nav overlap prevention, and accessible feedback buttons.
-- [ ] TODO-DESIGN-19.3 Reskin my answers with dynamic list, empty/loading/error states, detail navigation, bottom-nav overlap prevention, and card accessibility labels.
-- [ ] TODO-DESIGN-19.4 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
-- [ ] TODO-DESIGN-19.5 Add manual screenshot/browser-note evidence for received-answer detail, my-answer detail, feedback states, comment states, and my answers.
-- [ ] TODO-DESIGN-19.V1 Verify Phase 19 with screenshots/browser notes and feedback/read-model test output.
+- [x] TODO-DESIGN-19.1 Confirm Phase 7 reply-detail container, Phase 10 my-answers functional expansion, Phase 13 feedback/comment functional alignment, and Phase 14 shared primitives are complete before visual work starts; do not duplicate bottom navigation, card, CTA, modal, or loading/error primitives inside this phase.
+- [x] TODO-DESIGN-19.2 Reskin answer/reply check with original worry data, reply data, feedback states, comment states, loading/error fallbacks, bottom-nav overlap prevention, and accessible feedback buttons.
+- [x] TODO-DESIGN-19.3 Reskin my answers with dynamic list, empty/loading/error states, detail navigation, bottom-nav overlap prevention, and card accessibility labels.
+- [x] TODO-DESIGN-19.4 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
+- [x] TODO-DESIGN-19.5 Add manual screenshot/browser-note evidence for received-answer detail, my-answer detail, feedback states, comment states, and my answers.
+- [x] TODO-DESIGN-19.V1 Verify Phase 19 with screenshots/browser notes and feedback/read-model test output.
 
 ### Phase 20 - My Page/Account/Policy Visual Reskin
 

@@ -97,7 +97,13 @@ export type MyAnswerListItemProps = {
   readonly deliveryId?: string;
   readonly worryId?: string;
   readonly previewText: string;
+  readonly originalWorryPreview: string;
+  readonly dateLabel?: string;
   readonly feedbackLabel?: string;
+  readonly hasReceivedHeart: boolean;
+  readonly isUnread?: boolean;
+  readonly isSelected: boolean;
+  readonly accessibilityLabel: string;
 };
 
 export type MyAnswersScreenProps = {

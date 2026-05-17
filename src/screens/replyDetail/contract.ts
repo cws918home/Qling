@@ -39,6 +39,7 @@ export type ReplyDetailScreenProps = {
   readonly existingFeedback: ExistingFeedbackState;
   readonly selectedFeedback?: FeedbackValue;
   readonly commentDraft: string;
+  readonly commentMaxLength: number;
   readonly commentValidation: ScreenValidationState;
   readonly commentModeration: ScreenModerationState;
   readonly isFeedbackProcessing: boolean;

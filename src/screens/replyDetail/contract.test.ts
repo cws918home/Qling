@@ -39,6 +39,7 @@ test('reply detail contract represents original worry, reply, feedback, and comm
     },
     selectedFeedback: 'like',
     commentDraft: 'Comment draft',
+    commentMaxLength: 300,
     commentValidation: { status: 'valid' },
     commentModeration: { status: 'approved' },
     isFeedbackProcessing: false,
@@ -64,6 +65,7 @@ test('reply detail contract represents rejection and unavailable states without 
     state: { status: 'empty', message: 'Not found' },
     existingFeedback: { status: 'none' },
     commentDraft: '',
+    commentMaxLength: 300,
     commentValidation: { status: 'invalid', message: 'Required' },
     commentModeration: { status: 'rejected', reason: 'Rejected comment' },
     isFeedbackProcessing: false,
@@ -122,8 +124,10 @@ test('reply detail contract represents failed feedback/comment and existing disp
 test('reply detail source disables feedback and comment buttons while processing', () => {
   const source = readFileSync(join(process.cwd(), 'src/screens/replyDetail/ReplyDetailScreen.tsx'), 'utf8');
 
-  assert.match(source, /disabled=\{props\.isFeedbackProcessing\}/);
+  assert.match(source, /processing=\{props\.isFeedbackProcessing\}/);
   assert.match(source, /disabled=\{props\.isCommentProcessing\}/);
+  assert.match(source, /aria-label=\{isLike \? '이 답변이 위로가 되었어요 선택 후 제출' : '이 답변이 그냥 그랬어요 선택 후 제출'\}/);
+  assert.match(source, /aria-pressed=\{selected\}/);
 });
 
 function makeReadyProps(overrides: Partial<ReplyDetailScreenProps> = {}): ReplyDetailScreenProps {
@@ -146,6 +150,7 @@ function makeReadyProps(overrides: Partial<ReplyDetailScreenProps> = {}): ReplyD
     existingFeedback: { status: 'none' },
     selectedFeedback: 'like',
     commentDraft: '',
+    commentMaxLength: 300,
     commentValidation: { status: 'valid' },
     commentModeration: { status: 'approved' },
     isFeedbackProcessing: false,

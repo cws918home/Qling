@@ -17,8 +17,8 @@ export type MyAnswersContainerProps = {
 };
 
 export function MyAnswersContainer(props: MyAnswersContainerProps) {
-  const { myGivenReplies } = useMyGivenReplies({ user: props.user });
-  const items = myGivenReplies.map(mapMyGivenReplyToListItem);
+  const { myGivenReplies, isLoadingMyGivenReplies } = useMyGivenReplies({ user: props.user });
+  const items = myGivenReplies.map(reply => mapMyGivenReplyToListItem(reply));
 
   const selectReply = (item: MyAnswerListItemProps) => {
     const reply = myGivenReplies.find(candidate => candidate.id === item.replyId);
@@ -34,7 +34,11 @@ export function MyAnswersContainer(props: MyAnswersContainerProps) {
 
   return (
     <MyAnswersScreen
-      state={items.length === 0 ? { status: 'empty', message: '아직 내가 보낸 위로가 없어요.' } : { status: 'ready' }}
+      state={isLoadingMyGivenReplies
+        ? { status: 'loading', label: '내가 쓴 답변을 불러오는 중입니다.' }
+        : items.length === 0
+          ? { status: 'empty', message: '아직 내가 보낸 위로가 없어요.' }
+          : { status: 'ready' }}
       items={items}
       onBack={() => props.setView(backRouteForRoute('my_answers'))}
       onSelect={selectReply}
