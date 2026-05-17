@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Phase 21 - Static Hardcoded Data Audit And Visual Acceptance</title>
+  <title>Phase 21 - 정적 하드코딩 데이터 감사 및 시각 승인</title>
   <style>
     :root {
       --orange: #ff8b0d;
@@ -58,110 +58,110 @@
 </head>
 <body>
   <main>
-    <h1>Phase 21 - Static Hardcoded Data Audit And Visual Acceptance Pass</h1>
+    <h1>Phase 21 - 정적 하드코딩 데이터 감사 및 시각 승인 패스</h1>
     <p class="note">
-      This consolidated artifact is Phase 21 evidence only. It is a manual-equivalent/static browser-note artifact because this repository does not include a browser screenshot harness in its scripts or dependencies. The phone border below is non-production evidence chrome, not app UI.
+      이 통합 산출물은 Phase 21 증거 전용 파일입니다. 이 저장소의 스크립트와 의존성에는 브라우저 스크린샷 하네스가 없으므로, 이 파일은 수동 검수에 준하는 정적 브라우저 노트 산출물로 작성했습니다. 아래의 휴대폰 테두리는 비프로덕션 증거용 크롬이며 앱 UI가 아닙니다.
     </p>
     <p class="note">
-      Phase 21 was an audit/fix pass, not the first removal point for hardcoded design data. Production defects found by this pass: none.
+      Phase 21은 감사/수정 패스이며, 하드코딩된 디자인 데이터를 처음 제거하는 단계가 아닙니다. 이 패스에서 발견된 프로덕션 결함은 없습니다.
     </p>
 
-    <h2>Hardcoded-Data Audit Table</h2>
+    <h2>하드코딩 데이터 감사 표</h2>
     <table>
       <thead>
-        <tr><th>Search category</th><th>Command</th><th>Classification</th><th>Result</th></tr>
+        <tr><th>검색 범주</th><th>명령어</th><th>분류</th><th>결과</th></tr>
       </thead>
       <tbody>
         <tr>
-          <td>Sample names/counts/dates/lorem/artificial labels/category typo</td>
+          <td>샘플 이름/숫자/날짜/lorem/인공 라벨/카테고리 오타</td>
           <td><code>rg "라미|314|9월 24일|9월 20일|lorem|Lorem|sample|fake|tutorial|example|워라벨" src docs</code></td>
-          <td>Docs are source/evidence. Tests are allowed fixtures. Services are allowed example-worry domain concepts. Production screen matches were internal example-worry fields in <code>App.tsx</code> and test assertions preventing label leaks.</td>
-          <td class="ok">No production UI defect. No visible sample dates/counts/lorem, no visible example/sample/tutorial/fake label, and no production UI <code>워라벨</code> typo.</td>
+          <td>문서는 출처/증거로 허용됩니다. 테스트는 허용된 fixture입니다. 서비스 영역의 example-worry는 허용된 도메인 개념입니다. 프로덕션 화면에서 확인된 매치는 <code>App.tsx</code>의 내부 example-worry 필드와 라벨 노출 방지 테스트 assertion뿐이었습니다.</td>
+          <td class="ok">프로덕션 UI 결함 없음. 화면에 보이는 샘플 날짜/숫자/lorem, example/sample/tutorial/fake 라벨, 프로덕션 UI의 <code>워라벨</code> 오타가 없습니다.</td>
         </tr>
         <tr>
-          <td>Fake status bar/home indicator/design chrome</td>
+          <td>가짜 상태바/홈 인디케이터/디자인 크롬</td>
           <td><code>rg "9:41|10:46|status bar|home indicator|Home Indicator|battery|wifi|Rectangle" src/screens src/App.tsx</code></td>
-          <td>No matches in production screens/App. Any phone frame in <code>tmp/</code> is evidence-only and explicitly labeled non-production.</td>
-          <td class="ok">No production fake status bar or fake home indicator.</td>
+          <td>프로덕션 화면과 App에서 매치가 없었습니다. <code>tmp/</code> 안의 휴대폰 프레임은 증거 전용이며 비프로덕션이라고 명시되어 있습니다.</td>
+          <td class="ok">프로덕션 가짜 상태바 또는 가짜 홈 인디케이터가 없습니다.</td>
         </tr>
         <tr>
-          <td>Fixed 393px-only/absolute layout risk</td>
+          <td>고정 393px 전용/absolute 레이아웃 위험</td>
           <td><code>rg "absolute|left-\\[|top-\\[|w-\\[393px\\]|h-\\[852px\\]|size-full" src/screens src/App.tsx</code></td>
-          <td>Allowed bounded decorative/control positioning: bottom-nav central action, profile motif internals, connected-dot animation, age-unit suffix. No <code>w-[393px]</code> or <code>h-[852px]</code> production layout control.</td>
-          <td class="ok">No dynamic content card/form/list/policy/modal depends on fixed 393px-only absolute positioning.</td>
+          <td>허용된 제한적 장식/컨트롤 위치 지정만 확인되었습니다: 하단 내비게이션 중앙 액션, 프로필 모티프 내부 요소, 연결 상태 점 애니메이션, 나이 단위 suffix. 프로덕션 레이아웃을 제어하는 <code>w-[393px]</code> 또는 <code>h-[852px]</code>는 없습니다.</td>
+          <td class="ok">동적 콘텐츠 카드/폼/목록/정책/모달이 고정 393px 전용 absolute positioning에 의존하지 않습니다.</td>
         </tr>
         <tr>
-          <td>Explicit artificial-label props</td>
+          <td>명시적 인공 라벨 props</td>
           <td><code>rg "exampleLabel|fakeLabel|sampleLabel|tutorial" src/screens src/services</code></td>
-          <td>Allowed tests asserting artificial labels are absent from mapped UI props.</td>
-          <td class="ok">No production UI artificial label prop remains.</td>
+          <td>매핑된 UI props에 인공 라벨이 없음을 확인하는 테스트만 존재합니다.</td>
+          <td class="ok">프로덕션 UI에 인공 라벨 prop이 남아 있지 않습니다.</td>
         </tr>
         <tr>
-          <td>Viewport width scripting/fixed canvas</td>
+          <td>뷰포트 너비 스크립팅/고정 캔버스</td>
           <td><code>rg "window\\.innerWidth|screen\\.width|393|852" src/screens src/App.tsx</code></td>
-          <td>Allowed contract test text only.</td>
-          <td class="ok">No production screen branches on viewport width or fixed design canvas dimensions.</td>
+          <td>허용된 contract test 텍스트만 확인되었습니다.</td>
+          <td class="ok">프로덕션 화면은 뷰포트 너비 또는 고정 디자인 캔버스 크기로 분기하지 않습니다.</td>
         </tr>
       </tbody>
     </table>
 
-    <h2>Fixed Defects</h2>
+    <h2>수정된 결함</h2>
     <div class="sheet">
-      <p class="note">No production defects were found by the Phase 21 audit, so no production UI or service code was changed.</p>
+      <p class="note">Phase 21 감사에서 프로덕션 결함이 발견되지 않아 프로덕션 UI 또는 서비스 코드는 변경하지 않았습니다.</p>
     </div>
 
-    <h2>Visual Acceptance Matrix By Route/State</h2>
+    <h2>라우트/상태별 시각 승인 매트릭스</h2>
     <table>
       <thead>
-        <tr><th>Route/state</th><th>Dynamic data/chrome result</th><th>Shared primitive result</th><th>Visual acceptance result</th></tr>
+        <tr><th>라우트/상태</th><th>동적 데이터/크롬 결과</th><th>공유 primitive 결과</th><th>시각 승인 결과</th></tr>
       </thead>
       <tbody>
-        <tr><td>Login ready/processing/error</td><td>Auth state and error props drive UI; no login policy links or fake chrome.</td><td>MobileAppShell, ContentSheet, ProfileMotif, SecondaryCTA.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>Onboarding ready/processing/error</td><td>Nickname/gender/age/category props drive UI; test-only sample nickname allowed; <code>워라밸</code> canonical category verified by contract tests.</td><td>ContentSheet, CategoryChip, PrimaryCTA, SecondaryCTA.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>Received worries / answer feed</td><td>Cards render delivery ids, category, dynamic date label, unread state, and body/preview props.</td><td>QlingCard, CategoryChip, Empty/Loading/Error states.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>Write worry</td><td>Draft value/count/max/validation/moderation state drive form; no terminal hardcoded success screen.</td><td>ContentSheet, QlingTextArea, PrimaryCTA.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>Write reply</td><td>Selected worry body/category/date props and draft state drive form.</td><td>ContentSheet, CategoryChip, QlingTextArea, PrimaryCTA.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>Reply detail / feedback/comment</td><td>Original worry, reply, existing feedback, comment validation/moderation props drive UI.</td><td>QlingCard, QlingTextArea, PrimaryCTA, SecondaryCTA, Empty/Loading/Error states.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>My page</td><td>Nickname, interests, helpedCount, push/PWA states, QR share URL, and settings come from props.</td><td>OrangeHeaderBand, QlingCard, ProfileMotif, ContentSheet, SettingsRow, CTA, Dialog.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>My answers</td><td>Dynamic reply list props; tests assert no example/sample/fake labels.</td><td>OrangeHeaderBand, QlingCard, SuccessBadge, Empty/Loading/Error states.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>My worries</td><td>Dynamic worry/reply list props, reply counts, unread state, and selected worry content.</td><td>ContentSheet, QlingCard, CategoryChip, SecondaryCTA, Empty/Loading/Error states.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>Edit interests</td><td>Category options and selected interests are prop-driven; grid wraps in constrained content.</td><td>OrangeHeaderBand, ContentSheet, CategoryChip, PrimaryCTA.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>Privacy policy</td><td>Policy body or production-safe empty/error/loading state; no fake policy copy.</td><td>PolicyTextContainer, Loading/Error/Empty states.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>Operation policy</td><td>Policy body or production-safe empty/error/loading state; no fake policy copy.</td><td>PolicyTextContainer, Loading/Error/Empty states.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>Logout confirmation</td><td>Dialog open/processing/error state is prop-driven.</td><td>QlingDialog, SecondaryCTA, PrimaryCTA.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>Account deletion confirmation</td><td>Dialog open/processing/error state is prop-driven.</td><td>QlingDialog, SecondaryCTA, DestructiveCTA.</td><td class="ok">Accepted.</td></tr>
-        <tr><td>Bottom navigation/mobile shell</td><td>Route policy owns active tab and central write-worry action.</td><td>MobileAppShell, BottomNavigation.</td><td class="ok">Accepted, with final polish still owned by Phase 22.</td></tr>
+        <tr><td>로그인 ready/processing/error</td><td>인증 상태와 오류 props가 UI를 구동합니다. 로그인 정책 링크나 가짜 크롬은 없습니다.</td><td>MobileAppShell, ContentSheet, ProfileMotif, SecondaryCTA.</td><td class="ok">승인.</td></tr>
+        <tr><td>온보딩 ready/processing/error</td><td>닉네임/성별/나이/카테고리 props가 UI를 구동합니다. 테스트 전용 샘플 닉네임은 허용됩니다. <code>워라밸</code> canonical 카테고리는 contract test로 검증되었습니다.</td><td>ContentSheet, CategoryChip, PrimaryCTA, SecondaryCTA.</td><td class="ok">승인.</td></tr>
+        <tr><td>받은 고민 / 답변 피드</td><td>카드는 delivery id, 카테고리, 동적 날짜 라벨, 읽지 않음 상태, 본문/프리뷰 props를 렌더링합니다.</td><td>QlingCard, CategoryChip, Empty/Loading/Error states.</td><td class="ok">승인.</td></tr>
+        <tr><td>고민 작성</td><td>draft 값/글자 수/최대 길이/검증/모더레이션 상태가 폼을 구동합니다. 터미널형 하드코딩 성공 화면은 없습니다.</td><td>ContentSheet, QlingTextArea, PrimaryCTA.</td><td class="ok">승인.</td></tr>
+        <tr><td>답변 작성</td><td>선택된 고민의 본문/카테고리/날짜 props와 draft 상태가 폼을 구동합니다.</td><td>ContentSheet, CategoryChip, QlingTextArea, PrimaryCTA.</td><td class="ok">승인.</td></tr>
+        <tr><td>답변 상세 / 피드백/코멘트</td><td>원문 고민, 답변, 기존 피드백, 코멘트 검증/모더레이션 props가 UI를 구동합니다.</td><td>QlingCard, QlingTextArea, PrimaryCTA, SecondaryCTA, Empty/Loading/Error states.</td><td class="ok">승인.</td></tr>
+        <tr><td>마이페이지</td><td>닉네임, 관심사, helpedCount, push/PWA 상태, QR 공유 URL, 설정 항목은 props에서 옵니다.</td><td>OrangeHeaderBand, QlingCard, ProfileMotif, ContentSheet, SettingsRow, CTA, Dialog.</td><td class="ok">승인.</td></tr>
+        <tr><td>내가 쓴 답변</td><td>동적 답변 목록 props를 사용합니다. 테스트는 example/sample/fake 라벨이 없음을 검증합니다.</td><td>OrangeHeaderBand, QlingCard, SuccessBadge, Empty/Loading/Error states.</td><td class="ok">승인.</td></tr>
+        <tr><td>나의 고민</td><td>동적 고민/답변 목록 props, 답변 수, 읽지 않음 상태, 선택된 고민 본문을 사용합니다.</td><td>ContentSheet, QlingCard, CategoryChip, SecondaryCTA, Empty/Loading/Error states.</td><td class="ok">승인.</td></tr>
+        <tr><td>관심 분야 수정</td><td>카테고리 옵션과 선택된 관심사는 prop 기반입니다. 그리드는 제한된 콘텐츠 영역 안에서 줄바꿈됩니다.</td><td>OrangeHeaderBand, ContentSheet, CategoryChip, PrimaryCTA.</td><td class="ok">승인.</td></tr>
+        <tr><td>개인정보처리방침</td><td>정책 본문 또는 프로덕션 안전 empty/error/loading 상태를 사용합니다. 가짜 정책 문구는 없습니다.</td><td>PolicyTextContainer, Loading/Error/Empty states.</td><td class="ok">승인.</td></tr>
+        <tr><td>운영정책</td><td>정책 본문 또는 프로덕션 안전 empty/error/loading 상태를 사용합니다. 가짜 정책 문구는 없습니다.</td><td>PolicyTextContainer, Loading/Error/Empty states.</td><td class="ok">승인.</td></tr>
+        <tr><td>로그아웃 확인</td><td>다이얼로그 열림/처리 중/오류 상태는 prop 기반입니다.</td><td>QlingDialog, SecondaryCTA, PrimaryCTA.</td><td class="ok">승인.</td></tr>
+        <tr><td>계정 삭제 확인</td><td>다이얼로그 열림/처리 중/오류 상태는 prop 기반입니다.</td><td>QlingDialog, SecondaryCTA, DestructiveCTA.</td><td class="ok">승인.</td></tr>
+        <tr><td>하단 내비게이션/모바일 셸</td><td>route policy가 active tab과 중앙 고민 작성 액션을 소유합니다.</td><td>MobileAppShell, BottomNavigation.</td><td class="ok">승인. 최종 polish는 여전히 Phase 22 소유입니다.</td></tr>
       </tbody>
     </table>
 
-    <h2>Viewport Matrix</h2>
+    <h2>뷰포트 매트릭스</h2>
     <table>
       <thead>
-        <tr><th>Viewport</th><th>Reviewed concern</th><th>Result</th></tr>
+        <tr><th>뷰포트</th><th>검토한 우려</th><th>결과</th></tr>
       </thead>
       <tbody>
-        <tr><td>360px</td><td>Narrow mobile wrapping for onboarding controls, category chips, CTAs, cards, dialogs, and policy text.</td><td class="ok">Usable. Existing responsive classes and flexible grids prevent clipping in reviewed production code.</td></tr>
-        <tr><td>393px</td><td>Design-reference hierarchy for all reskinned screens.</td><td class="ok">Preserved through shared orange bands, cream shell, cards, chips, text areas, CTAs, dialog, and profile motif.</td></tr>
-        <tr><td>430px</td><td>Larger mobile spacing and readable line lengths.</td><td class="ok">Usable. Screens remain max-width constrained and do not depend on fixed 393px layout.</td></tr>
-        <tr><td>Desktop</td><td>Centered/readable shell without stretched dynamic text.</td><td class="ok">Usable. MobileAppShell and screen wrappers use max-width constraints.</td></tr>
+        <tr><td>360px</td><td>온보딩 컨트롤, 카테고리 칩, CTA, 카드, 다이얼로그, 정책 텍스트의 좁은 모바일 줄바꿈.</td><td class="ok">사용 가능. 검토한 프로덕션 코드의 기존 반응형 클래스와 유연한 그리드가 clipping을 방지합니다.</td></tr>
+        <tr><td>393px</td><td>모든 reskin 화면의 디자인 기준 hierarchy.</td><td class="ok">공유 orange band, cream shell, card, chip, text area, CTA, dialog, profile motif를 통해 유지됩니다.</td></tr>
+        <tr><td>430px</td><td>큰 모바일 간격과 읽기 좋은 줄 길이.</td><td class="ok">사용 가능. 화면은 max-width 제약을 유지하며 고정 393px 레이아웃에 의존하지 않습니다.</td></tr>
+        <tr><td>Desktop</td><td>동적 텍스트가 과도하게 늘어나지 않는 중앙 정렬/읽기 쉬운 shell.</td><td class="ok">사용 가능. MobileAppShell과 화면 wrapper는 max-width 제약을 사용합니다.</td></tr>
       </tbody>
     </table>
 
-    <h2>Manual-Equivalent Visual Notes</h2>
+    <h2>수동 검수에 준하는 시각 노트</h2>
     <div class="grid">
-      <section class="phone" aria-label="393px visual acceptance overview">
+      <section class="phone" aria-label="393px 시각 승인 개요">
         <div class="screen">
           <div class="header">
-            <span class="pill">393px reference</span>
+            <span class="pill">393px 기준</span>
             <h2>답변하기 / 나의 고민 / 마이페이지</h2>
-            <p class="note" style="color:white">Production UI uses safe-area-aware layout and browser/device chrome, not fake status bars.</p>
+            <p class="note" style="color:white">프로덕션 UI는 가짜 상태바가 아니라 safe-area-aware 레이아웃과 실제 브라우저/기기 크롬을 사용합니다.</p>
           </div>
           <div class="card">
             <div class="chips"><span class="chip on">워라밸</span><span class="chip">진로</span><span class="chip">건강</span></div>
-            <p class="note" style="margin-top:10px">Dynamic worry/reply/profile text is rendered through props or read models. No design-only sample values are required by screen components.</p>
+            <p class="note" style="margin-top:10px">동적 고민/답변/프로필 텍스트는 props 또는 read model을 통해 렌더링됩니다. 화면 컴포넌트는 디자인 전용 샘플 값을 요구하지 않습니다.</p>
           </div>
           <div class="card" style="margin-top:12px">
-            <div class="textarea">QlingTextArea handles write worry, write reply, and feedback comment states with shared count/error/disabled mapping.</div>
+            <div class="textarea">QlingTextArea는 고민 작성, 답변 작성, 피드백 코멘트 상태를 공유 글자 수/오류/비활성 mapping으로 처리합니다.</div>
           </div>
           <div class="card" style="margin-top:12px">
             <button class="cta">공통 CTA</button>
@@ -173,18 +173,18 @@
       </section>
 
       <section class="sheet">
-        <h3>Shared Primitive Consistency</h3>
-        <p class="note">Reviewed color, font, CTA, card, chip, bottom navigation, modal, text-area, policy container, settings row, and profile motif against <code>src/screens/shared/ui.tsx</code>. Local screen usage composes those primitives for the audited screens.</p>
+        <h3>공유 Primitive 일관성</h3>
+        <p class="note">색상, 글꼴, CTA, 카드, 칩, 하단 내비게이션, 모달, 텍스트 영역, 정책 컨테이너, 설정 행, 프로필 모티프를 <code>src/screens/shared/ui.tsx</code> 기준으로 검토했습니다. 감사 대상 화면의 로컬 사용부는 해당 primitive를 조합합니다.</p>
       </section>
 
       <section class="sheet">
-        <h3>Boundary Evidence</h3>
-        <p class="note"><code>src/App.tsx</code> was not changed and did not increase responsibility. Presentational screen modules stayed free of Firebase/API/service mutation imports; service imports appear in containers, mappings, tests, or app shell. Shared UI primitives remain service-free.</p>
+        <h3>경계 증거</h3>
+        <p class="note"><code>src/App.tsx</code>는 변경하지 않았고 책임도 증가하지 않았습니다. Presentational screen module은 Firebase/API/service mutation import 없이 유지되었습니다. service import는 container, mapping, test 또는 app shell에 존재합니다. 공유 UI primitive는 service-free 상태를 유지합니다.</p>
       </section>
 
       <section class="sheet">
-        <h3>Unresolved Risks</h3>
-        <p class="note">No Phase 21 defect remains. Phase 22 still owns final bottom-navigation/mobile-shell polish. Phase 23 still owns broad accessibility, contrast, keyboard, and responsive hardening beyond the Phase 21 audit scope.</p>
+        <h3>미해결 위험</h3>
+        <p class="note">남아 있는 Phase 21 결함은 없습니다. Phase 22는 여전히 최종 하단 내비게이션/모바일 셸 polish를 소유합니다. Phase 23은 Phase 21 감사 범위를 넘어서는 광범위한 접근성, 대비, 키보드, 반응형 hardening을 소유합니다.</p>
       </section>
     </div>
   </main>
