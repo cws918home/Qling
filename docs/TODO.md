@@ -524,12 +524,12 @@ Functional screen phases must use real production data sources and production ro
 
 Every visual reskin phase must use real production data and route state. Hardcoded sample names, dates, counts, worry text, reply text, lorem ipsum, and example/tutorial labels are forbidden unless the route is an explicit loading, error, or empty mock state.
 
-- [ ] TODO-DESIGN-15.1 Confirm Phase 2 route wiring, Phase 3 shell boundaries, Phase 4 screen contracts, and Phase 14 shared primitives are complete before visual work starts; do not duplicate app shell, CTA, loading/error, or policy-link primitives inside this phase.
-- [ ] TODO-DESIGN-15.2 Reskin loading/splash using production loading/error state, safe-area-aware layout, accessible loading text, and no fake status/home indicators.
-- [ ] TODO-DESIGN-15.3 Reskin login using production Google login wiring, processing/disabled/auth-error states, no policy or terms links under the current PRD, and keyboard/focus behavior.
-- [ ] TODO-DESIGN-15.4 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
-- [ ] TODO-DESIGN-15.5 Add manual screenshot evidence for loading/splash and login at 393px and at least one non-393px width, including evidence that policy links are absent from login.
-- [ ] TODO-DESIGN-15.V1 Verify Phase 15 with screenshots/browser notes and any touched functional test output.
+- [x] TODO-DESIGN-15.1 Confirm Phase 2 route wiring, Phase 3 shell boundaries, Phase 4 screen contracts, and Phase 14 shared primitives are complete before visual work starts; do not duplicate app shell, CTA, loading/error, or policy-link primitives inside this phase.
+- [x] TODO-DESIGN-15.2 Reskin loading/splash using production loading/error state, safe-area-aware layout, accessible loading text, and no fake status/home indicators.
+- [x] TODO-DESIGN-15.3 Reskin login using production Google login wiring, processing/disabled/auth-error states, no policy or terms links under the current PRD, and keyboard/focus behavior.
+- [x] TODO-DESIGN-15.4 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
+- [x] TODO-DESIGN-15.5 Add manual browser-note evidence and user visual verification handoff for loading/splash and login at 393px and at least one non-393px width, including evidence that policy links are absent from login; do not create, store, or output screenshot evidence files for Phase 15.
+- [x] TODO-DESIGN-15.V1 Verify Phase 15 with browser notes, user visual verification handoff checklist, and any touched functional test output.
 
 ### Phase 16 - Onboarding Visual Reskin
 
