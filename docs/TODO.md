@@ -593,16 +593,16 @@ Every visual reskin phase must use real production data and route state. Hardcod
 
 ### Phase 22 - Bottom Navigation And Mobile Shell Final Polish
 
-- [ ] TODO-DESIGN-22.1 Confirm Phase 14 already introduced the bottom navigation primitive and route/action contract before final shell polish starts, and confirm no visual phase duplicated that primitive independently.
-- [ ] TODO-DESIGN-22.2 Audit active tab highlighting for top-level received worries/answer feed, my worries, and my page.
-- [ ] TODO-DESIGN-22.3 Audit active tab highlighting for nested write reply, write worry, received-answer detail, my-answer detail, edit interests, my answers, privacy policy, operation policy, logout confirmation, and account deletion confirmation; `write_worry` remains owned by the `나의 고민` tab.
-- [ ] TODO-DESIGN-22.4 Audit the central orange action as a `고민 작성` shortcut that calls `routeToWriteWorry()` or the equivalent route helper and navigates to `write_worry`; it must not behave as a simple `나의 고민` tab switch.
-- [ ] TODO-DESIGN-22.5 Polish any remaining bottom-navigation overlap defects so the shell does not cover form CTAs, card lists, modals, or final scroll content.
-- [ ] TODO-DESIGN-22.6 Polish any remaining scroll-container bottom padding defects based on nav height and `env(safe-area-inset-bottom)`.
-- [ ] TODO-DESIGN-22.7 Add or update route-policy tests in `src/services/appShell/prdNavigationPolicy.test.ts` only for bottom-tab mappings changed during this polish phase; Phase 2/14 should already cover default route to `답변하기`, `write_worry` ownership by `나의 고민`, and central action navigation to write worry.
-- [ ] TODO-DESIGN-22.8 Add manual screenshot evidence for final bottom nav at 393px, 360px, 430px, and desktop preview.
-- [ ] TODO-DESIGN-22.9 Add manual-only PWA/browser notes for final iOS safe-area behavior and Android Chrome/PWA bottom navigation behavior; do not treat these as automated tests.
-- [ ] TODO-DESIGN-22.V1 Verify Phase 22 with changed route-policy test output if applicable, screenshots, and separate iOS/Android manual notes.
+- [x] TODO-DESIGN-22.1 Confirm Phase 14 already introduced the bottom navigation primitive and route/action contract before final shell polish starts, and confirm no visual phase duplicated that primitive independently.
+- [x] TODO-DESIGN-22.2 Audit active tab highlighting for top-level received worries/answer feed, my worries, and my page.
+- [x] TODO-DESIGN-22.3 Audit active tab highlighting for nested write reply, write worry, received-answer detail, my-answer detail, edit interests, my answers, privacy policy, operation policy, logout confirmation, and account deletion confirmation; `write_worry` remains owned by the `나의 고민` tab.
+- [x] TODO-DESIGN-22.4 Audit the central orange action as a `고민 작성` shortcut that calls `routeToWriteWorry()` or the equivalent route helper and navigates to `write_worry`; it must not behave as a simple `나의 고민` tab switch.
+- [x] TODO-DESIGN-22.5 Polish any remaining bottom-navigation overlap defects so the shell does not cover form CTAs, card lists, modals, or final scroll content.
+- [x] TODO-DESIGN-22.6 Polish any remaining scroll-container bottom padding defects based on nav height and `env(safe-area-inset-bottom)`.
+- [x] TODO-DESIGN-22.7 Add or update route-policy tests in `src/services/appShell/prdNavigationPolicy.test.ts` only for bottom-tab mappings changed during this polish phase; Phase 2/14 should already cover default route to `답변하기`, `write_worry` ownership by `나의 고민`, and central action navigation to write worry.
+- [x] TODO-DESIGN-22.8 Add manual screenshot evidence for final bottom nav at 393px, 360px, 430px, and desktop preview.
+- [x] TODO-DESIGN-22.9 Add manual-only PWA/browser notes for final iOS safe-area behavior and Android Chrome/PWA bottom navigation behavior; do not treat these as automated tests.
+- [x] TODO-DESIGN-22.V1 Verify Phase 22 with changed route-policy test output if applicable, screenshots, and separate iOS/Android manual notes.
 
 ### Phase 23 - Accessibility, Responsive Behavior, And Production Hardening
 

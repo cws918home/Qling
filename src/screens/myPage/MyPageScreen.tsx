@@ -66,7 +66,7 @@ const platformGuidanceLabels: Record<AppInstallAccessProps['platformGuidance'], 
 
 export function MyPageScreen(props: MyPageScreenProps) {
   return (
-    <div className="space-y-6 pb-[calc(var(--qling-space-nav-height)+var(--qling-space-safe-bottom)+2rem)]">
+    <div className="space-y-6">
       <OrangeHeaderBand className="space-y-2">
         <p className="text-sm font-bold opacity-85">마이페이지</p>
         <h1 className="text-2xl font-extrabold">내 프로필과 계정</h1>
@@ -173,7 +173,7 @@ export function PolicyScreen(props: PolicyScreenProps & { readonly onBack: () =>
   const policyBody = props.body?.trim();
 
   return (
-    <div className="space-y-5 pb-[calc(var(--qling-space-nav-height)+var(--qling-space-safe-bottom)+2rem)]">
+    <div className="space-y-5">
       <BackButton onBack={props.onBack} label="마이페이지로" />
       {props.state.status === 'loading' ? (
         <LoadingState title={props.title} message={props.state.label} />
@@ -196,7 +196,7 @@ export function EditInterestsScreen(props: EditInterestsProps) {
   const hasValidationError = Boolean(props.validationMessages.interests);
 
   return (
-    <div className="space-y-5 pb-[calc(var(--qling-space-nav-height)+var(--qling-space-safe-bottom)+2rem)]">
+    <div className="space-y-5">
       <BackButton onBack={props.onBack} label="마이페이지로" />
       <OrangeHeaderBand className="space-y-2">
         <p className="text-sm font-bold opacity-85">관심 분야 수정</p>
