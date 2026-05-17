@@ -1,7 +1,8 @@
 import { WORRY_CATEGORIES, type WorryCategory } from '@midnight-radio/domain';
 import type { ContentValidationResult } from '../../services/validation/content';
+import type { HomeWorryFeedTimestamp } from '../../services/homeWorryFeed/types';
 import type { SelectedReceivedWorry } from '../receivedWorries/ReceivedWorriesContainer';
-import type { ScreenModerationState, SubmitDisabledReason } from '../shared/contract';
+import type { DisplayDate, ScreenModerationState, SubmitDisabledReason } from '../shared/contract';
 import type { OriginalWorrySummaryProps, WriteDraftContract } from './contract';
 
 export function buildWriteDraftContract(params: {
@@ -41,6 +42,22 @@ export function mapSelectedWorryToOriginalWorrySummary(
     worryId: worry.worryId,
     category: toWorryCategory(worry.category),
     bodyText: worry.refinedContent,
+    receivedAt: displayDateFromTimestamp(worry.createdAt),
+  };
+}
+
+function displayDateFromTimestamp(createdAt: HomeWorryFeedTimestamp | null | undefined): DisplayDate {
+  const millis = createdAt?.toMillis?.();
+  if (typeof millis !== 'number' || Number.isNaN(millis)) {
+    return { label: '수신됨' };
+  }
+
+  return {
+    label: new Intl.DateTimeFormat('ko-KR', {
+      month: 'short',
+      day: 'numeric',
+    }).format(new Date(millis)),
+    isoValue: new Date(millis).toISOString(),
   };
 }
 

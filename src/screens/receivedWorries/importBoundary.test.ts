@@ -46,11 +46,11 @@ test('received-worries presentational pass event emits only delivery id', () => 
   assert.doesNotMatch(source, /onPass\(event/);
 });
 
-test('received-worries presentational pass and reply clicks stop card open propagation', () => {
+test('received-worries presentational pass click is isolated from card body open', () => {
   const source = fs.readFileSync(presentationalScreenPath, 'utf8');
 
-  assert.equal((source.match(/event\.stopPropagation\(\)/g) ?? []).length, 2);
-  assert.match(source, /props\.onReply\(\{ deliveryId: item\.deliveryId, worryId: item\.worryId \}\)/);
+  assert.equal((source.match(/event\.stopPropagation\(\)/g) ?? []).length, 1);
+  assert.match(source, /props\.onOpen\(\{ deliveryId: item\.deliveryId, worryId: item\.worryId \}\)/);
   assert.match(source, /props\.onPass\(item\.deliveryId\)/);
 });
 

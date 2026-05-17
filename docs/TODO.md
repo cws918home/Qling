@@ -543,12 +543,12 @@ Every visual reskin phase must use real production data and route state. Hardcod
 
 ### Phase 17 - Received Worries/Write Reply Visual Reskin
 
-- [ ] TODO-DESIGN-17.1 Confirm Phase 5 received-worries container, Phase 11 pass/reply functional alignment, Phase 12 write-reply behavior, and Phase 14 shared primitives are complete before visual work starts; do not duplicate bottom navigation, central action, card, text area, CTA, modal, or loading/error primitives inside this phase.
-- [ ] TODO-DESIGN-17.2 Reskin received worries with dynamic feed data, loading/error/empty states, pass disabled/processing state, answered-item exclusion from the feed, bottom-nav overlap prevention, and card accessibility labels.
-- [ ] TODO-DESIGN-17.3 Reskin write reply with selected worry data, empty input, processing, validation error, moderation error, safe-area/bottom-nav overlap prevention, keyboard behavior, and transient success styling only if it does not block navigation to my-answer detail or feed-item removal.
-- [ ] TODO-DESIGN-17.4 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
-- [ ] TODO-DESIGN-17.5 Add manual screenshot/browser-note evidence for received worries, empty/error/loading states where practical, pass state, reply success removing the item from the answer feed, publish-to-my-answer-detail transition, and write reply.
-- [ ] TODO-DESIGN-17.V1 Verify Phase 17 with screenshots/browser notes and affected pass/feed/write-reply test output.
+- [x] TODO-DESIGN-17.1 Confirm Phase 5 received-worries container, Phase 11 pass/reply functional alignment, Phase 12 write-reply behavior, and Phase 14 shared primitives are complete before visual work starts; do not duplicate bottom navigation, central action, card, text area, CTA, modal, or loading/error primitives inside this phase.
+- [x] TODO-DESIGN-17.2 Reskin received worries with dynamic feed data, loading/error/empty states, pass disabled/processing state, answered-item exclusion from the feed, bottom-nav overlap prevention, and card accessibility labels.
+- [x] TODO-DESIGN-17.3 Reskin write reply with selected worry data, empty input, processing, validation error, moderation error, safe-area/bottom-nav overlap prevention, keyboard behavior, and transient success styling only if it does not block navigation to my-answer detail or feed-item removal.
+- [x] TODO-DESIGN-17.4 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
+- [x] TODO-DESIGN-17.5 Add manual screenshot/browser-note evidence for received worries, empty/error/loading states where practical, pass state, reply success removing the item from the answer feed, publish-to-my-answer-detail transition, and write reply.
+- [x] TODO-DESIGN-17.V1 Verify Phase 17 with screenshots/browser notes and affected pass/feed/write-reply test output.
 
 ### Phase 18 - Write Worry/My Worries Visual Reskin
 

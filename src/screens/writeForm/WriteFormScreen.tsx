@@ -1,4 +1,10 @@
 import { Loader2, Send, Sparkles } from 'lucide-react';
+import {
+  CategoryChip,
+  ContentSheet,
+  PrimaryCTA,
+  QlingTextArea,
+} from '../shared/ui';
 import type { WriteFormScreenProps } from './contract';
 
 export function WriteFormScreen(props: WriteFormScreenProps) {
@@ -6,19 +12,89 @@ export function WriteFormScreen(props: WriteFormScreenProps) {
   const characterCount = props.draft.characterCount;
   const isTooLong = characterCount > props.draft.maxLength;
 
-  return (
-    <div className="space-y-6">
-      {props.kind === 'write-reply' && (
-        <div className="bg-[#FAEDCD]/50 p-6 rounded-2xl mb-8 border border-[#FAEDCD]">
-          <div className="text-xs font-bold text-[#D4A373] mb-2">
-            답장할 고민 ({props.originalWorry.category})
+  if (props.kind === 'write-reply') {
+    const validationMessage = props.draft.validation.status === 'invalid' && props.draft.value !== ''
+      ? props.draft.validation.message
+      : undefined;
+    const moderationMessage = props.draft.moderation.status === 'rejected'
+      ? [props.draft.moderation.reason, props.draft.moderation.helpMessage].filter(Boolean).join('\n\n')
+      : props.draft.moderation.status === 'failed'
+        ? props.draft.moderation.message
+        : undefined;
+
+    return (
+      <div className="space-y-5 pb-4">
+        <ContentSheet className="space-y-4 bg-[var(--qling-color-surface)]">
+          <div className="flex flex-wrap items-center gap-2">
+            <CategoryChip
+              label={props.originalWorry.category}
+              selected
+              disabled
+              className="pointer-events-none px-3 py-1 text-[11px] disabled:opacity-100"
+            />
+            {props.originalWorry.receivedAt && (
+              <time
+                className="text-xs font-bold text-[var(--qling-color-muted)]"
+                dateTime={props.originalWorry.receivedAt.isoValue}
+              >
+                {props.originalWorry.receivedAt.label}
+              </time>
+            )}
           </div>
-          <p className="text-[#5A5A40] text-sm leading-relaxed whitespace-pre-wrap">
+          <p className="whitespace-pre-wrap text-base font-extrabold leading-7 text-[var(--qling-color-text)]">
             {props.originalWorry.bodyText}
           </p>
-        </div>
-      )}
+        </ContentSheet>
 
+        <QlingTextArea
+          value={props.draft.value}
+          onChange={props.onDraftChange}
+          maxLength={props.draft.maxLength}
+          label="답변 작성"
+          placeholder="고민자에게 따뜻한 말을 전달해주세요!"
+          errorMessage={validationMessage}
+          disabled={props.draft.isProcessing}
+          processing={props.draft.isProcessing}
+        />
+
+        {moderationMessage && (
+          <div className="rounded-[var(--qling-radius-card)] border border-red-100 bg-red-50 p-4 text-sm font-semibold leading-6 text-red-700 whitespace-pre-wrap">
+            {moderationMessage}
+          </div>
+        )}
+
+        {props.draft.moderation.status === 'checking' && (
+          <p className="text-sm font-bold text-[var(--qling-color-muted)]">AI 안심 필터가 내용을 확인하고 있습니다.</p>
+        )}
+
+        <div className="rounded-[var(--qling-radius-card)] border border-[var(--qling-color-border)] bg-[var(--qling-color-cream-soft)]/70 p-4">
+          <div className="flex gap-3">
+            <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-[var(--qling-color-success)]" aria-hidden="true" />
+            <p className="text-xs leading-6 text-[var(--qling-color-muted)]">
+              <strong className="text-[var(--qling-color-text)]">AI 안심 필터 적용 안내</strong><br />
+              전송 시 부적절한 언어가 감지되는지 확인하고, 문제가 없다면 원문 그대로 전달됩니다.
+            </p>
+          </div>
+        </div>
+
+        <PrimaryCTA
+          disabled={isDisabled}
+          processing={props.draft.isProcessing}
+          accessibilityLabel="답변 전송"
+          onClick={() => props.onPublish({
+            deliveryId: props.originalWorry.deliveryId,
+            worryId: props.originalWorry.worryId,
+          })}
+        >
+          <Send className="h-5 w-5" aria-hidden="true" />
+          답변 전송
+        </PrimaryCTA>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
       <div className="relative">
         <textarea
           value={props.draft.value}
@@ -69,14 +145,7 @@ export function WriteFormScreen(props: WriteFormScreenProps) {
       <button
         disabled={isDisabled}
         onClick={() => {
-          if (props.kind === 'write-worry') {
-            props.onPublish();
-          } else {
-            props.onPublish({
-              deliveryId: props.originalWorry.deliveryId,
-              worryId: props.originalWorry.worryId,
-            });
-          }
+          props.onPublish();
         }}
         className="w-full py-4 bg-[#5A5A40] text-white rounded-xl font-bold shadow-xl hover:bg-[#4A4A30] disabled:opacity-50 transition-all flex items-center justify-center gap-3"
       >

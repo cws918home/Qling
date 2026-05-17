@@ -23,7 +23,7 @@ import { mapHomeWorryFeedLetterToReceivedWorryFeedItem } from './mapping';
 
 export type SelectedReceivedWorry = Pick<
   HomeWorryFeedLetter,
-  'deliveryId' | 'worryId' | 'category' | 'refinedContent' | 'source'
+  'deliveryId' | 'worryId' | 'category' | 'refinedContent' | 'source' | 'createdAt'
 >;
 
 export type ReceivedWorriesContainerProps = {

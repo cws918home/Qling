@@ -1,5 +1,13 @@
-import { Loader2, MessageSquare, XCircle } from 'lucide-react';
+import { ChevronRight, Loader2, XCircle } from 'lucide-react';
 import type { MouseEvent } from 'react';
+import { cn } from '../../lib/utils';
+import {
+  CategoryChip,
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  QlingCard,
+} from '../shared/ui';
 import type { ReceivedWorriesScreenProps } from './contract';
 
 export function ReceivedWorriesScreen(props: ReceivedWorriesScreenProps) {
@@ -7,66 +15,56 @@ export function ReceivedWorriesScreen(props: ReceivedWorriesScreenProps) {
 
   if (props.state.status === 'loading') {
     return (
-      <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
-        <Loader2 className="w-12 h-12 text-[#D4A373] mx-auto mb-3 animate-spin" />
-        <p className="text-[#8B8B6B]">{props.state.label}</p>
-      </div>
+      <LoadingState title="고민을 불러오고 있어요" message={props.state.label} />
     );
   }
 
   if (props.state.status === 'error') {
     return (
-      <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
-        <XCircle className="w-12 h-12 text-[#E07A5F] mx-auto mb-3" />
-        <p className="text-[#8B8B6B]">{props.state.message}</p>
-      </div>
+      <ErrorState title="답변 피드를 불러오지 못했어요" message={props.state.message} />
     );
   }
 
   if (props.state.status === 'empty') {
     return (
-      <div className="text-center py-16 bg-white/50 rounded-3xl border border-dashed border-[#E9EDC9]">
-        <MessageSquare className="w-12 h-12 text-[#E9EDC9] mx-auto mb-3" />
-        <p className="text-[#8B8B6B]">{props.state.message}</p>
-      </div>
+      <EmptyState title="지금은 도착한 고민이 없어요" message={props.state.message} />
     );
   }
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-3 pb-2" aria-label="받은 고민 목록">
       {props.items.map(item => {
         const isPassing = passingDeliveryIds.has(item.deliveryId);
+        const content = item.bodyText ?? item.previewText;
 
         return (
-          <article
+          <QlingCard
             key={item.deliveryId}
-            onClick={() => props.onOpen({ deliveryId: item.deliveryId, worryId: item.worryId })}
-            className={`bg-white p-6 rounded-2xl shadow-sm border relative group cursor-pointer ${
-              item.isUnread ? 'border-[#E07A5F] bg-[#FFF8F1]' : 'border-[#FAEDCD]'
-            }`}
+            className={cn(
+              'relative overflow-hidden p-0 shadow-[0_10px_22px_rgb(37_34_31/0.12)]',
+              item.isUnread && 'border-[var(--qling-color-primary-orange)] bg-[var(--qling-color-cream-soft)]',
+            )}
           >
-            <div className="flex items-center gap-2 mb-4">
-              <span className="px-2.5 py-1 bg-[#FAEDCD] text-[#D4A373] text-[10px] font-bold rounded-lg border border-[#E9EDC9]">
-                {item.category}
-              </span>
-              <time className="text-[#8B8B6B] text-xs" dateTime={item.receivedAt.isoValue}>
-                · {item.receivedAt.label}
-              </time>
-            </div>
-            <p className="text-[#5A5A40] leading-relaxed mb-6 whitespace-pre-wrap font-medium">
-              {item.bodyText ?? item.previewText}
-            </p>
-            <div className="grid grid-cols-[1fr_auto] gap-2">
-              <button
-                type="button"
-                onClick={(event: MouseEvent<HTMLButtonElement>) => {
-                  event.stopPropagation();
-                  props.onReply({ deliveryId: item.deliveryId, worryId: item.worryId });
-                }}
-                className="min-w-0 py-3 bg-[#FDFCF8] text-[#8B8B6B] font-medium border border-[#E9EDC9] rounded-xl hover:bg-[#FAEDCD] hover:text-[#5A5A40] transition-colors flex items-center justify-center gap-2"
-              >
-                <MessageSquare className="w-4 h-4" /> 다정하게 답장해주기
-              </button>
+            <div className="flex items-start justify-between gap-3 px-4 pt-3">
+              <div className="flex min-w-0 flex-wrap items-center gap-2">
+                <CategoryChip
+                  label={item.category}
+                  selected
+                  disabled
+                  className="pointer-events-none px-3 py-1 text-[11px] disabled:opacity-100"
+                />
+                <time
+                  className="text-xs font-bold text-[var(--qling-color-muted)]"
+                  dateTime={item.receivedAt.isoValue}
+                >
+                  {item.receivedAt.label}
+                </time>
+                {item.isUnread && (
+                  <span className="rounded-[var(--qling-radius-pill)] bg-[var(--qling-color-primary-orange)] px-2 py-0.5 text-[10px] font-bold text-white">
+                    새 고민
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={(event: MouseEvent<HTMLButtonElement>) => {
@@ -74,16 +72,27 @@ export function ReceivedWorriesScreen(props: ReceivedWorriesScreenProps) {
                   props.onPass(item.deliveryId);
                 }}
                 disabled={isPassing}
-                className="px-4 py-3 bg-white text-[#8B8B6B] font-bold border border-[#E9EDC9] rounded-xl hover:bg-[#FDFCF8] hover:text-[#5A5A40] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                title="패스"
+                aria-label={`${item.category} 고민 건너뛰기`}
+                className="inline-flex h-7 shrink-0 items-center justify-center gap-1 rounded-[var(--qling-radius-pill)] border border-[var(--qling-color-primary-orange)] bg-[var(--qling-color-primary-orange)] px-3 text-[11px] font-bold text-white transition-colors hover:bg-[var(--qling-color-secondary-orange)] disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isPassing
-                  ? <Loader2 className="w-4 h-4 animate-spin" />
-                  : <XCircle className="w-4 h-4" />}
-                <span className="hidden sm:inline">패스</span>
+                {isPassing ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <XCircle className="h-3.5 w-3.5" aria-hidden="true" />}
+                {isPassing ? '처리 중' : '건너뛰기'}
               </button>
             </div>
-          </article>
+            <button
+              type="button"
+              onClick={() => props.onOpen({ deliveryId: item.deliveryId, worryId: item.worryId })}
+              aria-label={`${item.category} 고민에 답변 작성하기`}
+              className="group flex w-full items-end justify-between gap-3 px-4 pb-4 pt-4 text-left focus:outline-none focus:ring-2 focus:ring-[var(--qling-color-primary-orange)] focus:ring-inset"
+            >
+              <span className="min-w-0 whitespace-pre-wrap text-base font-extrabold leading-7 text-[var(--qling-color-text)]">
+                {content}
+              </span>
+              <span className="mb-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--qling-color-cream-soft)] text-[var(--qling-color-primary-orange)] transition-transform group-hover:translate-x-0.5" aria-hidden="true">
+                <ChevronRight className="h-4 w-4" />
+              </span>
+            </button>
+          </QlingCard>
         );
       })}
     </div>

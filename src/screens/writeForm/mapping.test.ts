@@ -11,6 +11,7 @@ test('maps selected delivery data to original worry summary props', () => {
     worryId: 'worry-1',
     category: WORRY_CATEGORIES[2],
     refinedContent: 'Original worry',
+    createdAt: { toMillis: () => Date.UTC(2026, 4, 16) },
   } as SelectedReceivedWorry);
 
   assert.deepEqual(summary, {
@@ -18,6 +19,10 @@ test('maps selected delivery data to original worry summary props', () => {
     worryId: 'worry-1',
     category: WORRY_CATEGORIES[2],
     bodyText: 'Original worry',
+    receivedAt: {
+      label: '5월 16일',
+      isoValue: '2026-05-16T00:00:00.000Z',
+    },
   });
 });
 
