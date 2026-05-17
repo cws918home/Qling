@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase 18 My Worry Detail Evidence</title>
+  <style>
+    :root { --orange:#ff8b3d; --cream:#fff1d1; --soft:#fff5eb; --text:#2a2a2a; --muted:#7a7a7a; font-family: SUIT, Inter, system-ui, sans-serif; }
+    body { margin:0; background:#ececec; color:var(--text); }
+    .wrap { display:grid; grid-template-columns:repeat(2, 393px); gap:24px; padding:24px; }
+    .phone { position:relative; width:393px; height:852px; overflow:hidden; background:var(--cream); border:1px solid #d8d8d8; border-radius:28px; box-shadow:0 18px 50px rgb(0 0 0 / 18%); }
+    .screen { box-sizing:border-box; min-height:100%; padding:42px 16px 132px; display:flex; flex-direction:column; gap:16px; }
+    .header, .selected, .state, .reply { border-radius:22px; padding:18px; }
+    .header { background:var(--orange); color:white; }
+    h1 { margin:0; font-size:24px; }
+    .selected { background:var(--soft); }
+    .eyebrow { color:var(--orange); font-size:12px; font-weight:900; margin-bottom:8px; }
+    p { margin:0; line-height:1.6; }
+    .title { font-size:14px; font-weight:900; margin:4px 0 10px; }
+    .state { background:white; border:1px dashed #dadce0; text-align:center; color:var(--muted); font-weight:800; }
+    .reply { background:white; border:1px solid #dadce0; display:grid; gap:10px; }
+    .reply.unread { border-color:var(--orange); background:rgb(255 245 235 / 86%); }
+    .row { display:flex; gap:8px; align-items:center; }
+    .badge { margin-left:auto; border-radius:999px; background:var(--orange); color:white; padding:5px 10px; font-size:11px; font-weight:900; }
+    .nav { position:absolute; left:0; right:0; bottom:0; height:96px; background:rgb(255 255 255 / 96%); border-top:1px solid #dadce0; display:grid; place-items:center; font-size:12px; font-weight:900; color:var(--muted); }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section>
+      <div class="phone">
+        <div class="screen">
+          <section class="header"><h1>나의 고민</h1><p>선택된 고민과 도착한 답장</p></section>
+          <section class="selected"><div class="eyebrow">선택한 고민</div><p>production route state의 selectedMyWorry.content가 표시된다. design 샘플 날짜/문장/카운트는 사용하지 않는다.</p></section>
+          <div class="title">도착한 답장 (2)</div>
+          <article class="reply unread" aria-label="받은 답장 상세로 이동, 읽지 않은 답장">
+            <div class="row"><strong>누군가의 따뜻한 답장</strong><span class="badge">새 답장</span></div>
+            <p>동적 reply.previewText가 들어가며 선택 시 routeToReceivedReplyDetail 계열 동작으로 이동한다.</p>
+          </article>
+          <article class="reply" aria-label="받은 답장 상세로 이동, 읽은 답장">
+            <div class="row"><strong>누군가의 따뜻한 답장</strong></div>
+            <p>read-state marking은 container/service 경로에 남아 있다.</p>
+          </article>
+        </div>
+        <div class="nav">bottom nav overlap 없음</div>
+      </div>
+    </section>
+    <section>
+      <div class="phone">
+        <div class="screen">
+          <section class="header"><h1>나의 고민</h1><p>loading / empty / error state</p></section>
+          <section class="selected"><div class="eyebrow">선택한 고민</div><p>선택된 고민 본문</p></section>
+          <div class="title">도착한 답장 (0)</div>
+          <div class="state">답장을 불러오는 중</div>
+          <div class="state">아직 도착한 답장이 없어요</div>
+          <div class="state">답장을 불러오지 못했어요</div>
+        </div>
+        <div class="nav">shared BottomNavigation</div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

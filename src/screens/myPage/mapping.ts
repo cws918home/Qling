@@ -56,13 +56,23 @@ export function mapMyWorryToListItem(params: {
   readonly worry: MyWorryListItem;
   readonly selectedWorryId?: string;
 }): MyWorryListItemProps {
+  const replyCount = params.worry.humanReplyCount ?? 0;
+  const categoryLabel = params.worry.categories.join(', ') || '기타';
+  const isSelected = params.worry.id === params.selectedWorryId;
   return {
     worryId: params.worry.id,
     contentPreview: params.worry.content,
-    categoryLabel: params.worry.categories.join(', ') || '기타',
-    replyCount: params.worry.humanReplyCount ?? 0,
+    categoryLabel,
+    replyCount,
     hasUnreadReplies: params.worry.hasUnreadReplies,
-    isSelected: params.worry.id === params.selectedWorryId,
+    isSelected,
+    accessibilityLabel: [
+      `나의 고민 상세로 이동`,
+      `카테고리 ${categoryLabel}`,
+      `답장 ${replyCount}개`,
+      params.worry.hasUnreadReplies ? '읽지 않은 답장 있음' : '읽지 않은 답장 없음',
+      isSelected ? '현재 선택됨' : '선택되지 않음',
+    ].join(', '),
   };
 }
 
@@ -72,5 +82,9 @@ export function mapReceivedReplyToListItem(reply: ReplyReadModelItem): ReceivedR
     worryId: reply.worryId,
     previewText: reply.refinedContent,
     hasUnread: reply.hasUnread === true,
+    accessibilityLabel: [
+      '받은 답장 상세로 이동',
+      reply.hasUnread === true ? '읽지 않은 답장' : '읽은 답장',
+    ].join(', '),
   };
 }

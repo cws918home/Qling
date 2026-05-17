@@ -38,14 +38,17 @@ export function useRepliesForWorry(params: {
   const [readStatesByReplyId, setReadStatesByReplyId] = useState(new Map<string, ReplyReadStateDoc>());
   const [feedbacksByReplyId, setFeedbacksByReplyId] = useState(new Map<string, PrdFeedbackDoc>());
   const [isLoadingRepliesForWorry, setIsLoadingRepliesForWorry] = useState(false);
+  const [repliesForWorryError, setRepliesForWorryError] = useState<string | undefined>();
 
   useEffect(() => {
     if (!user || !worryId) {
       setPrdReplies([]);
       setIsLoadingRepliesForWorry(false);
+      setRepliesForWorryError(undefined);
       return;
     }
     setIsLoadingRepliesForWorry(true);
+    setRepliesForWorryError(undefined);
 
     const unsubscribe = onSnapshot(
       query(
@@ -65,11 +68,13 @@ export function useRepliesForWorry(params: {
           feedbacksByReplyId,
         }));
         setIsLoadingRepliesForWorry(false);
+        setRepliesForWorryError(undefined);
       },
       error => {
         logFirestoreListenerError('Replies for worry listener error:', error);
         setPrdReplies([]);
         setIsLoadingRepliesForWorry(false);
+        setRepliesForWorryError('도착한 답장을 불러오지 못했습니다.');
       }
     );
 
@@ -96,6 +101,7 @@ export function useRepliesForWorry(params: {
       error => {
         logFirestoreListenerError('Publisher feedback listener error:', error);
         setFeedbacksByReplyId(new Map());
+        setRepliesForWorryError('답장 반응 상태를 불러오지 못했습니다.');
       }
     );
 
@@ -117,6 +123,7 @@ export function useRepliesForWorry(params: {
       },
       error => {
         logFirestoreListenerError('Replies read-state listener error:', error);
+        setRepliesForWorryError('답장 읽음 상태를 불러오지 못했습니다.');
       }
     );
 
@@ -131,5 +138,5 @@ export function useRepliesForWorry(params: {
     [prdReplies]
   );
 
-  return { repliesForWorry, isLoadingRepliesForWorry };
+  return { repliesForWorry, isLoadingRepliesForWorry, repliesForWorryError };
 }

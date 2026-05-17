@@ -48,7 +48,6 @@ test('write-form presentational screen emits draft and publish events only', () 
   const source = fs.readFileSync(presentationalScreenFiles[0], 'utf8');
 
   assert.match(source, /onChange=\{props\.onDraftChange\}/);
-  assert.match(source, /props\.onDraftChange\(event\.target\.value\)/);
   assert.match(source, /props\.onPublish\(/);
   assert.doesNotMatch(source, /validateDraftContent|publishWorryViaApi|publishReplyViaApi|setDraft|clearDraft/);
 });

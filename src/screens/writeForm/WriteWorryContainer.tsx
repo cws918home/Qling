@@ -81,17 +81,17 @@ export function WriteWorryContainer(props: WriteWorryContainerProps) {
   };
 
   return (
-    <div>
+    <div className="space-y-5 pb-4">
       <button
         onClick={() => props.setView(backRouteFromWriteWorry())}
-        className="mb-6 flex items-center gap-2 text-[#8B8B6B] hover:text-[#5A5A40] transition-colors"
+        className="flex items-center gap-2 text-sm font-bold text-[var(--qling-color-muted)] transition-colors hover:text-[var(--qling-color-text)]"
+        aria-label="나의 고민으로 돌아가기"
       >
-        <ArrowLeft className="w-4 h-4" /> 돌아가기
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> 돌아가기
       </button>
-      <h2 className="text-2xl font-serif font-bold mb-2">당신의 이야기를 들려주세요</h2>
-      <p className="text-[#8B8B6B] mb-8">
-        마음 한구석에 담아둔 고민을 적어보세요. AI 안심 필터가 내용을 확인한 뒤, 가장 따뜻한 답변을 줄 수 있는 이웃에게 전달합니다.
-      </p>
+      <header className="text-center">
+        <h2 className="text-lg font-extrabold text-[var(--qling-color-text)]">질문 작성</h2>
+      </header>
 
       <WriteFormScreen
         kind="write-worry"

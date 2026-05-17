@@ -552,12 +552,12 @@ Every visual reskin phase must use real production data and route state. Hardcod
 
 ### Phase 18 - Write Worry/My Worries Visual Reskin
 
-- [ ] TODO-DESIGN-18.1 Confirm Phase 6 write forms container, Phase 10 my-worries functional expansion, Phase 12 write-worry behavior, and Phase 14 shared primitives are complete before visual work starts; do not duplicate bottom navigation, central action, card, text area, CTA, modal, or loading/error primitives inside this phase.
-- [ ] TODO-DESIGN-18.2 Reskin write worry with draft data, empty input, processing, validation error, moderation error, safe-area/bottom-nav overlap prevention, keyboard behavior, and transient success styling only if it does not block navigation to the written worry detail.
-- [ ] TODO-DESIGN-18.3 Reskin my worries with dynamic list, empty/loading/error states, received-replies navigation, bottom-nav overlap prevention, and card accessibility labels.
-- [ ] TODO-DESIGN-18.4 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
-- [ ] TODO-DESIGN-18.5 Add manual screenshot/browser-note evidence for write worry, publish-to-written-worry-detail transition, and my worries list/detail states.
-- [ ] TODO-DESIGN-18.V1 Verify Phase 18 with screenshots/browser notes and affected write-worry/my-worries test output.
+- [x] TODO-DESIGN-18.1 Confirm Phase 6 write forms container, Phase 10 my-worries functional expansion, Phase 12 write-worry behavior, and Phase 14 shared primitives are complete before visual work starts; do not duplicate bottom navigation, central action, card, text area, CTA, modal, or loading/error primitives inside this phase.
+- [x] TODO-DESIGN-18.2 Reskin write worry with draft data, empty input, processing, validation error, moderation error, safe-area/bottom-nav overlap prevention, keyboard behavior, and transient success styling only if it does not block navigation to the written worry detail.
+- [x] TODO-DESIGN-18.3 Reskin my worries with dynamic list, empty/loading/error states, received-replies navigation, bottom-nav overlap prevention, and card accessibility labels.
+- [x] TODO-DESIGN-18.4 Verify 393px hierarchy matches the design intent and 360px/430px/desktop remain usable and not clipped.
+- [x] TODO-DESIGN-18.5 Add manual screenshot/browser-note evidence for write worry, publish-to-written-worry-detail transition, and my worries list/detail states.
+- [x] TODO-DESIGN-18.V1 Verify Phase 18 with screenshots/browser notes and affected write-worry/my-worries test output.
 
 ### Phase 19 - Reply Check/Feedback/My Answers Visual Reskin
 

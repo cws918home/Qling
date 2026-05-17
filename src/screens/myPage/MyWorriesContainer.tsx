@@ -30,8 +30,8 @@ export type SelectedMyWorry = MyWorryListItem;
 export type SelectedMyReply = ReplyReadModelItem;
 
 export function MyWorriesContainer(props: MyWorriesContainerProps) {
-  const { myWorries } = useMyWorries({ user: props.user });
-  const { repliesForWorry } = useRepliesForWorry({
+  const { myWorries, isLoadingMyWorries, myWorriesError } = useMyWorries({ user: props.user });
+  const { repliesForWorry, isLoadingRepliesForWorry, repliesForWorryError } = useRepliesForWorry({
     user: props.user,
     worryId: props.selectedMyWorry?.id ?? null,
   });
@@ -73,7 +73,13 @@ export function MyWorriesContainer(props: MyWorriesContainerProps) {
 
   return (
     <MyWorriesScreen
-      state={myWorries.length === 0 ? { status: 'empty', message: '아직 작성한 고민이 없어요.' } : { status: 'ready' }}
+      state={myWorriesError
+        ? { status: 'error', message: myWorriesError, canRetry: false }
+        : isLoadingMyWorries
+          ? { status: 'loading', label: '작성한 고민을 불러오고 있습니다.' }
+          : myWorries.length === 0
+            ? { status: 'empty', message: '아직 작성한 고민이 없어요.' }
+            : { status: 'ready' }}
       items={myWorries.map(worry => mapMyWorryToListItem({
         worry,
         selectedWorryId: props.selectedMyWorry?.id,
@@ -81,9 +87,13 @@ export function MyWorriesContainer(props: MyWorriesContainerProps) {
       selectedWorry={props.selectedMyWorry ? {
         worryId: props.selectedMyWorry.id,
         content: props.selectedMyWorry.content,
-        repliesState: repliesWithWorryFallback.length === 0
-          ? { status: 'empty', message: '아직 이 고민에 도착한 답장이 없어요.' }
-          : { status: 'ready' },
+        repliesState: repliesForWorryError
+          ? { status: 'error', message: repliesForWorryError, canRetry: false }
+          : isLoadingRepliesForWorry
+            ? { status: 'loading', label: '도착한 답장을 불러오고 있습니다.' }
+            : repliesWithWorryFallback.length === 0
+              ? { status: 'empty', message: '아직 이 고민에 도착한 답장이 없어요.' }
+              : { status: 'ready' },
         replies: repliesWithWorryFallback.map(mapReceivedReplyToListItem),
       } : undefined}
       onWriteWorry={() => props.setView(routeToWriteWorry())}

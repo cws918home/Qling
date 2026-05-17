@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phase 18 Write Worry Evidence</title>
+  <style>
+    :root {
+      --orange: #ff8b3d;
+      --cream: #fff1d1;
+      --soft: #fff5eb;
+      --text: #2a2a2a;
+      --muted: #8b8b8b;
+      --danger: #d64545;
+      font-family: SUIT, Inter, system-ui, sans-serif;
+    }
+    body { margin: 0; background: #ececec; color: var(--text); }
+    .wrap { display: grid; gap: 24px; padding: 24px; }
+    .phone { width: 393px; height: 852px; overflow: hidden; background: var(--cream); border: 1px solid #d8d8d8; border-radius: 28px; box-shadow: 0 18px 50px rgb(0 0 0 / 18%); }
+    .screen { min-height: 100%; box-sizing: border-box; padding: 54px 20px 132px; display: flex; flex-direction: column; gap: 20px; }
+    .back { color: var(--muted); font-size: 14px; font-weight: 800; }
+    h1 { margin: 0; text-align: center; font-size: 18px; }
+    .area { background: var(--soft); border: 1.5px solid var(--orange); border-radius: 24px; padding: 18px; min-height: 500px; display: flex; flex-direction: column; }
+    label { font-size: 14px; font-weight: 900; margin-bottom: 10px; }
+    textarea { flex: 1; border: 1px solid #dadce0; border-radius: 16px; padding: 16px; resize: none; font: inherit; line-height: 1.7; color: var(--text); }
+    .meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; color: var(--muted); font-size: 12px; font-weight: 800; }
+    .danger { color: var(--danger); }
+    .note, .error { border-radius: 20px; padding: 14px 16px; font-size: 13px; line-height: 1.6; background: white; border: 1px solid #dadce0; }
+    .error { border-color: #ffd0d0; background: #fff1f1; color: #a42b2b; font-weight: 800; white-space: pre-wrap; }
+    .cta { position: sticky; bottom: 104px; min-height: 48px; border-radius: 16px; background: var(--orange); color: white; border: 0; font-weight: 900; font-size: 16px; }
+    .cta[disabled] { opacity: .55; }
+    .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 96px; background: rgb(255 255 255 / 96%); border-top: 1px solid #dadce0; display: grid; place-items: center; color: var(--muted); font-size: 12px; font-weight: 800; }
+    .state-grid { display: grid; grid-template-columns: repeat(2, 393px); gap: 24px; align-items: start; }
+    .caption { margin: 0 0 8px; font-weight: 900; }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section>
+      <p class="caption">393px x 852px frame: empty draft uses real max length contract, disabled CTA, no fake status/home chrome.</p>
+      <div class="phone"><div class="screen">
+        <div class="back">← 돌아가기</div>
+        <h1>질문 작성</h1>
+        <div class="area">
+          <label>질문 작성</label>
+          <textarea placeholder="당신의 솔직한 이야기를 들려주세요"></textarea>
+          <div class="meta"><span>최대 1000자까지 작성할 수 있어요.</span><span>0/1000</span></div>
+        </div>
+        <div class="note"><strong>AI 안심 필터 적용 안내</strong><br>전송 시 부적절한 언어가 감지되는지 확인하고, 문제가 없다면 원문 그대로 전달됩니다.</div>
+        <button class="cta" disabled>고민 전송</button>
+        <div class="nav">공유 bottom navigation 영역과 겹치지 않음</div>
+      </div></div>
+    </section>
+    <section class="state-grid">
+      <div>
+        <p class="caption">Validation / moderation failed state</p>
+        <div class="phone"><div class="screen">
+          <div class="back">← 돌아가기</div>
+          <h1>질문 작성</h1>
+          <div class="area">
+            <label>질문 작성</label>
+            <textarea>너무 짧은 입력</textarea>
+            <div class="meta"><span class="danger">고민을 조금 더 자세히 적어주세요.</span><span>7/1000</span></div>
+          </div>
+          <div class="error">개인정보 포함<br><br>실명, 연락처 등 개인을 식별할 수 있는 내용은 제외해 주세요.</div>
+          <button class="cta">고민 전송</button>
+          <div class="nav">shared BottomNavigation</div>
+        </div></div>
+      </div>
+      <div>
+        <p class="caption">Moderation checking / processing state</p>
+        <div class="phone"><div class="screen">
+          <div class="back">← 돌아가기</div>
+          <h1>질문 작성</h1>
+          <div class="area">
+            <label>질문 작성</label>
+            <textarea disabled>요즘 계속 불안해서 누군가의 답을 들어보고 싶어요.</textarea>
+            <div class="meta"><span>AI 안심 필터가 내용을 확인하고 있습니다.</span><span>29/1000</span></div>
+          </div>
+          <div class="note"><strong>AI 안심 필터 적용 안내</strong><br>전송 시 부적절한 언어가 감지되는지 확인합니다.</div>
+          <button class="cta" disabled>전송 중...</button>
+          <div class="nav">keyboard-safe sticky CTA above nav</div>
+        </div></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

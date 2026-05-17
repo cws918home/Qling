@@ -66,5 +66,11 @@ test('reply and worry read models map to list props without example labels', () 
   assert.equal(answerItem.previewText, 'refined');
   assert.equal(receivedItem.hasUnread, true);
   assert.equal(worryItem.isSelected, true);
+  assert.match(worryItem.accessibilityLabel, /카테고리 진로/);
+  assert.match(worryItem.accessibilityLabel, /답장 2개/);
+  assert.match(worryItem.accessibilityLabel, /읽지 않은 답장 있음/);
+  assert.match(worryItem.accessibilityLabel, /현재 선택됨/);
+  assert.match(receivedItem.accessibilityLabel, /받은 답장 상세로 이동/);
+  assert.match(receivedItem.accessibilityLabel, /읽지 않은 답장/);
   assert.equal(Object.hasOwn(answerItem, 'exampleLabel'), false);
 });

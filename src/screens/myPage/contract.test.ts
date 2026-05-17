@@ -124,6 +124,7 @@ test('my answers and my worries contracts expose list states and route callbacks
       replyCount: 1,
       hasUnreadReplies: true,
       isSelected: false,
+      accessibilityLabel: '나의 고민 상세로 이동, 카테고리 취업, 답장 1개, 읽지 않은 답장 있음, 선택되지 않음',
     }],
     selectedWorry: {
       worryId: 'worry-1',
@@ -134,6 +135,7 @@ test('my answers and my worries contracts expose list states and route callbacks
         worryId: 'worry-1',
         previewText: '받은 답장',
         hasUnread: true,
+        accessibilityLabel: '받은 답장 상세로 이동, 읽지 않은 답장',
       }],
     },
     onWriteWorry: () => undefined,
@@ -144,6 +146,9 @@ test('my answers and my worries contracts expose list states and route callbacks
   assert.equal(answers.items[0].previewText, '답장 내용');
   assert.equal(typeof answers.onSelect, 'function');
   assert.equal(worries.selectedWorry?.replies[0].hasUnread, true);
+  assert.match(worries.items[0].accessibilityLabel, /답장 1개/);
+  assert.match(worries.items[0].accessibilityLabel, /읽지 않은 답장 있음/);
+  assert.match(worries.items[0].accessibilityLabel, /상세로 이동/);
   for (const item of [...answers.items, ...worries.items]) {
     assert.equal(Object.hasOwn(item, 'exampleLabel'), false);
     assert.equal(Object.hasOwn(item, 'fakeLabel'), false);

@@ -114,6 +114,7 @@ export type MyWorryListItemProps = {
   readonly replyCount: number;
   readonly hasUnreadReplies: boolean;
   readonly isSelected: boolean;
+  readonly accessibilityLabel: string;
 };
 
 export type ReceivedReplyListItemProps = {
@@ -121,6 +122,7 @@ export type ReceivedReplyListItemProps = {
   readonly worryId?: string;
   readonly previewText: string;
   readonly hasUnread: boolean;
+  readonly accessibilityLabel: string;
 };
 
 export type MyWorriesScreenProps = {

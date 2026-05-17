@@ -30,16 +30,22 @@ export function useMyWorries(params: {
 }) {
   const { user, firestore = db } = params;
   const [myWorries, setMyWorries] = useState<MyWorryListItem[]>([]);
+  const [isLoadingMyWorries, setIsLoadingMyWorries] = useState(false);
+  const [myWorriesError, setMyWorriesError] = useState<string | undefined>();
 
   useEffect(() => {
     if (!user) {
       setMyWorries([]);
+      setIsLoadingMyWorries(false);
+      setMyWorriesError(undefined);
       return;
     }
 
     let latestWorries: PrdWorryDoc[] = [];
     let latestReplies: PrdReplyDoc[] = [];
     let latestReadStates = new Map<string, ReplyReadStateDoc>();
+    setIsLoadingMyWorries(true);
+    setMyWorriesError(undefined);
 
     function recompute() {
       setMyWorries(selectMyWorries({
@@ -55,10 +61,14 @@ export function useMyWorries(params: {
       snapshot => {
         latestWorries = toPrdWorryDocs(snapshot);
         recompute();
+        setIsLoadingMyWorries(false);
+        setMyWorriesError(undefined);
       },
       error => {
         logFirestoreListenerError('My worries listener error:', error);
         setMyWorries([]);
+        setIsLoadingMyWorries(false);
+        setMyWorriesError('작성한 고민을 불러오지 못했습니다.');
       }
     );
     const unsubscribeReplies = onSnapshot(
@@ -74,6 +84,7 @@ export function useMyWorries(params: {
       },
       error => {
         logFirestoreListenerError('My worries reply listener error:', error);
+        setMyWorriesError('답장 상태를 불러오지 못했습니다.');
       }
     );
     const unsubscribeReadStates = onSnapshot(
@@ -86,6 +97,7 @@ export function useMyWorries(params: {
       },
       error => {
         logFirestoreListenerError('My worries read-state listener error:', error);
+        setMyWorriesError('읽음 상태를 불러오지 못했습니다.');
       }
     );
 
@@ -96,5 +108,5 @@ export function useMyWorries(params: {
     };
   }, [firestore, user]);
 
-  return { myWorries };
+  return { myWorries, isLoadingMyWorries, myWorriesError };
 }
