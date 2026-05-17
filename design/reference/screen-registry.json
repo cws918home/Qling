@@ -1,8 +1,15 @@
 {
+  "version": 1,
+  "purpose": "Static design reference registry for pixel-perfect comparison.",
   "canvas": {
     "width": 393,
     "height": 852,
     "unit": "px"
+  },
+  "sourceOfTruthPolicy": {
+    "primary": "reference PNG when available",
+    "secondary": "reference React component and local assets",
+    "missingPngPolicy": "Do not infer pixel-perfect layout from non-existent PNG. Use component only as provisional reference."
   },
   "screens": [
     {
@@ -16,7 +23,21 @@
       "referencePngOriginalName": "Splash.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "splash screen"
+      "targetAppHint": "splash screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "login",
@@ -29,7 +50,21 @@
       "referencePngOriginalName": "로그인 화면.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "login screen"
+      "targetAppHint": "login screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "onboarding-basic",
@@ -42,7 +77,21 @@
       "referencePngOriginalName": "온보딩 - 기본정보.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "basic onboarding screen"
+      "targetAppHint": "basic onboarding screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "onboarding-duplicate",
@@ -55,7 +104,21 @@
       "referencePngOriginalName": "온보딩 - 중복확인.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "onboarding duplicate-check screen"
+      "targetAppHint": "onboarding duplicate-check screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "onboarding-interests",
@@ -68,7 +131,21 @@
       "referencePngOriginalName": "온보딩 - 주요 관심사.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "onboarding interests screen"
+      "targetAppHint": "onboarding interests screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "received-worries",
@@ -81,7 +158,21 @@
       "referencePngOriginalName": "메인 화면 - 받은 고민.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "received worries main screen"
+      "targetAppHint": "received worries main screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "question-write-a",
@@ -94,7 +185,21 @@
       "referencePngOriginalName": "고민 작성1.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "question writing screen A"
+      "targetAppHint": "question writing screen A",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "answer-check",
@@ -107,7 +212,21 @@
       "referencePngOriginalName": "답변 상세 확인.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "answer detail check screen"
+      "targetAppHint": "answer detail check screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "question-write-b",
@@ -120,7 +239,21 @@
       "referencePngOriginalName": "고민 작성2.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "question writing screen B"
+      "targetAppHint": "question writing screen B",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "my-page",
@@ -133,7 +266,21 @@
       "referencePngOriginalName": "마이페이지.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "my page screen"
+      "targetAppHint": "my page screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "loading",
@@ -146,7 +293,18 @@
       "referencePngOriginalName": null,
       "matchStatus": "missing-png",
       "notes": "Source screen exists, but no direct PNG reference is present in pngs/.",
-      "targetAppHint": "loading screen"
+      "targetAppHint": "loading screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "missing-reference-png",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": null,
+      "pixelPerfectNotes": "No reference PNG exists. Do not treat this screen as pixel-perfect ready until a reference PNG or explicit policy is provided."
     },
     {
       "id": "edit-interests",
@@ -159,7 +317,21 @@
       "referencePngOriginalName": "관심분야 수정.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "edit interests screen"
+      "targetAppHint": "edit interests screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "my-answers",
@@ -172,7 +344,21 @@
       "referencePngOriginalName": "내가 쓴 답변.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "my answers screen"
+      "targetAppHint": "my answers screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "privacy-policy",
@@ -185,7 +371,21 @@
       "referencePngOriginalName": "개인정보처리방침.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "privacy policy screen"
+      "targetAppHint": "privacy policy screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "logout",
@@ -198,7 +398,21 @@
       "referencePngOriginalName": "로그아웃.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "logout screen"
+      "targetAppHint": "logout screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "account-deletion",
@@ -211,7 +425,21 @@
       "referencePngOriginalName": "회원 탈퇴.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "account deletion screen"
+      "targetAppHint": "account deletion screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "answer-write-1",
@@ -224,7 +452,21 @@
       "referencePngOriginalName": "답변 작성1.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "answer writing screen 1"
+      "targetAppHint": "answer writing screen 1",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "answer-write-2",
@@ -237,7 +479,21 @@
       "referencePngOriginalName": "답변 작성2.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "answer writing screen 2"
+      "targetAppHint": "answer writing screen 2",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "answer-write-3",
@@ -250,7 +506,21 @@
       "referencePngOriginalName": "답변 작성3.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "answer writing screen 3"
+      "targetAppHint": "answer writing screen 3",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     },
     {
       "id": "my-worries",
@@ -263,7 +533,21 @@
       "referencePngOriginalName": "내가 쓴 고민.png",
       "matchStatus": "matched",
       "notes": "README slug and PNG name are directly matched.",
-      "targetAppHint": "my worries screen"
+      "targetAppHint": "my worries screen",
+      "referencePriority": "png-first",
+      "comparisonReadiness": "ready",
+      "currentAppMapping": {
+        "route": null,
+        "component": null,
+        "requiredAuthState": null,
+        "requiredDataState": null,
+        "notes": "To be filled in design/current mapping phase."
+      },
+      "referencePngDimensions": {
+        "width": 393,
+        "height": 852
+      },
+      "pixelPerfectNotes": "Use PNG as visual source of truth. Component path is secondary for layout, asset, and CSS inspection."
     }
   ],
   "extraReferences": [
