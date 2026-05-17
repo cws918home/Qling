@@ -487,20 +487,20 @@ Functional screen phases must use real production data sources and production ro
 
 ### Phase 13 - Reply Check, Feedback, Comment Functional Alignment
 
-- [ ] TODO-DESIGN-13.1 Map answer-check to received-answer detail for replies to the user's worries.
-- [ ] TODO-DESIGN-13.2 Map my-answer detail to replies written by the user, even if it shares the answer-check visual pattern; include replies written to example worries without distinguishing them from real-worry replies.
-- [ ] TODO-DESIGN-13.3 Preserve dynamic original worry content and dynamic reply content in both detail flows.
-- [ ] TODO-DESIGN-13.4 Preserve helpful and not-helpful feedback submission through `submitReplyFeedbackWithProductionAdapters`.
-- [ ] TODO-DESIGN-13.5 Preserve publisher comment submission where allowed after helpful feedback.
-- [ ] TODO-DESIGN-13.6 Preserve feedback/comment moderation rejection handling and user/help copy.
-- [ ] TODO-DESIGN-13.7 Preserve helpedCount behavior and do not mutate helpedCount from browser UI code.
-- [ ] TODO-DESIGN-13.8 Preserve read-model assumptions for existing feedback and comments, and ensure hidden worries/replies disappear from publisher and answerer read models.
-- [ ] TODO-DESIGN-13.9 Preserve feedback comment draft persistence and clearing.
-- [ ] TODO-DESIGN-13.10 Add or update feedback tests in `src/services/replyFeedback/submitReplyFeedback.test.ts`, `src/services/replyFeedback/serverFeedback.test.ts`, and `src/services/replyFeedback/serverFirestore.test.ts` if behavior changes.
-- [ ] TODO-DESIGN-13.11 Add or update mailbox/read-model tests in `src/services/replyMailbox/controller.test.ts`, `src/services/myWorries/prdPolicy.test.ts`, `src/services/homeWorryFeed/prdPolicy.test.ts`, or read-state tests if detail/read behavior changes; include hidden worry/reply exclusion for home feed, my worries, received replies, my answers, and detail routes.
-- [ ] TODO-DESIGN-13.12 Add pure props-contract tests for helpful feedback, not-helpful feedback, comment submission, rejected comment, existing feedback display, my-answer detail display, and received-answer detail display.
-- [ ] TODO-DESIGN-13.13 Add manual browser-note evidence for received-answer detail, my-answer detail, feedback submission, existing feedback display, and comment submission/rejection state.
-- [ ] TODO-DESIGN-13.V1 Verify Phase 13 with feedback/read-model tests, props-contract tests, and manual browser-note evidence.
+- [x] TODO-DESIGN-13.1 Map answer-check to received-answer detail for replies to the user's worries.
+- [x] TODO-DESIGN-13.2 Map my-answer detail to replies written by the user, even if it shares the answer-check visual pattern; include replies written to example worries without distinguishing them from real-worry replies.
+- [x] TODO-DESIGN-13.3 Preserve dynamic original worry content and dynamic reply content in both detail flows.
+- [x] TODO-DESIGN-13.4 Preserve helpful and not-helpful feedback submission through `submitReplyFeedbackWithProductionAdapters`.
+- [x] TODO-DESIGN-13.5 Preserve publisher comment submission where allowed after helpful feedback.
+- [x] TODO-DESIGN-13.6 Preserve feedback/comment moderation rejection handling and user/help copy.
+- [x] TODO-DESIGN-13.7 Preserve helpedCount behavior and do not mutate helpedCount from browser UI code.
+- [x] TODO-DESIGN-13.8 Preserve read-model assumptions for existing feedback and comments, and ensure hidden worries/replies disappear from publisher and answerer read models.
+- [x] TODO-DESIGN-13.9 Preserve feedback comment draft persistence and clearing.
+- [x] TODO-DESIGN-13.10 Add or update feedback tests in `src/services/replyFeedback/submitReplyFeedback.test.ts`, `src/services/replyFeedback/serverFeedback.test.ts`, and `src/services/replyFeedback/serverFirestore.test.ts` if behavior changes.
+- [x] TODO-DESIGN-13.11 Add or update mailbox/read-model tests in `src/services/replyMailbox/controller.test.ts`, `src/services/myWorries/prdPolicy.test.ts`, `src/services/homeWorryFeed/prdPolicy.test.ts`, or read-state tests if detail/read behavior changes; include hidden worry/reply exclusion for home feed, my worries, received replies, my answers, and detail routes.
+- [x] TODO-DESIGN-13.12 Add pure props-contract tests for helpful feedback, not-helpful feedback, comment submission, rejected comment, existing feedback display, my-answer detail display, and received-answer detail display.
+- [x] TODO-DESIGN-13.13 Add manual browser-note evidence for received-answer detail, my-answer detail, feedback submission, existing feedback display, and comment submission/rejection state.
+- [x] TODO-DESIGN-13.V1 Verify Phase 13 with feedback/read-model tests, props-contract tests, and manual browser-note evidence.
 
 ### Phase 14 - Design Token And Global Style Foundation
 
