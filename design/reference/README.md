@@ -76,3 +76,21 @@
 npm run build
 npm run validate:reference
 ```
+
+## Production Pixel-Alignment Reference
+
+This directory is also the canonical reference package for production UI pixel-alignment work. Use `screen-map.json`, `tokens.md`, and `notes/` before making Codex-driven visual changes to `src/`.
+
+Reference PNG and CSS exports are not enough on their own. Future agents must inspect the mapped production screen files, shared UI primitives, and `src/index.css` tokens before editing. Figma/exported CSS is advisory measurement evidence only; translate it into existing Qling design tokens and shared primitives instead of copying fixture CSS into production code.
+
+Production behavior must not change during visual alignment work. Do not change routing, containers, contracts, mappings, Firebase, Auth, API calls, Firestore rules, services, or server code for pixel work unless a separate task explicitly asks for behavior changes.
+
+Future pixel work should compare each reference screen against the mapped production screen in `screen-map.json`. Actual screenshot capture or screenshot diffing is not required by this package unless project tooling explicitly supports it.
+
+The normalized production-alignment directories are:
+
+- `screenshots/`: copied reference PNGs for mapped production screens, with `.gitkeep` for future additions.
+- `css/`: copied advisory CSS exports, with `.gitkeep` for future additions.
+- `notes/`: per-screen intent, risks, states to verify, and edit boundaries.
+
+The original fixture package files, including `src/`, `pngs/`, `screen-registry.*`, `CODEX_USAGE.md`, and `validate-reference.mjs`, are preserved for fixture preview and registry work.
