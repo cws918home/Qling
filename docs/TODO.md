@@ -582,14 +582,14 @@ Every visual reskin phase must use real production data and route state. Hardcod
 
 ### Phase 21 - Static Hardcoded Data Audit And Visual Acceptance Pass
 
-- [ ] TODO-DESIGN-21.1 Audit that earlier phases did not introduce static hardcoded design data where dynamic data is required, including sample names, dates, counts, worry text, reply text, lorem ipsum, and any production UI marker that labels an example worry as example/sample/tutorial content; fix only defects found by this audit, not deferred cleanup from earlier phases.
-- [ ] TODO-DESIGN-21.2 Verify no production screen uses fake status bars or fake home indicators from `design/`; all mobile chrome spacing must be safe-area-aware production layout.
-- [ ] TODO-DESIGN-21.3 Verify no production screen depends on fixed 393px-only absolute positioning for dynamic content.
-- [ ] TODO-DESIGN-21.4 Verify color, font, CTA, card, chip, bottom-nav, modal, text-area, and profile motif alignment across reskinned screens.
-- [ ] TODO-DESIGN-21.5 Verify 393px width preserves design hierarchy and main layout across all reskinned screens.
-- [ ] TODO-DESIGN-21.6 Verify 360px, 430px, and desktop preview widths remain usable and not clipped across representative screens.
-- [ ] TODO-DESIGN-21.7 Add final manual screenshot/browser-note evidence for the full visual acceptance pass.
-- [ ] TODO-DESIGN-21.V1 Verify Phase 21 with the hardcoded-data audit, visual acceptance notes, and final screenshot set; this phase is an audit/fix pass, not the first point where hardcoded design data is removed.
+- [x] TODO-DESIGN-21.1 Audit that earlier phases did not introduce static hardcoded design data where dynamic data is required, including sample names, dates, counts, worry text, reply text, lorem ipsum, and any production UI marker that labels an example worry as example/sample/tutorial content; fix only defects found by this audit, not deferred cleanup from earlier phases.
+- [x] TODO-DESIGN-21.2 Verify no production screen uses fake status bars or fake home indicators from `design/`; all mobile chrome spacing must be safe-area-aware production layout.
+- [x] TODO-DESIGN-21.3 Verify no production screen depends on fixed 393px-only absolute positioning for dynamic content.
+- [x] TODO-DESIGN-21.4 Verify color, font, CTA, card, chip, bottom-nav, modal, text-area, and profile motif alignment across reskinned screens.
+- [x] TODO-DESIGN-21.5 Verify 393px width preserves design hierarchy and main layout across all reskinned screens.
+- [x] TODO-DESIGN-21.6 Verify 360px, 430px, and desktop preview widths remain usable and not clipped across representative screens.
+- [x] TODO-DESIGN-21.7 Add final manual screenshot/browser-note evidence for the full visual acceptance pass.
+- [x] TODO-DESIGN-21.V1 Verify Phase 21 with the hardcoded-data audit, visual acceptance notes, and final screenshot set; this phase is an audit/fix pass, not the first point where hardcoded design data is removed.
 
 ### Phase 22 - Bottom Navigation And Mobile Shell Final Polish
 
