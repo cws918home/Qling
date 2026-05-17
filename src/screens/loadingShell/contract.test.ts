@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
 import {
   LOADING_SHELL_REASONS,
   LOGIN_SESSION_STATES,
@@ -22,6 +24,34 @@ test('login contract exposes sign-in state, error, disabled, and submit event on
   assert.equal(Object.hasOwn(props, 'firebaseUser'), false);
   assert.equal(Object.hasOwn(props, 'policyLinks'), false);
   assert.equal(Object.hasOwn(props, 'ter' + 'msLink'), false);
+});
+
+test('login screen source keeps policy links and preview-only mobile chrome out of production login', () => {
+  const source = fs.readFileSync(path.join(process.cwd(), 'src', 'screens', 'loadingShell', 'LoginScreen.tsx'), 'utf8');
+
+  for (const forbidden of [
+    '개인정보처리방침',
+    '이용 약관',
+    '이용약관',
+    '운영정책',
+    'usage guide',
+    'homeIndicator',
+    'statusBar',
+    '393px',
+  ]) {
+    assert.equal(source.includes(forbidden), false, `LoginScreen includes forbidden preview/login policy content: ${forbidden}`);
+  }
+});
+
+test('loading shell screen source keeps accessible status text without fake timing or mobile chrome', () => {
+  const source = fs.readFileSync(path.join(process.cwd(), 'src', 'screens', 'loadingShell', 'LoadingShellScreen.tsx'), 'utf8');
+
+  assert.equal(source.includes('role="status"'), true);
+  assert.equal(source.includes('aria-live="polite"'), true);
+  assert.equal(source.includes('setTimeout'), false);
+  assert.equal(source.includes('delayMs'), false);
+  assert.equal(source.includes('homeIndicator'), false);
+  assert.equal(source.includes('statusBar'), false);
 });
 
 test('login session states cover loading and processing without provider objects', () => {

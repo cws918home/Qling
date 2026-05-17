@@ -128,6 +128,8 @@ test('discovers every presentational screen file under src/screens', () => {
   assert.deepEqual(
     listPresentationalScreenFiles().map(relativeProjectPath),
     [
+      'src/screens/loadingShell/LoadingShellScreen.tsx',
+      'src/screens/loadingShell/LoginScreen.tsx',
       'src/screens/myPage/MyAnswersScreen.tsx',
       'src/screens/myPage/MyPageScreen.tsx',
       'src/screens/myPage/MyWorriesScreen.tsx',
