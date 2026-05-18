@@ -112,7 +112,7 @@ export function WriteFormScreen(props: WriteFormScreenProps) {
           disabled={props.draft.isProcessing}
           aria-invalid={Boolean(validationMessage) || undefined}
           placeholder="당신의 솔직한 이야기를 들려주세요"
-          className="absolute inset-0 h-full w-full resize-none bg-transparent px-[25px] pb-[48px] pt-[20.5px] text-[16px] font-bold leading-[24px] tracking-[-0.64px] text-[#2a2a2a] outline-none placeholder:text-[#b8b8b8] disabled:cursor-not-allowed disabled:opacity-60"
+          className="absolute inset-0 h-full w-full resize-none bg-transparent pb-[48px] pl-[50.5px] pr-[25px] pt-[20.5px] text-[16px] font-bold leading-[24px] tracking-[-0.64px] text-[#2a2a2a] outline-none placeholder:text-[#b8b8b8] disabled:cursor-not-allowed disabled:opacity-60"
         />
         <Sparkles className="pointer-events-none absolute left-[22.5px] top-[22.5px] h-[20px] w-[20px] text-[#b8b8b8]" aria-hidden="true" />
         <span className="pointer-events-none absolute left-[281.5px] top-[501.5px] text-[13px] font-bold leading-none text-[#b8b8b8]">

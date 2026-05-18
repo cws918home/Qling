@@ -22,7 +22,7 @@
     <ul>
       <li>loaded/success branch만 화면 전용 <code>393px x 852px</code> 캔버스로 교체했다. loading/error/empty branch는 유지했다.</li>
       <li>카드는 전체 클릭 가능한 실제 <code>button</code>을 유지하고, 건너뛰기 버튼은 <code>event.stopPropagation()</code>, <code>onPass</code>, disabled/processing 상태를 유지한다.</li>
-      <li>상단 프로필/알림은 preview 및 chrome-neutral 경로를 위한 시각 전용 요소다. 기존 production handler가 없으므로 새 navigation behavior를 만들지 않았다.</li>
+      <li>상단 좌측 캐릭터와 우측 profile/my-page-like 아이콘은 preview 및 chrome-neutral 경로를 위한 시각 전용 요소다. 기존 production handler가 없으므로 새 navigation behavior를 만들지 않았다.</li>
       <li>preview harness fixture 문자열은 참조 Component.tsx의 한국어 문구를 production prop shape에 맞게 재사용했다. production route에는 fixture 문자열이 없다.</li>
       <li>production에서는 카드 개수를 맞추기 위한 fabricated card를 만들지 않는다. 실제 <code>props.items</code>가 1개면 1개 카드만 보이며, 이는 reference PNG와의 남은 시각 차이로 기록한다.</li>
     </ul>
@@ -51,8 +51,8 @@
       <li><code>MobileAppShell</code>에 presentation-only <code>frameMode?: "default" | "pixel-aligned"</code>를 추가했다. 기본값은 <code>default</code>라서 비대상 route 동작은 그대로 유지된다.</li>
       <li><code>frameMode="pixel-aligned"</code>에서는 <code>main</code>이 <code>mx-auto min-h-[852px] w-[393px] p-0</code>만 사용한다. <code>max-w-2xl</code>, shell-x padding, <code>pt-24</code>, bottom scroll padding을 적용하지 않는다. CSS transform scaling은 사용하지 않는다.</li>
       <li><code>App.tsx</code>는 06(<code>답변하기</code>, <code>received_worries</code>), 07(<code>write_worry</code>), 08(<code>answer_check</code>, <code>read_received_reply</code>, <code>received_answer_detail</code>)에서만 <code>usesPixelAlignedFrame</code>을 켠다.</li>
-      <li><code>usesPixelAlignedFrame</code>이 true일 때 App shell은 global authenticated header를 넘기지 않고, real <code>BottomNavigation</code>도 넘기지 않으며, <code>hasBottomNavigation={false}</code>와 frame-neutral main을 사용한다.</li>
-      <li>06 route branch는 pixel-aligned mode에서 App-level <code>답변하기</code> title row와 interest badge를 렌더링하지 않는다. 06 내부 시각 bottom chrome만 남기고 real fixed bottom navigation은 mount하지 않아 duplicate navigation chrome이 없다.</li>
+      <li><code>usesPixelAlignedFrame</code>이 true일 때 App shell은 global authenticated header를 넘기지 않고, 기능형 <code>BottomNavigation variant="pixel-aligned"</code>를 <code>393px</code> frame 내부에 absolute로 mount한다.</li>
+      <li>06 route branch는 pixel-aligned mode에서 App-level <code>답변하기</code> title row와 interest badge를 렌더링하지 않는다. 06 내부 decorative bottom chrome은 제거했고, shared 기능형 bottom navigation만 남겨 duplicate navigation chrome이 없다.</li>
       <li>07 write-worry canvas는 global header/bottom nav 아래에 떠 있는 child가 아니라 frame-neutral main의 직접 body로 렌더링된다. 내부 back button, textarea, submit behavior는 그대로 유지했다.</li>
       <li>08 received-answer-detail canvas도 frame-neutral main의 직접 body로 렌더링된다. <code>my-answer-detail</code> branch는 기존 shell/panel behavior를 유지한다.</li>
       <li>수정은 route-frame presentation logic에 한정했다. route selection, auth guard, data loading, handlers, contracts, mapping modules, services, Firestore, server code는 변경하지 않았다.</li>
@@ -61,7 +61,7 @@
     <ul>
       <li>production routes는 real container props를 사용한다. fixture strings and objects는 <code>tmp/main-flow-pixel-alignment/preview.tsx</code>에만 존재한다.</li>
       <li><code>ReceivedWorriesScreen</code>은 loaded branch에서 <code>props.items.map((item, index) =&gt; ...)</code>만 사용한다. 각 card는 <code>item.deliveryId</code>, <code>item.worryId</code>, <code>item.category</code>, <code>item.receivedAt.isoValue</code>, <code>item.receivedAt.label</code>, <code>item.bodyText ?? item.previewText</code>, <code>item.isUnread</code>, <code>props.passingDeliveryIds</code>로 렌더링/동작한다.</li>
-      <li>06의 decorative internal bottom chrome은 production screen에서 제거했다. 대신 <code>BottomNavigation presentationMode="pixel-aligned"</code>를 App shell이 같은 <code>393px</code> frame 안에 렌더링하며, 기존 <code>onSelectTab</code>과 <code>onCentralAction</code> handlers를 그대로 사용한다.</li>
+      <li>06의 decorative internal bottom chrome은 production screen에서 제거했다. 대신 <code>BottomNavigation variant="pixel-aligned"</code>를 App shell이 같은 <code>393px</code> frame 안에 렌더링하며, 기존 <code>onSelectTab</code>과 <code>onCentralAction</code> handlers를 그대로 사용한다.</li>
       <li>06 상단 profile/bell chrome은 기존 production handler가 없는 visual-only chrome이다. 새 profile 또는 notification navigation behavior를 만들지 않았고, product navigation은 기능형 bottom navigation으로 유지한다.</li>
       <li>07은 real <code>draft.value</code>, <code>onDraftChange</code>, <code>submitDisabledReason</code>, <code>isProcessing</code>, <code>onPublish</code>, validation/moderation 상태를 사용한다. AI 필터 안내는 DOM에 유지하되 reference capture 영역 밖에 배치했다.</li>
       <li>08은 real <code>props.originalWorry</code>, <code>props.reply</code>, <code>props.existingFeedback</code>, <code>props.selectedFeedback</code>, comment validation/moderation/draft props를 사용한다. feedback buttons는 기존처럼 <code>onFeedbackChange</code> 다음 <code>onFeedbackSubmit</code>을 호출한다.</li>
@@ -72,11 +72,21 @@
       <li>이전 수정은 기능형 <code>BottomNavigation</code>을 <code>393px</code> frame 안에 넣었지만, old production design인 fixed/grid/lucide/central text pill/border shadow style을 그대로 유지했다.</li>
       <li><code>BottomNavigation</code>에 presentation-only <code>variant?: "default" | "pixel-aligned"</code>를 추가했다. default variant는 기존 fixed viewport nav, 3-column grid, lucide icons, central <code>고민 작성</code> pill을 그대로 유지한다.</li>
       <li>pixel-aligned variant는 shared UI 한 곳에서만 reference bottom bar geometry를 구현한다. production screens에는 screen-local fake nav 또는 <code>aria-hidden</code> replacement nav를 렌더링하지 않는다.</li>
-      <li>pixel variant는 <code>absolute left:0 bottom:0 width:393px height:112px</code> frame 안에서 base cream band, side tab buttons, center owner-tab hit area, and orange central write action을 배치한다.</li>
-      <li>측정 기준은 06 bottom nav bbox <code>(0,740,393,852)</code>, active item <code>(135,755,260,835)</code>, 08 bottom nav/chrome <code>(0,760,393,852)</code>를 시작점으로 삼았다. 구현 CSS는 selected bg <code>left:135 top:15 width:125 height:80</code>, center action <code>left:149 top:24 width:95 height:59</code>이다.</li>
+      <li>pixel variant는 <code>absolute left:0 bottom:-7px width:393px height:104px</code> frame에서 <code>417px</code> wide reference MenuBar SVG를 렌더링하고, 그 위에 투명 기능 버튼을 배치한다.</li>
+      <li>측정 기준은 06 bottom nav bbox <code>(0,740,393,852)</code>, active item <code>(135,755,260,835)</code>, 08 bottom nav/chrome <code>(0,760,393,852)</code>를 시작점으로 삼았다. 구현 SVG는 selected bg <code>x=140 y=0 width=114 height=88</code>, center action <code>x=149 y=9 width=95 height=59</code>이다.</li>
       <li>각 nav item은 functional button이다. side tabs call <code>onSelectTab(tab)</code>, center owner-tab background calls <code>onSelectTab(ownerTab.tab)</code>, orange center action calls <code>onCentralAction</code>. Active tab state는 tab buttons에 <code>aria-current="page"</code>로 반영된다.</li>
       <li>중앙 orange shape는 reference의 large center item을 write-worry central action으로 해석했다. 그 주변 cream selected background는 central action의 owner tab인 <code>나의 고민</code> tab hit area로 유지해 tab navigation도 잃지 않았다.</li>
-      <li>남은 mismatch: reference SVG icon path와 production CSS-drawn icon glyph가 완전히 동일하지는 않다. 그러나 old lucide icon/text pill/grid visual은 pixel variant에서 제거했고, navigation behavior는 보존했다.</li>
+      <li>left home, right send/message, center eye icon은 CSS-drawn approximation을 제거하고 reference SVG path data를 production-local 상수로 복사했다. old lucide icon/text pill/grid visual은 pixel variant에서 제거했고, navigation behavior는 보존했다.</li>
+    </ul>
+    <h2>Fine visual correction pass</h2>
+    <ul>
+      <li>남은 icon mismatch는 <code>design/reference</code>를 import하지 않고, 필요한 path data만 production-local 상수로 복사해 inline SVG로 렌더링하는 방식으로 수정했다.</li>
+      <li>06 좌측 상단 캐릭터는 <code>design/reference/src/screens/received-worries/svg-c1fzchw7wo.ts</code>의 <code>p2f1c2d00</code>, <code>pf977a80</code>, <code>p2f962800</code>, <code>p360ee270</code>, <code>p37b21770</code>, <code>p10968100</code>을 사용한다. CSS ellipse approximation은 제거했다.</li>
+      <li>06 우측 상단 profile/my-page-like 아이콘은 같은 reference 파일의 <code>p37b1ab00</code>, <code>p36aa5a00</code>과 circle stroke를 사용한다. 기존 lucide <code>Bell</code>은 제거했다. 이 아이콘은 기존 production handler가 없으므로 reference-matching visual profile icon이며 새 route behavior를 만들지 않았다.</li>
+      <li>shared pixel-aligned bottom navigation은 <code>design/reference/src/screens/received-worries/svg-c1fzchw7wo.ts</code>의 <code>p29c4a2f0</code>, <code>p37614900</code>, <code>p3dc36300</code>, <code>p15619480</code>, <code>pad1b700</code>, <code>p23c07380</code>, <code>p31e3c200</code>, <code>p110abb00</code>을 사용한다. default bottom navigation branch는 변경하지 않았다.</li>
+      <li>pixel-aligned bottom navigation은 계속 functional이다. side tab buttons는 <code>onSelectTab</code>, 중앙 orange write action은 <code>onCentralAction</code>, owner-tab hit area는 <code>onSelectTab(ownerTab.tab)</code>을 호출한다.</li>
+      <li>06 카드 본문 위치 문제는 text CSS top만 보지 않고 렌더된 glyph bbox로 확인했다. 최종 첫 카드 bbox는 <code>(16,139,377,274)</code>, 첫 본문 glyph bbox는 <code>(36,200,356,238)</code>이다. 핵심 수정은 카드 absolute top을 sheet-local <code>20 + n*149</code>로 바로잡은 것이다.</li>
+      <li>07 textarea placeholder overlap은 textarea padding을 <code>pl-[50.5px] pr-[25px] pt-[20.5px] pb-[48px]</code>로 바꿔 해결했다. 실제 textarea, typing, validation, disabled, maxLength, submit behavior는 유지된다.</li>
     </ul>
   </body>
 </html>

@@ -109,14 +109,15 @@ test('bottom navigation pixel-aligned variant keeps functional actions with refe
   } satisfies BottomNavigationProps;
   const html = renderToStaticMarkup(createElement(BottomNavigation, props));
 
-  assert.match(html, /absolute left-0 bottom-0/);
-  assert.match(html, /h-\[112px\] w-\[393px\]/);
-  assert.match(html, /left-\[135px\] top-\[15px\] h-\[80px\] w-\[125px\]/);
-  assert.match(html, /left-\[149px\] top-\[24px\].*h-\[59px\] w-\[95px\]/);
+  assert.match(html, /absolute left-0 bottom-\[-7px\]/);
+  assert.match(html, /bottom-\[-7px\]/);
+  assert.match(html, /h-\[104px\] w-\[393px\]/);
+  assert.match(html, /viewBox="0 0 417 104"/);
+  assert.match(html, /left-\[140px\] top-0 z-10 h-\[88px\] w-\[114px\]/);
+  assert.match(html, /left-\[149px\] top-\[9px\].*h-\[59px\] w-\[95px\]/);
   assert.match(html, /aria-label="고민 작성"/);
   assert.match(html, /aria-current="page"/);
   assert.doesNotMatch(html, /fixed inset-x-0 bottom-0/);
-  assert.doesNotMatch(html, />고민 작성</);
 });
 
 test('bottom navigation pixel-aligned source preserves tab and central callbacks', () => {
@@ -125,9 +126,14 @@ test('bottom navigation pixel-aligned source preserves tab and central callbacks
   assert.match(source, /variant === 'pixel-aligned'/);
   assert.match(source, /onClick=\{onCentralAction\}/);
   assert.match(source, /onClick=\{\(\) => onSelectTab\(ownerTab\.tab\)\}/);
-  assert.match(source, /onClick=\{\(\) => onSelectTab\(tab\)\}/);
+  assert.match(source, /onClick=\{\(\) => onSelectTab\(leftTab\.tab\)\}/);
+  assert.match(source, /onClick=\{\(\) => onSelectTab\(rightTab\.tab\)\}/);
   assert.match(source, /aria-current=\{activeTab === ownerTab\.tab \? 'page' : undefined\}/);
-  assert.match(source, /aria-current=\{isActive \? 'page' : undefined\}/);
+  assert.match(source, /aria-current=\{isLeftActive \? 'page' : undefined\}/);
+  assert.match(source, /aria-current=\{isRightActive \? 'page' : undefined\}/);
+  assert.match(source, /p29c4a2f0/);
+  assert.match(source, /p37614900/);
+  assert.match(source, /p3dc36300/);
 });
 
 test('profile motif remains visual-only without avatar data requirements', () => {
