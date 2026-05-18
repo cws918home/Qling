@@ -23,7 +23,8 @@
       <li>loaded/success branch만 화면 전용 <code>393px x 852px</code> 캔버스로 교체했다. loading/error/empty branch는 유지했다.</li>
       <li>카드는 전체 클릭 가능한 실제 <code>button</code>을 유지하고, 건너뛰기 버튼은 <code>event.stopPropagation()</code>, <code>onPass</code>, disabled/processing 상태를 유지한다.</li>
       <li>상단 프로필/알림은 preview 및 chrome-neutral 경로를 위한 시각 전용 요소다. 기존 production handler가 없으므로 새 navigation behavior를 만들지 않았다.</li>
-      <li>fixture 문자열은 참조 Component.tsx의 한국어 문구를 production prop shape에 맞게 재사용했다.</li>
+      <li>preview harness fixture 문자열은 참조 Component.tsx의 한국어 문구를 production prop shape에 맞게 재사용했다. production route에는 fixture 문자열이 없다.</li>
+      <li>production에서는 카드 개수를 맞추기 위한 fabricated card를 만들지 않는다. 실제 <code>props.items</code>가 1개면 1개 카드만 보이며, 이는 reference PNG와의 남은 시각 차이로 기록한다.</li>
     </ul>
     <h2>07 질문 작성</h2>
     <ul>
@@ -31,14 +32,14 @@
       <li><code>WriteFormScreen.tsx</code>의 <code>kind === "write-worry"</code> branch만 전용 절대 좌표 레이아웃으로 바꿨다. <code>write-reply</code> branch는 유지했다.</li>
       <li>textarea는 실제 <code>textarea</code>이며 <code>value</code>, <code>onDraftChange</code>, <code>maxLength</code>, disabled/processing 상태를 그대로 사용한다.</li>
       <li>AI 안심 필터 정보는 product behavior를 삭제하지 않고 DOM에 남겼으나, 참조 캡처 영역과 충돌하지 않도록 캔버스 아래쪽에 배치했다. validation/moderation 메시지는 production 상태가 요구할 때만 표시된다.</li>
-      <li>fixture 문자열은 참조 Component.tsx의 placeholder와 CTA 문구를 사용했다.</li>
+      <li>preview harness fixture는 참조 Component.tsx의 placeholder와 CTA 문구를 사용했다. production route는 container의 real draft state를 사용한다.</li>
     </ul>
     <h2>08 답변 확인</h2>
     <ul>
       <li>loaded 상태의 <code>variant === "received-answer-detail"</code>에만 <code>ReceivedAnswerDetailFrame</code>을 적용했다. <code>my-answer-detail</code>, <code>MyAnswerFeedbackPanel</code>, generic comment behavior는 기존 분기를 유지한다.</li>
       <li>feedback 버튼은 기존처럼 클릭 시 <code>onFeedbackChange</code> 다음 <code>onFeedbackSubmit</code>을 호출한다.</li>
       <li>comment UI는 기존 production 상태가 요구하는 submitted-like-without-comment 조건에서만 렌더링한다.</li>
-      <li>원문 고민 한국어 문구는 참조 Component.tsx에서 가져왔고, 답변 본문은 현재 참조가 lorem ipsum을 사용하므로 같은 줄 수의 대체 문자열을 fixture에 사용했다.</li>
+      <li>preview harness의 원문 고민 한국어 문구는 참조 Component.tsx에서 가져왔고, 답변 본문은 현재 참조가 lorem ipsum을 사용하므로 같은 줄 수의 대체 문자열을 fixture에 사용했다. production route는 real detail props를 사용한다.</li>
     </ul>
     <h2>Wrapper edits</h2>
     <ul>
@@ -55,6 +56,16 @@
       <li>07 write-worry canvas는 global header/bottom nav 아래에 떠 있는 child가 아니라 frame-neutral main의 직접 body로 렌더링된다. 내부 back button, textarea, submit behavior는 그대로 유지했다.</li>
       <li>08 received-answer-detail canvas도 frame-neutral main의 직접 body로 렌더링된다. <code>my-answer-detail</code> branch는 기존 shell/panel behavior를 유지한다.</li>
       <li>수정은 route-frame presentation logic에 한정했다. route selection, auth guard, data loading, handlers, contracts, mapping modules, services, Firestore, server code는 변경하지 않았다.</li>
+    </ul>
+    <h2>Production functionality reintegration</h2>
+    <ul>
+      <li>production routes는 real container props를 사용한다. fixture strings and objects는 <code>tmp/main-flow-pixel-alignment/preview.tsx</code>에만 존재한다.</li>
+      <li><code>ReceivedWorriesScreen</code>은 loaded branch에서 <code>props.items.map((item, index) =&gt; ...)</code>만 사용한다. 각 card는 <code>item.deliveryId</code>, <code>item.worryId</code>, <code>item.category</code>, <code>item.receivedAt.isoValue</code>, <code>item.receivedAt.label</code>, <code>item.bodyText ?? item.previewText</code>, <code>item.isUnread</code>, <code>props.passingDeliveryIds</code>로 렌더링/동작한다.</li>
+      <li>06의 decorative internal bottom chrome은 production screen에서 제거했다. 대신 <code>BottomNavigation presentationMode="pixel-aligned"</code>를 App shell이 같은 <code>393px</code> frame 안에 렌더링하며, 기존 <code>onSelectTab</code>과 <code>onCentralAction</code> handlers를 그대로 사용한다.</li>
+      <li>06 상단 profile/bell chrome은 기존 production handler가 없는 visual-only chrome이다. 새 profile 또는 notification navigation behavior를 만들지 않았고, product navigation은 기능형 bottom navigation으로 유지한다.</li>
+      <li>07은 real <code>draft.value</code>, <code>onDraftChange</code>, <code>submitDisabledReason</code>, <code>isProcessing</code>, <code>onPublish</code>, validation/moderation 상태를 사용한다. AI 필터 안내는 DOM에 유지하되 reference capture 영역 밖에 배치했다.</li>
+      <li>08은 real <code>props.originalWorry</code>, <code>props.reply</code>, <code>props.existingFeedback</code>, <code>props.selectedFeedback</code>, comment validation/moderation/draft props를 사용한다. feedback buttons는 기존처럼 <code>onFeedbackChange</code> 다음 <code>onFeedbackSubmit</code>을 호출한다.</li>
+      <li>focused tests를 추가해 06/07/08이 supplied props text를 렌더링하고, production screen HTML에 preview-only strings such as <code>one two three</code>, reference card text, or <code>Lorem ipsum</code>이 나타나지 않도록 확인했다.</li>
     </ul>
   </body>
 </html>

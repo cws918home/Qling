@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { ReceivedWorriesScreen } from './ReceivedWorriesScreen';
 
 const presentationalScreenPath = path.join(
   process.cwd(),
@@ -59,4 +62,42 @@ test('received-worries presentational pass disabled state is keyed by delivery i
 
   assert.match(source, /passingDeliveryIds\.has\(item\.deliveryId\)/);
   assert.match(source, /disabled=\{isPassing\}/);
+});
+
+test('received-worries loaded branch renders only provided item data', () => {
+  const html = renderToStaticMarkup(createElement(ReceivedWorriesScreen, {
+    state: { status: 'ready' },
+    items: [
+      {
+        deliveryId: 'delivery-real-1',
+        worryId: 'worry-real-1',
+        category: '학업',
+        previewText: '실제 컨테이너가 넘긴 고민 본문',
+        receivedAt: { label: '방금 전', isoValue: '2026-05-18T00:00:00.000Z' },
+        isUnread: true,
+      },
+    ],
+    passingDeliveryIds: [],
+    onPass: () => undefined,
+    onOpen: () => undefined,
+    onReply: () => undefined,
+  }));
+
+  assert.match(html, /실제 컨테이너가 넘긴 고민 본문/);
+  assert.match(html, /방금 전/);
+  assert.match(html, /학업/);
+  assert.doesNotMatch(html, /one two three/);
+  assert.doesNotMatch(html, /시험이 얼마 안 남았는데/);
+});
+
+test('received-worries source keeps card open and pass callbacks wired to item ids', () => {
+  const source = fs.readFileSync(presentationalScreenPath, 'utf8');
+
+  assert.match(source, /props\.items\.map\(\(item, index\)/);
+  assert.match(source, /props\.onOpen\(\{ deliveryId: item\.deliveryId, worryId: item\.worryId \}\)/);
+  assert.match(source, /props\.onPass\(item\.deliveryId\)/);
+  assert.match(source, /event\.stopPropagation\(\)/);
+  assert.match(source, /const content = item\.bodyText \?\? item\.previewText/);
+  assert.match(source, /dateTime=\{item\.receivedAt\.isoValue\}/);
+  assert.match(source, /\{item\.receivedAt\.label\}/);
 });

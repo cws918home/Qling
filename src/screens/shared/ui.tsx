@@ -37,10 +37,10 @@ export function MobileAppShell({
     return (
       <div className="min-h-dvh overflow-x-hidden bg-[var(--qling-color-cream)] text-[var(--qling-color-text)] font-sans selection:bg-[var(--qling-color-cream-soft)]">
         {header}
-        <main className={cn('mx-auto min-h-[852px] w-[393px] p-0', mainClassName)}>
+        <main className={cn('relative mx-auto min-h-[852px] w-[393px] p-0', mainClassName)}>
           {children}
+          {bottomNavigation}
         </main>
-        {bottomNavigation}
       </div>
     );
   }
@@ -68,17 +68,22 @@ export function BottomNavigation({
   centralAction,
   onSelectTab,
   onCentralAction,
+  presentationMode = 'default',
 }: BottomNavigationProps) {
   const iconByTab: Record<BottomNavigationTab, ReactNode> = {
     답변하기: <MessageSquare className="h-5 w-5" aria-hidden="true" />,
     '나의 고민': <FileText className="h-5 w-5" aria-hidden="true" />,
     마이페이지: <UserRound className="h-5 w-5" aria-hidden="true" />,
   };
+  const isPixelAligned = presentationMode === 'pixel-aligned';
 
   return (
     <nav
       aria-label="주요 화면"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--qling-color-border)] bg-[rgb(255_255_255/0.96)] shadow-[var(--qling-shadow-nav)] backdrop-blur-md"
+      className={cn(
+        'z-50 border-t border-[var(--qling-color-border)] bg-[rgb(255_255_255/0.96)] shadow-[var(--qling-shadow-nav)] backdrop-blur-md',
+        isPixelAligned ? 'absolute inset-x-0 bottom-0' : 'fixed inset-x-0 bottom-0',
+      )}
       style={{ paddingBottom: 'var(--qling-space-safe-bottom)' }}
     >
       <button
@@ -92,7 +97,10 @@ export function BottomNavigation({
         <Send className="h-4 w-4" aria-hidden="true" />
         {centralAction.label}
       </button>
-      <div className="mx-auto grid h-[var(--qling-space-nav-height)] max-w-2xl grid-cols-3 gap-1 px-2 pt-3">
+      <div className={cn(
+        'mx-auto grid h-[var(--qling-space-nav-height)] grid-cols-3 gap-1 px-2 pt-3',
+        isPixelAligned ? 'w-[393px]' : 'max-w-2xl',
+      )}>
         {tabs.map(({ tab, label }) => {
           const isActive = activeTab === tab;
           return (

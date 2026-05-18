@@ -311,13 +311,14 @@ export default function App() {
           </div>
         </header>
       )}
-      bottomNavigation={!usesPixelAlignedFrame && routeBoundary.mountsBottomNavigation && routeBoundary.authenticatedTab && (
+      bottomNavigation={routeBoundary.mountsBottomNavigation && routeBoundary.authenticatedTab && (
         <BottomNavigation
           tabs={PRD_APP_TABS.map(tab => ({ tab, label: tab }))}
           activeTab={routeBoundary.authenticatedTab}
           centralAction={CENTRAL_BOTTOM_NAVIGATION_ACTION}
           onSelectTab={(tab) => setView(tab)}
           onCentralAction={() => setView(routeToWriteWorry())}
+          presentationMode={usesPixelAlignedFrame ? 'pixel-aligned' : 'default'}
         />
       )}
       hasBottomNavigation={!usesPixelAlignedFrame && routeBoundary.mountsBottomNavigation}

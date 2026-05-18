@@ -4,7 +4,12 @@ import '../../src/index.css';
 import { ReceivedWorriesScreen } from '../../src/screens/receivedWorries/ReceivedWorriesScreen';
 import { WriteFormScreen } from '../../src/screens/writeForm/WriteFormScreen';
 import { ReplyDetailScreen } from '../../src/screens/replyDetail/ReplyDetailScreen';
-import { MobileAppShell } from '../../src/screens/shared/ui';
+import { BottomNavigation, MobileAppShell } from '../../src/screens/shared/ui';
+import {
+  CENTRAL_BOTTOM_NAVIGATION_ACTION,
+  PRD_APP_TABS,
+  type PrdAppTab,
+} from '../../src/services/appShell/prdNavigationPolicy';
 import type { ReceivedWorryFeedItem } from '../../src/screens/receivedWorries/contract';
 import type { WriteDraftContract } from '../../src/screens/writeForm/contract';
 import type { ReplyDetailScreenProps } from '../../src/screens/replyDetail/contract';
@@ -90,6 +95,7 @@ function PreviewApp() {
   const params = new URLSearchParams(window.location.search);
   const screen = params.get('screen') ?? '06';
   const [draftValue, setDraftValue] = useState('');
+  const activeTab: PrdAppTab = screen === '06' ? '답변하기' : '나의 고민';
   const draft = useMemo<WriteDraftContract>(() => ({
     ...writeDraft,
     value: draftValue,
@@ -98,7 +104,20 @@ function PreviewApp() {
   }), [draftValue]);
 
   return (
-    <MobileAppShell frameMode="pixel-aligned" hasBottomNavigation={false}>
+    <MobileAppShell
+      frameMode="pixel-aligned"
+      hasBottomNavigation={false}
+      bottomNavigation={(
+        <BottomNavigation
+          tabs={PRD_APP_TABS.map(tab => ({ tab, label: tab }))}
+          activeTab={activeTab}
+          centralAction={CENTRAL_BOTTOM_NAVIGATION_ACTION}
+          onSelectTab={tab => window.dispatchEvent(new CustomEvent('preview-action', { detail: `tab:${tab}` }))}
+          onCentralAction={() => window.dispatchEvent(new CustomEvent('preview-action', { detail: 'central-write-worry' }))}
+          presentationMode="pixel-aligned"
+        />
+      )}
+    >
       {screen === '06' && (
         <ReceivedWorriesScreen
           state={{ status: 'ready' }}

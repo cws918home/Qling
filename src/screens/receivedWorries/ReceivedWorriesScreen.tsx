@@ -95,7 +95,6 @@ export function ReceivedWorriesScreen(props: ReceivedWorriesScreenProps) {
         );
       })}
       </div>
-      <VisualBottomNavigation top={740} />
     </div>
   );
 }
@@ -113,16 +112,5 @@ function ReferenceStatusBar({ tone }: { readonly tone: 'light' | 'dark' }) {
       <div className={`absolute left-[377px] top-[25px] h-[6px] w-[2px] rounded-[1px] ${color}`} />
       <div className={`absolute left-[352px] top-[24.5px] h-[7px] w-[16px] rounded-[1px] ${color}`} />
     </>
-  );
-}
-
-function VisualBottomNavigation({ top }: { readonly top: number }) {
-  return (
-    <div aria-hidden="true" className="absolute left-0 h-[112px] w-[393px] bg-[#fff5eb]" style={{ top }}>
-      <div className="absolute left-[135px] top-[15px] h-[80px] w-[125px] rounded-[37px] bg-[#fff5eb]" />
-      <div className="absolute left-[149px] top-[15px] h-[59px] w-[95px] rounded-full bg-[#ff8b3d]" />
-      <div className="absolute left-[16px] top-[52px] h-[36px] w-[116px] rounded-[7px] bg-[#fae5d7]" />
-      <div className="absolute left-[262px] top-[52px] h-[36px] w-[116px] rounded-[7px] bg-[#dadce0]" />
-    </div>
   );
 }

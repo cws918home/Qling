@@ -140,8 +140,6 @@ function ReceivedAnswerDetailFrame(props: ReplyDetailScreenProps) {
           <p className="whitespace-pre-wrap text-[12px] leading-[20px] text-[#2a2a2a]">{props.existingFeedback.comment}</p>
         </article>
       )}
-
-      <VisualBottomNavigation />
     </div>
   );
 }
@@ -198,17 +196,6 @@ function ReferenceStatusBar() {
       <div className="absolute left-[377px] top-[25px] h-[6px] w-[2px] rounded-[1px] border border-[#1a1a1a] bg-white" />
       <div className="absolute left-[352px] top-[24.5px] h-[7px] w-[16px] rounded-[1px] border border-[#1a1a1a] bg-[#1a1a1a]" />
     </>
-  );
-}
-
-function VisualBottomNavigation() {
-  return (
-    <div aria-hidden="true" className="absolute left-0 top-[760px] h-[92px] w-[393px] bg-[#fff5eb]">
-      <div className="absolute left-[135px] top-[4px] h-[80px] w-[125px] rounded-[37px] bg-[#fff5eb]" />
-      <div className="absolute left-[149px] top-[13px] h-[59px] w-[95px] rounded-full bg-[#ff8b3d]" />
-      <div className="absolute left-[16px] top-[41px] h-[36px] w-[116px] rounded-[7px] bg-[#dadce0]" />
-      <div className="absolute left-[262px] top-[41px] h-[36px] w-[116px] rounded-[7px] bg-[#fae5d7]" />
-    </div>
   );
 }
 
