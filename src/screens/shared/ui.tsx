@@ -31,7 +31,20 @@ export function MobileAppShell({
   bottomNavigation,
   hasBottomNavigation = Boolean(bottomNavigation),
   mainClassName,
+  frameMode = 'default',
 }: MobileAppShellProps) {
+  if (frameMode === 'pixel-aligned') {
+    return (
+      <div className="min-h-dvh overflow-x-hidden bg-[var(--qling-color-cream)] text-[var(--qling-color-text)] font-sans selection:bg-[var(--qling-color-cream-soft)]">
+        {header}
+        <main className={cn('mx-auto min-h-[852px] w-[393px] p-0', mainClassName)}>
+          {children}
+        </main>
+        {bottomNavigation}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-dvh overflow-x-hidden bg-[var(--qling-color-cream)] text-[var(--qling-color-text)] font-sans selection:bg-[var(--qling-color-cream-soft)]">
       {header}

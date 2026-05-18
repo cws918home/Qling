@@ -42,7 +42,19 @@
     </ul>
     <h2>Wrapper edits</h2>
     <ul>
-      <li>App.tsx와 shared/ui.tsx는 수정하지 않았다. 따라서 wrapper edit 사유, route/auth/data/handler contract 변경 없음 증명 대상도 없다.</li>
+      <li><code>App.tsx</code>와 <code>shared/ui.tsx</code>를 presentation-only로 수정했다. domain/service/auth/data/handler contract는 변경하지 않았다.</li>
+    </ul>
+    <h2>Production shell integration fix</h2>
+    <ul>
+      <li>첫 구현은 <code>393x852</code> 정렬 캔버스를 기존 <code>MobileAppShell</code> route body 안에 중첩했다. 그 결과 global fixed Qling header, <code>main</code>의 <code>pt-24</code>, shell horizontal padding/max-width, App-level 06 route title row, real fixed <code>BottomNavigation</code>이 그대로 남았다.</li>
+      <li><code>MobileAppShell</code>에 presentation-only <code>frameMode?: "default" | "pixel-aligned"</code>를 추가했다. 기본값은 <code>default</code>라서 비대상 route 동작은 그대로 유지된다.</li>
+      <li><code>frameMode="pixel-aligned"</code>에서는 <code>main</code>이 <code>mx-auto min-h-[852px] w-[393px] p-0</code>만 사용한다. <code>max-w-2xl</code>, shell-x padding, <code>pt-24</code>, bottom scroll padding을 적용하지 않는다. CSS transform scaling은 사용하지 않는다.</li>
+      <li><code>App.tsx</code>는 06(<code>답변하기</code>, <code>received_worries</code>), 07(<code>write_worry</code>), 08(<code>answer_check</code>, <code>read_received_reply</code>, <code>received_answer_detail</code>)에서만 <code>usesPixelAlignedFrame</code>을 켠다.</li>
+      <li><code>usesPixelAlignedFrame</code>이 true일 때 App shell은 global authenticated header를 넘기지 않고, real <code>BottomNavigation</code>도 넘기지 않으며, <code>hasBottomNavigation={false}</code>와 frame-neutral main을 사용한다.</li>
+      <li>06 route branch는 pixel-aligned mode에서 App-level <code>답변하기</code> title row와 interest badge를 렌더링하지 않는다. 06 내부 시각 bottom chrome만 남기고 real fixed bottom navigation은 mount하지 않아 duplicate navigation chrome이 없다.</li>
+      <li>07 write-worry canvas는 global header/bottom nav 아래에 떠 있는 child가 아니라 frame-neutral main의 직접 body로 렌더링된다. 내부 back button, textarea, submit behavior는 그대로 유지했다.</li>
+      <li>08 received-answer-detail canvas도 frame-neutral main의 직접 body로 렌더링된다. <code>my-answer-detail</code> branch는 기존 shell/panel behavior를 유지한다.</li>
+      <li>수정은 route-frame presentation logic에 한정했다. route selection, auth guard, data loading, handlers, contracts, mapping modules, services, Firestore, server code는 변경하지 않았다.</li>
     </ul>
   </body>
 </html>

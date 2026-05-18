@@ -45,6 +45,7 @@ export type MobileAppShellProps = {
   readonly bottomNavigation?: ReactNode;
   readonly hasBottomNavigation?: boolean;
   readonly mainClassName?: string;
+  readonly frameMode?: 'default' | 'pixel-aligned';
 };
 
 export type CtaVariant = 'primary' | 'secondary' | 'destructive';

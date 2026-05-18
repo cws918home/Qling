@@ -262,6 +262,12 @@ export default function App() {
     : `${visibleHomeInterestBadgeText}${profileInterests.length > 5 ? '...' : ''}`;
   const routeBoundary = routeRenderingBoundaryForRoute(view);
   const currentRoute = routeBoundary.currentRoute;
+  const usesPixelAlignedFrame = currentRoute === '답변하기'
+    || currentRoute === 'received_worries'
+    || currentRoute === 'write_worry'
+    || currentRoute === 'answer_check'
+    || currentRoute === 'read_received_reply'
+    || currentRoute === 'received_answer_detail';
 
   if (loading) {
     return (
@@ -286,7 +292,8 @@ export default function App() {
 
   return (
     <MobileAppShell
-      header={routeBoundary.mountsAuthenticatedShell && (
+      frameMode={usesPixelAlignedFrame ? 'pixel-aligned' : 'default'}
+      header={!usesPixelAlignedFrame && routeBoundary.mountsAuthenticatedShell && (
         <header className="fixed top-0 left-0 right-0 bg-[#FDFCF8]/80 backdrop-blur-md z-50 border-b border-[#E9EDC9]/50">
           <div className="max-w-2xl mx-auto px-6 h-16 flex items-center justify-between">
             <button onClick={() => setView('답변하기')} className="text-xl font-serif font-bold tracking-tight text-[#D4A373] flex items-center gap-2">
@@ -304,7 +311,7 @@ export default function App() {
           </div>
         </header>
       )}
-      bottomNavigation={routeBoundary.mountsBottomNavigation && routeBoundary.authenticatedTab && (
+      bottomNavigation={!usesPixelAlignedFrame && routeBoundary.mountsBottomNavigation && routeBoundary.authenticatedTab && (
         <BottomNavigation
           tabs={PRD_APP_TABS.map(tab => ({ tab, label: tab }))}
           activeTab={routeBoundary.authenticatedTab}
@@ -313,8 +320,8 @@ export default function App() {
           onCentralAction={() => setView(routeToWriteWorry())}
         />
       )}
-      hasBottomNavigation={routeBoundary.mountsBottomNavigation}
-      mainClassName={cn(routeBoundary.routeGroup === 'onboarding flow' ? "pt-12" : "pt-24")}
+      hasBottomNavigation={!usesPixelAlignedFrame && routeBoundary.mountsBottomNavigation}
+      mainClassName={usesPixelAlignedFrame ? undefined : cn(routeBoundary.routeGroup === 'onboarding flow' ? "pt-12" : "pt-24")}
     >
       <AnimatePresence>
         {filterAlert && (
@@ -398,11 +405,13 @@ export default function App() {
 
           {/* 2. Answer View (Feed) */}
           {(currentRoute === '답변하기' || currentRoute === 'received_worries') && (
-            <motion.div key="answer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-serif font-bold">답변하기</h2>
-                <span className="text-xs bg-[#E9EDC9] text-[#5A5A40] px-3 py-1 rounded-full">{homeInterestBadgeText}</span>
-              </div>
+            <motion.div key="answer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className={usesPixelAlignedFrame ? undefined : 'space-y-8'}>
+              {!usesPixelAlignedFrame && (
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-serif font-bold">답변하기</h2>
+                  <span className="text-xs bg-[#E9EDC9] text-[#5A5A40] px-3 py-1 rounded-full">{homeInterestBadgeText}</span>
+                </div>
+              )}
               <ReceivedWorriesContainer
                 user={user}
                 profile={profile}

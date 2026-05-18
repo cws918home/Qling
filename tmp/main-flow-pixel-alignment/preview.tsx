@@ -4,6 +4,7 @@ import '../../src/index.css';
 import { ReceivedWorriesScreen } from '../../src/screens/receivedWorries/ReceivedWorriesScreen';
 import { WriteFormScreen } from '../../src/screens/writeForm/WriteFormScreen';
 import { ReplyDetailScreen } from '../../src/screens/replyDetail/ReplyDetailScreen';
+import { MobileAppShell } from '../../src/screens/shared/ui';
 import type { ReceivedWorryFeedItem } from '../../src/screens/receivedWorries/contract';
 import type { WriteDraftContract } from '../../src/screens/writeForm/contract';
 import type { ReplyDetailScreenProps } from '../../src/screens/replyDetail/contract';
@@ -97,7 +98,7 @@ function PreviewApp() {
   }), [draftValue]);
 
   return (
-    <main className="h-[852px] w-[393px] overflow-hidden bg-white">
+    <MobileAppShell frameMode="pixel-aligned" hasBottomNavigation={false}>
       {screen === '06' && (
         <ReceivedWorriesScreen
           state={{ status: 'ready' }}
@@ -132,7 +133,7 @@ function PreviewApp() {
         </div>
       )}
       {screen === '08' && <ReplyDetailScreen {...replyDetailProps} />}
-    </main>
+    </MobileAppShell>
   );
 }
 
