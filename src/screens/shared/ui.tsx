@@ -68,22 +68,92 @@ export function BottomNavigation({
   centralAction,
   onSelectTab,
   onCentralAction,
-  presentationMode = 'default',
+  variant = 'default',
 }: BottomNavigationProps) {
   const iconByTab: Record<BottomNavigationTab, ReactNode> = {
     답변하기: <MessageSquare className="h-5 w-5" aria-hidden="true" />,
     '나의 고민': <FileText className="h-5 w-5" aria-hidden="true" />,
     마이페이지: <UserRound className="h-5 w-5" aria-hidden="true" />,
   };
-  const isPixelAligned = presentationMode === 'pixel-aligned';
+
+  if (variant === 'pixel-aligned') {
+    const sideTabs = tabs.filter(({ tab }) => tab !== centralAction.ownerTab);
+    const ownerTab = tabs.find(({ tab }) => tab === centralAction.ownerTab);
+
+    return (
+      <nav
+        aria-label="주요 화면"
+        className="absolute left-0 bottom-0 z-50 h-[112px] w-[393px] overflow-hidden bg-transparent"
+      >
+        <div className="absolute left-0 top-[47px] h-[65px] w-[393px] bg-[#fff5eb]" aria-hidden="true" />
+        {ownerTab && (
+          <button
+            type="button"
+            aria-label={ownerTab.label}
+            aria-current={activeTab === ownerTab.tab ? 'page' : undefined}
+            onClick={() => onSelectTab(ownerTab.tab)}
+            className={cn(
+              'absolute left-[135px] top-[15px] h-[80px] w-[125px] rounded-[37px] bg-[#fff5eb] focus:outline-none focus:ring-2 focus:ring-[#ff8b3d] focus:ring-offset-0',
+              activeTab === ownerTab.tab && 'ring-0',
+            )}
+          >
+            <span className="sr-only">{ownerTab.label}</span>
+          </button>
+        )}
+        <button
+          type="button"
+          aria-label={centralAction.accessibleLabel}
+          data-target-route={centralAction.targetRoute}
+          data-owner-tab={centralAction.ownerTab}
+          onClick={onCentralAction}
+          className="absolute left-[149px] top-[24px] flex h-[59px] w-[95px] items-center justify-center rounded-[29px] bg-[#ff8b3d] focus:outline-none focus:ring-2 focus:ring-[#2a2a2a] focus:ring-offset-0"
+        >
+          <span className="relative h-[26px] w-[48px]" aria-hidden="true">
+            <span className="absolute left-[5px] top-0 h-[26px] w-[18px] rounded-full bg-[#fff5eb]" />
+            <span className="absolute left-[25px] top-0 h-[26px] w-[18px] rounded-full bg-[#fff5eb]" />
+            <span className="absolute left-[14px] top-[9px] h-[8px] w-[4px] rounded-full bg-[#1a1a1a]" />
+            <span className="absolute left-[30px] top-[9px] h-[8px] w-[4px] rounded-full bg-[#1a1a1a]" />
+          </span>
+        </button>
+        {sideTabs.map(({ tab, label }, index) => {
+          const isActive = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              type="button"
+              aria-label={label}
+              aria-current={isActive ? 'page' : undefined}
+              onClick={() => onSelectTab(tab)}
+              className={cn(
+                'absolute top-[52px] flex h-[36px] w-[116px] items-center justify-center rounded-[7px] focus:outline-none focus:ring-2 focus:ring-[#ff8b3d] focus:ring-offset-0',
+                index === 0 ? 'left-[16px]' : 'left-[262px]',
+                isActive ? 'bg-[#fae5d7] text-[#ff8b3d]' : 'bg-[#dadce0] text-[#b8b8b8]',
+              )}
+            >
+              {index === 0 ? (
+                <span className="relative h-[17px] w-[19px]" aria-hidden="true">
+                  <span className="absolute left-0 top-[2px] h-[13px] w-[13px] rounded-full border-[2px] border-current" />
+                  <span className="absolute left-[12px] top-[7px] h-[2px] w-[7px] rounded-full bg-current" />
+                </span>
+              ) : (
+                <span className="relative h-[17px] w-[17px]" aria-hidden="true">
+                  <span className="absolute left-[2px] top-[1px] h-[15px] w-[13px] rounded-[3px] border-[2px] border-current" />
+                  <span className="absolute left-[5px] top-[5px] h-[2px] w-[7px] rounded-full bg-current" />
+                  <span className="absolute left-[5px] top-[10px] h-[2px] w-[7px] rounded-full bg-current" />
+                </span>
+              )}
+              <span className="sr-only">{label}</span>
+            </button>
+          );
+        })}
+      </nav>
+    );
+  }
 
   return (
     <nav
       aria-label="주요 화면"
-      className={cn(
-        'z-50 border-t border-[var(--qling-color-border)] bg-[rgb(255_255_255/0.96)] shadow-[var(--qling-shadow-nav)] backdrop-blur-md',
-        isPixelAligned ? 'absolute inset-x-0 bottom-0' : 'fixed inset-x-0 bottom-0',
-      )}
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--qling-color-border)] bg-[rgb(255_255_255/0.96)] shadow-[var(--qling-shadow-nav)] backdrop-blur-md"
       style={{ paddingBottom: 'var(--qling-space-safe-bottom)' }}
     >
       <button
@@ -97,10 +167,7 @@ export function BottomNavigation({
         <Send className="h-4 w-4" aria-hidden="true" />
         {centralAction.label}
       </button>
-      <div className={cn(
-        'mx-auto grid h-[var(--qling-space-nav-height)] grid-cols-3 gap-1 px-2 pt-3',
-        isPixelAligned ? 'w-[393px]' : 'max-w-2xl',
-      )}>
+      <div className="mx-auto grid h-[var(--qling-space-nav-height)] max-w-2xl grid-cols-3 gap-1 px-2 pt-3">
         {tabs.map(({ tab, label }) => {
           const isActive = activeTab === tab;
           return (

@@ -67,5 +67,16 @@
       <li>08은 real <code>props.originalWorry</code>, <code>props.reply</code>, <code>props.existingFeedback</code>, <code>props.selectedFeedback</code>, comment validation/moderation/draft props를 사용한다. feedback buttons는 기존처럼 <code>onFeedbackChange</code> 다음 <code>onFeedbackSubmit</code>을 호출한다.</li>
       <li>focused tests를 추가해 06/07/08이 supplied props text를 렌더링하고, production screen HTML에 preview-only strings such as <code>one two three</code>, reference card text, or <code>Lorem ipsum</code>이 나타나지 않도록 확인했다.</li>
     </ul>
+    <h2>Shared bottom navigation alignment</h2>
+    <ul>
+      <li>이전 수정은 기능형 <code>BottomNavigation</code>을 <code>393px</code> frame 안에 넣었지만, old production design인 fixed/grid/lucide/central text pill/border shadow style을 그대로 유지했다.</li>
+      <li><code>BottomNavigation</code>에 presentation-only <code>variant?: "default" | "pixel-aligned"</code>를 추가했다. default variant는 기존 fixed viewport nav, 3-column grid, lucide icons, central <code>고민 작성</code> pill을 그대로 유지한다.</li>
+      <li>pixel-aligned variant는 shared UI 한 곳에서만 reference bottom bar geometry를 구현한다. production screens에는 screen-local fake nav 또는 <code>aria-hidden</code> replacement nav를 렌더링하지 않는다.</li>
+      <li>pixel variant는 <code>absolute left:0 bottom:0 width:393px height:112px</code> frame 안에서 base cream band, side tab buttons, center owner-tab hit area, and orange central write action을 배치한다.</li>
+      <li>측정 기준은 06 bottom nav bbox <code>(0,740,393,852)</code>, active item <code>(135,755,260,835)</code>, 08 bottom nav/chrome <code>(0,760,393,852)</code>를 시작점으로 삼았다. 구현 CSS는 selected bg <code>left:135 top:15 width:125 height:80</code>, center action <code>left:149 top:24 width:95 height:59</code>이다.</li>
+      <li>각 nav item은 functional button이다. side tabs call <code>onSelectTab(tab)</code>, center owner-tab background calls <code>onSelectTab(ownerTab.tab)</code>, orange center action calls <code>onCentralAction</code>. Active tab state는 tab buttons에 <code>aria-current="page"</code>로 반영된다.</li>
+      <li>중앙 orange shape는 reference의 large center item을 write-worry central action으로 해석했다. 그 주변 cream selected background는 central action의 owner tab인 <code>나의 고민</code> tab hit area로 유지해 tab navigation도 잃지 않았다.</li>
+      <li>남은 mismatch: reference SVG icon path와 production CSS-drawn icon glyph가 완전히 동일하지는 않다. 그러나 old lucide icon/text pill/grid visual은 pixel variant에서 제거했고, navigation behavior는 보존했다.</li>
+    </ul>
   </body>
 </html>

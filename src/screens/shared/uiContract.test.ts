@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { BottomNavigation } from './ui';
 import {
   SHARED_UI_PRIMITIVE_OWNERSHIP,
   type BottomNavigationProps,
@@ -59,6 +62,72 @@ test('bottom navigation contract preserves PRD tabs and central write-worry acti
   assert.equal(props.centralAction.label, '고민 작성');
   assert.equal(props.centralAction.targetRoute, 'write_worry');
   assert.equal(props.centralAction.ownerTab, '나의 고민');
+});
+
+test('bottom navigation default variant keeps fixed grid production presentation', () => {
+  const props = {
+    tabs: [
+      { tab: '답변하기', label: '답변하기' },
+      { tab: '나의 고민', label: '나의 고민' },
+      { tab: '마이페이지', label: '마이페이지' },
+    ],
+    activeTab: '답변하기',
+    centralAction: {
+      label: '고민 작성',
+      accessibleLabel: '고민 작성',
+      targetRoute: 'write_worry',
+      ownerTab: '나의 고민',
+    },
+    onSelectTab: () => undefined,
+    onCentralAction: () => undefined,
+  } satisfies BottomNavigationProps;
+  const html = renderToStaticMarkup(createElement(BottomNavigation, props));
+
+  assert.match(html, /fixed inset-x-0 bottom-0/);
+  assert.match(html, /grid h-\[var\(--qling-space-nav-height\)\]/);
+  assert.match(html, />고민 작성</);
+  assert.match(html, /aria-current="page"/);
+});
+
+test('bottom navigation pixel-aligned variant keeps functional actions with reference geometry', () => {
+  const props = {
+    tabs: [
+      { tab: '답변하기', label: '답변하기' },
+      { tab: '나의 고민', label: '나의 고민' },
+      { tab: '마이페이지', label: '마이페이지' },
+    ],
+    activeTab: '나의 고민',
+    centralAction: {
+      label: '고민 작성',
+      accessibleLabel: '고민 작성',
+      targetRoute: 'write_worry',
+      ownerTab: '나의 고민',
+    },
+    onSelectTab: () => undefined,
+    onCentralAction: () => undefined,
+    variant: 'pixel-aligned',
+  } satisfies BottomNavigationProps;
+  const html = renderToStaticMarkup(createElement(BottomNavigation, props));
+
+  assert.match(html, /absolute left-0 bottom-0/);
+  assert.match(html, /h-\[112px\] w-\[393px\]/);
+  assert.match(html, /left-\[135px\] top-\[15px\] h-\[80px\] w-\[125px\]/);
+  assert.match(html, /left-\[149px\] top-\[24px\].*h-\[59px\] w-\[95px\]/);
+  assert.match(html, /aria-label="고민 작성"/);
+  assert.match(html, /aria-current="page"/);
+  assert.doesNotMatch(html, /fixed inset-x-0 bottom-0/);
+  assert.doesNotMatch(html, />고민 작성</);
+});
+
+test('bottom navigation pixel-aligned source preserves tab and central callbacks', () => {
+  const source = fs.readFileSync(path.join(process.cwd(), 'src', 'screens', 'shared', 'ui.tsx'), 'utf8');
+
+  assert.match(source, /variant === 'pixel-aligned'/);
+  assert.match(source, /onClick=\{onCentralAction\}/);
+  assert.match(source, /onClick=\{\(\) => onSelectTab\(ownerTab\.tab\)\}/);
+  assert.match(source, /onClick=\{\(\) => onSelectTab\(tab\)\}/);
+  assert.match(source, /aria-current=\{activeTab === ownerTab\.tab \? 'page' : undefined\}/);
+  assert.match(source, /aria-current=\{isActive \? 'page' : undefined\}/);
 });
 
 test('profile motif remains visual-only without avatar data requirements', () => {

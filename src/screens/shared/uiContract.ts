@@ -37,7 +37,7 @@ export type BottomNavigationProps = {
   readonly centralAction: BottomNavigationCentralAction;
   readonly onSelectTab: (tab: BottomNavigationTab) => void;
   readonly onCentralAction: () => void;
-  readonly presentationMode?: 'default' | 'pixel-aligned';
+  readonly variant?: 'default' | 'pixel-aligned';
 };
 
 export type MobileAppShellProps = {

@@ -318,7 +318,7 @@ export default function App() {
           centralAction={CENTRAL_BOTTOM_NAVIGATION_ACTION}
           onSelectTab={(tab) => setView(tab)}
           onCentralAction={() => setView(routeToWriteWorry())}
-          presentationMode={usesPixelAlignedFrame ? 'pixel-aligned' : 'default'}
+          variant={usesPixelAlignedFrame ? 'pixel-aligned' : 'default'}
         />
       )}
       hasBottomNavigation={!usesPixelAlignedFrame && routeBoundary.mountsBottomNavigation}

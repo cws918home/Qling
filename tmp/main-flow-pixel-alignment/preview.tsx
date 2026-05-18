@@ -114,7 +114,7 @@ function PreviewApp() {
           centralAction={CENTRAL_BOTTOM_NAVIGATION_ACTION}
           onSelectTab={tab => window.dispatchEvent(new CustomEvent('preview-action', { detail: `tab:${tab}` }))}
           onCentralAction={() => window.dispatchEvent(new CustomEvent('preview-action', { detail: 'central-write-worry' }))}
-          presentationMode="pixel-aligned"
+          variant="pixel-aligned"
         />
       )}
     >
